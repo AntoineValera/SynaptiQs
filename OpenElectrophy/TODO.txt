@@ -1,0 +1,214 @@
+# todo now:
+# - append regarder sqlalchemy doc OK
+# - numpy OK
+# - neo to oe regarder dynamic subclassing OK
+# io wrapper OK
+# save et load OK
+# populate OK
+# relation primary key dans sqlmapper verifier load et save OK
+
+
+# problem double filiation IO OK
+# longblob OK
+# tree
+    # main OK
+    # icon OK
+    # gui for autodesign OK
+
+
+# explorer
+    # add close tab OK
+    # edit tab OK
+    # avec memoire OK
+    # tri sql OK
+
+# URGENT gerer le save load OK
+
+
+# open_db GUI OK
+# create_db GUI OK
+
+# mainwindow OK
+
+# import GUI OK
+
+# gerer le spike2IO OK
+
+
+# clean class OK
+
+
+
+
+
+# declencher une erreur quand load echoue
+
+# figure zone à revoir
+
+
+# explorer
+    # context menu Draw OK
+    # drag and drop
+    # refresh piste queryChildren OK
+    # context menu move to OK
+
+
+# plot 
+	# epoch and event OK
+    # spiketrain OK
+	# spike OK
+	# segment OK
+    # neuron OK
+
+
+# mainwindow:
+    # gestion ouverture fenettre des figurezones
+    # menu draw OK
+
+# icon OK
+
+# gerer nuance spike spiketrain
+
+# faire le diagram final
+
+# gerer clear_mappers and non_primary = True
+    # multi tab db
+# sessionmaker() et globalsesssion OK
+
+# import pas file URGENT OK
+
+# export GUI OK
+
+# BUG delete orphean OK
+# BUG id merge OK
+# BUG sql_in_python_loop OK
+# BUG dernier view fermer OK
+# BUG exampleIO sinus OK
+
+
+# spikesorting
+    # BUG NAN normalement
+    # menu contextuel Neuron group delete OK
+    # menu contextuel spike OK
+    # poubelle OK
+    # brush for clustering OK
+    # tour au NDViewer REVOIR avec POUZAT et GGOBI
+    # colors OK
+    # cross correlogram for elimating same neurons OK
+    # mode reclustering_mode a faire et tester OK
+    # histogram amplitude pour le seuil OK
+    # info mode re cluster OK
+    # explode cluster OK
+    # explode deviant
+    # gerer le multiprocessing
+    # revoir affichage avec thread sinon c'est long .... OK visible
+    # optimisation plot quand >1000 OK
+    # Cython for parammagnetic
+    # menu neuron select all spike OK
+    # new save (option waveforms, sweep, sampling,...) OK
+    # improve plot lon signal
+    # look for clustering method in scilits.learn
+    # save global configuration
+    # object SpikeSorter pour script
+
+
+
+# backref OK
+
+# commande sql OK
+
+# ajjouter menu explorer
+
+# recordingpoint io OK
+
+# Object not in OE dans globals() OK
+
+# import 
+    # option group spiketrain in neuron with same name
+    # option group spiketrain or spike OK
+
+# trodness pour plexon et nexion IO OK
+# ASciiSpike option group insame neuron
+
+# plot recording point average signal along segment
+
+# bug delete deja delete OK
+
+# creer un objet spikewaveform et spiketime = spiketrain data OK
+
+# orthographe extractor OK
+
+# bug neuron acrroché à old ! OK
+    
+# bug raw IO OK
+
+# gerer un system de cache PROVISOIRE
+
+
+
+# edit oscillation sur trop long ne pas calculer la carte OK
+
+
+# execption for saving when no acces to database
+
+
+# WinEDR (WinWCP) OK
+# TDT OK
+
+
+
+
+# autocreate new oject OK
+    # fixme: inject in globals scope
+
+# table design OK
+
+
+# sql filter order
+
+
+ROAD MAP PUBLIC:
+
+    1 good mapper
+    2 good QTtree
+    3 IO neo wrapper
+    4 figure zone
+    5 construct pacquet:
+        - python setup.py
+        - py2exe
+        - deb package
+        - (NSI ? ....)
+    5 morlet OK
+    7 oscillation GUI
+    6 spike GUI
+    8 examples
+    8 enrichir computing
+    9 docs
+
+AVANT sortie labo
+
+    10 respiration OK
+    11 import old database
+    12 GUI for golbal oscillation detection
+
+
+
+Strasbourg:
+    meméoire spikesorting OK
+
+    Spike2IO print... OK
+    
+    Detection evenement synaptic
+    Pipeline 1 philippe
+    Pipeline 2 philippe
+
+ 
+BUG:
+    * delete cascade OK
+    * bug gros BLOB OK in 0.6 OK    
+    *  uncicode with TEXT
+
+
+Long miltones:
+    * beaker cahing
+
