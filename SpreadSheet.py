@@ -10,10 +10,11 @@ from PyQt4 import QtCore, QtGui
 
 class SpreadSheet(QtGui.QWidget,object):
     
-    def __init__(self,parent=None,Source=[range(25)],Labels=[''],Rendering=False):
+    def __init__(self,parent=None,Source=[range(25)],Labels=[''],Rendering=False,MustBeClosed=False):
         self.__name__="SpreadSheet"
         QtGui.QWidget.__init__(self)
         self.setParent(parent)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         layout = QtGui.QVBoxLayout(self)
         maxlen=[]
         
@@ -53,10 +54,15 @@ class SpreadSheet(QtGui.QWidget,object):
         QtCore.QObject.connect(self.table, QtCore.SIGNAL("cellChanged(int, int)"),UpdateSource)
         #QtCore.QObject.connect(self.table, QtCore.SIGNAL("itemChanged()"),self.UpdateSourceArray) 
         #QtCore.QObject.connect(self.table, QtCore.SIGNAL("itemSelectionChanged()"),self.copytoclipboard) 
-        
+
+        if MustBeClosed == True:
+            self.setWindowModality(QtCore.Qt.ApplicationModal)
         if Rendering == True:
             self.show()
-                
+            
+    #def closeEvent(self,event):
+    #    # Let the Exit button handle tab closing
+    #    print 'Spreadsheet Closed, arrays edited'      
 
     def UpdateSourceArray(self,Source):
         a=self.table.currentColumn()

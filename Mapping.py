@@ -408,7 +408,7 @@ class Mapping(object):
         self.Charges_Display_Mode = QtGui.QComboBox()
         self.Charges_Display_Mode.setGeometry(240, 170, 60, 25)
         self.Charges_Display_Mode.addItems(["Color","Surface","None"])
-        self.Charges_Display_Mode.setCurrentIndex(2)
+        self.Charges_Display_Mode.setCurrentIndex(1)
 
         hbox7=QtGui.QHBoxLayout()
         hbox7.addWidget(self.Amplitudes_Display_Mode_Label)
@@ -759,17 +759,21 @@ class Mapping(object):
             self.DB_Picture=False
 
 
+        
     def Define_Non_Grid_Positions(self):
 
         # TODO : Find a way to Input Data, and implement repeats
         self.Sorted_Y_Coordinates=numpy.random.randint(0,100,len(Requete.Analogsignal_ids))
         self.Sorted_X_Coordinates=numpy.random.randint(0,100,len(Requete.Analogsignal_ids))
         self.Scanning_Direction_Mode = 'UserDefined'   
+
+        self.Window=SpreadSheet(Source=[self.Sorted_X_Coordinates,self.Sorted_Y_Coordinates],Rendering=True,MustBeClosed=True)
         
-        self.ManualInput=SpreadSheet(Source=[self.Sorted_X_Coordinates,self.Sorted_Y_Coordinates],Rendering=True)
+        QtCore.QObject.connect(self.Window, QtCore.SIGNAL('destroyed()'),self.UpdateDictafterWidgetClosure)        
+
+
+    def UpdateDictafterWidgetClosure(self):
         
-        
-        # TODO : This has to be updated when the spreadsheet is edited
         self.Sorted_Y_Coordinates_Full=self.Sorted_Y_Coordinates
         self.Sorted_X_Coordinates_Full=self.Sorted_X_Coordinates
         self.Sorted_X_and_Y_Coordinates=[None]*len(self.Sorted_X_Coordinates)
@@ -778,10 +782,10 @@ class Mapping(object):
             
         self.Sorted_X_and_Y_Coordinates_Full=self.Sorted_X_and_Y_Coordinates#*int(self.Number_of_Turns.text())
         self.Set_Coordinates_in_Tag_Variable()
-            
+        
        
 
-    def Define_Coordinates(self):
+    def Define_Coordinates(self,Available=[1,2,3,4]):
         
         """
         C'est le popup qui permet de selectionner si le scan est par ligne ou par colonne
@@ -798,29 +802,33 @@ class Mapping(object):
         MapWidget = QtGui.QWidget(self.Map_tools_Widget)
         MapWidget.setGeometry(0,0,400,120)
         
-        self.Vertical_Lines_Button = QtGui.QPushButton(MapWidget) #creation du bouton
-        self.Vertical_Lines_Button.setGeometry(10,10,80,80) #taille et position (X,Y,Xsize,Ysize)
-        self.Vertical_Lines_Button.setIcon(QtGui.QIcon(Main.Script_Path+"/Columns.png"))
-        self.Vertical_Lines_Button.setIconSize(QtCore.QSize(70, 70))
-        QtCore.QObject.connect(self.Vertical_Lines_Button, QtCore.SIGNAL("clicked()"),self.Create_Mapping_Pathway)
+        if 1 in Available:
+            self.Vertical_Lines_Button = QtGui.QPushButton(MapWidget) #creation du bouton
+            self.Vertical_Lines_Button.setGeometry(10,10,80,80) #taille et position (X,Y,Xsize,Ysize)
+            self.Vertical_Lines_Button.setIcon(QtGui.QIcon(Main.Script_Path+"/Columns.png"))
+            self.Vertical_Lines_Button.setIconSize(QtCore.QSize(70, 70))
+            QtCore.QObject.connect(self.Vertical_Lines_Button, QtCore.SIGNAL("clicked()"),self.Create_Mapping_Pathway)
         
-        self.Horizontal_Lines_Button = QtGui.QPushButton(MapWidget) #creation du bouton
-        self.Horizontal_Lines_Button.setGeometry(110,10,80,80) #taille et position (X,Y,Xsize,Ysize)
-        self.Horizontal_Lines_Button.setIcon(QtGui.QIcon(Main.Script_Path+"/Lines.png"))
-        self.Horizontal_Lines_Button.setIconSize(QtCore.QSize(70, 70))
-        QtCore.QObject.connect(self.Horizontal_Lines_Button, QtCore.SIGNAL("clicked()"),self.Create_Mapping_Pathway)
+        if 2 in Available:
+            self.Horizontal_Lines_Button = QtGui.QPushButton(MapWidget) #creation du bouton
+            self.Horizontal_Lines_Button.setGeometry(110,10,80,80) #taille et position (X,Y,Xsize,Ysize)
+            self.Horizontal_Lines_Button.setIcon(QtGui.QIcon(Main.Script_Path+"/Lines.png"))
+            self.Horizontal_Lines_Button.setIconSize(QtCore.QSize(70, 70))
+            QtCore.QObject.connect(self.Horizontal_Lines_Button, QtCore.SIGNAL("clicked()"),self.Create_Mapping_Pathway)
 
-        self.UserDefined_Button = QtGui.QPushButton(MapWidget) #creation du bouton
-        self.UserDefined_Button.setGeometry(210,10,80,80) #taille et position (X,Y,Xsize,Ysize)
-        self.UserDefined_Button.setText("User Defined")
-        QtCore.QObject.connect(self.UserDefined_Button, QtCore.SIGNAL("clicked()"),self.Define_Non_Grid_Positions)
-
-        self.GridGenerator_Button = QtGui.QPushButton(MapWidget) #creation du bouton
-        self.GridGenerator_Button.setGeometry(310,10,80,80) #taille et position (X,Y,Xsize,Ysize)
-        self.GridGenerator_Button.setText("AutoFill Grid")
-        QtCore.QObject.connect(self.GridGenerator_Button, QtCore.SIGNAL("clicked()"),self.AutoFill_Grid)
-
+        if 3 in Available:
+            self.UserDefined_Button = QtGui.QPushButton(MapWidget) #creation du bouton
+            self.UserDefined_Button.setGeometry(210,10,80,80) #taille et position (X,Y,Xsize,Ysize)
+            self.UserDefined_Button.setText("User Defined")
+            QtCore.QObject.connect(self.UserDefined_Button, QtCore.SIGNAL("clicked()"),self.Define_Non_Grid_Positions)
         
+        if 4 in Available:
+            self.GridGenerator_Button = QtGui.QPushButton(MapWidget) #creation du bouton
+            self.GridGenerator_Button.setGeometry(310,10,80,80) #taille et position (X,Y,Xsize,Ysize)
+            self.GridGenerator_Button.setText("AutoFill Grid")
+            QtCore.QObject.connect(self.GridGenerator_Button, QtCore.SIGNAL("clicked()"),self.AutoFill_Grid)
+
+        #TODO : Add Number of Steps
         for i in [self.X_Start_Field,
                   self.X_End_Field,
                   self.X_Step_Field,
@@ -930,6 +938,7 @@ class Mapping(object):
             self.Sorted_X_Coordinates_Full=self.Sorted_X_Coordinates*int(self.Number_of_Turns.text()) #et on refait la trajectoire autant de fois qu'il y a de tours
             self.Sorted_Y_Coordinates_Full=self.Sorted_Y_Coordinates*int(self.Number_of_Turns.text())
             self.Set_Coordinates_in_Tag_Variable()
+            self.AutoComplete_Missing_Fields()
             
         except ValueError:
             msgBox = QtGui.QMessageBox()
@@ -960,28 +969,53 @@ class Mapping(object):
                 """)
                 msgBox.exec_()      
 
+
     def AutoFill_Grid(self):
         
         Xe=int(self.X_End_Field.text())
         Xs=int(self.X_Start_Field.text())
-        Xn=int(self.X_Number_Field.text())
+        Xn=int(self.X_Number_Field.text())-1 #because if there are 6 points on a line, there are 5 intervals
         N=int(self.Number_of_Turns.text())
         Ye=int(self.Y_End_Field.text())
         Ys=int(self.Y_Start_Field.text())
-        Yn=int(self.Y_Number_Field.text())
+        Yn=int(self.Y_Number_Field.text())-1 #because if there are 6 points on a line, there are 5 intervals
 
-        self.X_Step_Field.setText(str((Xe-Xs)/Xn))#(Xn*N*Yn)))
-        self.Y_Step_Field.setText(str((Ye-Ys)/Xn))#(Yn*N*Xn)))
+        self.X_Step_Field.setText(str((Xe-Xs)/abs(Xn)))#(Xn*N*Yn)))
+        self.Y_Step_Field.setText(str((Ye-Ys)/abs(Xn)))#(Yn*N*Xn)))
         
-        L=Yn*Xn*N
+        L=(Yn+1)*(Xn+1)*N
         print 'expected number of sweep is ', L
         print 'actual number is', len(Requete.Analogsignal_ids)
         
         if L != len(Requete.Analogsignal_ids):
             raise IOError('The number of recordings do not match your mapping plan')
+        else:
+            self.Define_Coordinates(Available=[1,2])
+            
+    def AutoComplete_Missing_Fields(self):
         
+        Xe=int(self.X_End_Field.text())
+        Xs=int(self.X_Start_Field.text())
+        Xst=int(self.X_Step_Field.text())
+        N=int(self.Number_of_Turns.text())
+        Ye=int(self.Y_End_Field.text())
+        Ys=int(self.Y_Start_Field.text())
+        Yst=int(self.Y_Step_Field.text())    
+        PreviousX=self.X_Number_Field.text() #Can be ''
+        PreviousY=self.Y_Number_Field.text() #Can be ''
+        NewX=(Xe-Xs)/(Xst)+1
+        NewY=(Ye-Ys)/(Yst)+1
         
-        
+        if PreviousX == '':
+            self.X_Number_Field.setText(str(NewX))
+        elif PreviousX != NewX:
+            print 'Warning, number of X steps was adjusted using X_Step Value'
+            self.X_Number_Field.setText(str(NewX))
+        if PreviousY == '':
+            self.Y_Number_Field.setText(str(NewY))
+        elif PreviousY != NewY:
+            print 'Warning, number of Y steps was adjusted using Y_Step Value'
+            self.X_Number_Field.setText(str(NewY))            
 
     def Set_Coordinates_in_Tag_Variable(self):
         
