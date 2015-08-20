@@ -125,171 +125,248 @@ class Mapping(object):
             self.Save_User_Defined_Parameters()
             parameters.close()
             
-
-                
-                
- 
-        self.X_Neuron_Label = QtGui.QLabel(Main.MappingWidget)
-        self.X_Neuron_Label.setGeometry(100, 95, 8, 20)
-        self.X_Neuron_Label.setText( "X:")         
-        self.X_Neuron = QtGui.QLineEdit(Main.MappingWidget) #Lines, columns, Parent
-        self.X_Neuron.setGeometry(110,95,40,20)
-        self.X_Neuron.setText("0")
+        GlobalVBox=QtGui.QVBoxLayout(Main.MappingWidget)
 
 
-        self.Y_Neuron_Label = QtGui.QLabel(Main.MappingWidget)
-        self.Y_Neuron_Label.setGeometry(160, 95, 8, 20)
-        self.Y_Neuron_Label.setText( "Y:")   
-        self.Y_Neuron = QtGui.QLineEdit(Main.MappingWidget) #Lines, columns, Parent
-        self.Y_Neuron.setGeometry(170,95,40,20)
-        self.Y_Neuron.setText("0")
-        
-        
-        self.SweepPosition_Label = QtGui.QLabel(Main.MappingWidget)
-        self.SweepPosition_Label.setGeometry(5, 95, 80, 20)
-        self.SweepPosition_Label.setText( "Sweep #")   
-        self.SweepPosition = QtGui.QLineEdit(Main.MappingWidget) #Lines, columns, Parent
-        self.SweepPosition.setGeometry(50, 95, 45, 20)
-        #self.SweepPosition.setText("")
-        self.SweepPosition.setValidator(QtGui.QIntValidator(0, 100,self.SweepPosition))
-
-
-        QtCore.QObject.connect(self.SweepPosition, QtCore.SIGNAL("editingFinished ()"),self.Find_Corresponding_Coordinates)        
-
-        self.onepositionaverage = QtGui.QPushButton(Main.MappingWidget) #creation du bouton
-        self.onepositionaverage.setGeometry(210,95,100,25) #taille et position (X,Y,Xsize,Ysize)
-        self.onepositionaverage.setText( "Local Average")        
-        QtCore.QObject.connect(self.onepositionaverage, QtCore.SIGNAL("clicked()"),self.One_Stim_Average)        
    
-
-        self.X_Start_Label = QtGui.QLabel(Main.MappingWidget)
+        self.X_Start_Label = QtGui.QLabel()
         self.X_Start_Label.setGeometry(10, 10, 40, 20)
-        self.X_Start_Label.setText( "X Start")   
-        self.X_Start_Field = QtGui.QLineEdit(Main.MappingWidget) #Lines, columns, Parent
+        self.X_Start_Label.setText("X Start")   
+        self.X_Start_Field = QtGui.QLineEdit() #Lines, columns, Parent
         self.X_Start_Field.setGeometry(50,10,40,20)
-        self.X_Start_Field.setText("")   
+        self.X_Start_Field.setText("") 
 
-        self.X_End_Label = QtGui.QLabel(Main.MappingWidget)
+        self.X_End_Label = QtGui.QLabel()
         self.X_End_Label.setGeometry(110, 10, 40, 20)
-        self.X_End_Label.setText( "X End")   
-        self.X_End_Field = QtGui.QLineEdit(Main.MappingWidget) #Lines, columns, Parent
+        self.X_End_Label.setText("X End")   
+        self.X_End_Field = QtGui.QLineEdit() #Lines, columns, Parent
         self.X_End_Field.setGeometry(150,10,40,20)
         self.X_End_Field.setText("")         
         
-        self.X_Step_Label = QtGui.QLabel(Main.MappingWidget)
+        self.X_Step_Label = QtGui.QLabel()
         self.X_Step_Label.setGeometry(210, 10, 40, 20)
-        self.X_Step_Label.setText( "X Step")   
-        self.X_Step_Field = QtGui.QLineEdit(Main.MappingWidget) #Lines, columns, Parent
+        self.X_Step_Label.setText("X Step")   
+        self.X_Step_Field = QtGui.QLineEdit() #Lines, columns, Parent
         self.X_Step_Field.setGeometry(250,10,40,20)
         self.X_Step_Field.setText("")   
-        
-        self.Y_Start_Label = QtGui.QLabel(Main.MappingWidget)
+
+        self.X_Number_Label = QtGui.QLabel()
+        self.X_Number_Label.setGeometry(210, 10, 40, 20)
+        self.X_Number_Label.setText("Step#")   
+        self.X_Number_Field = QtGui.QLineEdit() #Lines, columns, Parent
+        self.X_Number_Field.setGeometry(250,10,40,20)
+        self.X_Number_Field.setText("")  
+
+        self.Y_Start_Label = QtGui.QLabel()
         self.Y_Start_Label.setGeometry(10, 30, 40, 20)
         self.Y_Start_Label.setText( "Y Start")   
-        self.Y_Start_Field = QtGui.QLineEdit(Main.MappingWidget) #Lines, columns, Parent
+        self.Y_Start_Field = QtGui.QLineEdit() #Lines, columns, Parent
         self.Y_Start_Field.setGeometry(50,30,40,20)
         self.Y_Start_Field.setText("")    
         
-        self.Y_End_Label = QtGui.QLabel(Main.MappingWidget)
+        self.Y_End_Label = QtGui.QLabel()
         self.Y_End_Label.setGeometry(110, 30, 40, 20)
         self.Y_End_Label.setText( "Y End")   
-        self.Y_End_Field = QtGui.QLineEdit(Main.MappingWidget) #Lines, columns, Parent
+        self.Y_End_Field = QtGui.QLineEdit() #Lines, columns, Parent
         self.Y_End_Field.setGeometry(150,30,40,20)
         self.Y_End_Field.setText("")          
 
-        self.Y_Step_Label = QtGui.QLabel(Main.MappingWidget)
+        self.Y_Step_Label = QtGui.QLabel()
         self.Y_Step_Label.setGeometry(210, 30, 40, 20)
         self.Y_Step_Label.setText( "Y Step")   
-        self.Y_Step_Field = QtGui.QLineEdit(Main.MappingWidget) #Lines, columns, Parent
+        self.Y_Step_Field = QtGui.QLineEdit() #Lines, columns, Parent
         self.Y_Step_Field.setGeometry(250,30,40,20)
         self.Y_Step_Field.setText("")
-        
-        self.Number_of_Turns_Label = QtGui.QLabel(Main.MappingWidget)
+
+        self.Y_Number_Label = QtGui.QLabel()
+        self.Y_Number_Label.setGeometry(210, 10, 40, 20)
+        self.Y_Number_Label.setText("Step#")   
+        self.Y_Number_Field = QtGui.QLineEdit() #Lines, columns, Parent
+        self.Y_Number_Field.setGeometry(250,10,40,20)
+        self.Y_Number_Field.setText("") 
+
+        self.Number_of_Turns_Label = QtGui.QLabel()
         self.Number_of_Turns_Label.setGeometry(150, 50, 120, 20)
         self.Number_of_Turns_Label.setText( "Number of Turns")   
-        self.Number_of_Turns = QtGui.QLineEdit(Main.MappingWidget) #Lines, columns, Parent
+        self.Number_of_Turns = QtGui.QLineEdit() #Lines, columns, Parent
         self.Number_of_Turns.setGeometry(250,50,40,20)
-        self.Number_of_Turns.setText("")         
+        self.Number_of_Turns.setText("")
 
-        self.User_Defined_Measurement_Parameters = QtGui.QComboBox(Main.MappingWidget)
+
+        
+        
+        self.Define_Coordinates_Button = QtGui.QPushButton() #creation du bouton
+        self.Define_Coordinates_Button.setGeometry(300, 10, 80, 32) #taille et position (X,Y,Xsize,Ysize)
+        self.Define_Coordinates_Button.setText( "Define\nCoordinates")  
+        QtCore.QObject.connect(self.Define_Coordinates_Button, QtCore.SIGNAL("clicked()"),self.Define_Coordinates)
+        
+        self.User_Defined_Measurement_Parameters = QtGui.QComboBox()
         self.User_Defined_Measurement_Parameters.setGeometry(300, 40, 80, 20)
         self.User_Defined_Measurement_Parameters.addItems(self.List_of_User_Defined_Mapping_Parameters)
 
-        self.Add_User_Defined_Measurement_Parameters_Button = QtGui.QPushButton(Main.MappingWidget) #creation du bouton
+        self.Add_User_Defined_Measurement_Parameters_Button = QtGui.QPushButton() #creation du bouton
         self.Add_User_Defined_Measurement_Parameters_Button.setGeometry(300, 60, 15, 14) #taille et position (X,Y,Xsize,Ysize)
         self.Add_User_Defined_Measurement_Parameters_Button.setText("+")  
         
-        self.Remove_User_Defined_Measurement_Parameters_Button = QtGui.QPushButton(Main.MappingWidget) #creation du bouton
+        self.Remove_User_Defined_Measurement_Parameters_Button = QtGui.QPushButton() #creation du bouton
         self.Remove_User_Defined_Measurement_Parameters_Button.setGeometry(330, 60, 15, 14) #taille et position (X,Y,Xsize,Ysize)
         self.Remove_User_Defined_Measurement_Parameters_Button.setText("-")          
 
-        self.Set_User_Defined_Measurement_Parameters_to_Zero_Button = QtGui.QPushButton(Main.MappingWidget) #creation du bouton
+        self.Set_User_Defined_Measurement_Parameters_to_Zero_Button = QtGui.QPushButton() #creation du bouton
         self.Set_User_Defined_Measurement_Parameters_to_Zero_Button.setGeometry(365, 60, 15, 14) #taille et position (X,Y,Xsize,Ysize)
         self.Set_User_Defined_Measurement_Parameters_to_Zero_Button.setText("0")  
 
+ 
+        inputhbox=QtGui.QHBoxLayout()
+        
+        Grid=QtGui.QGridLayout()
+        Grid.addWidget(self.X_Start_Label,1,0)
+        Grid.addWidget(self.X_Start_Field,1,1)
+        Grid.addWidget(self.X_End_Label,1,2)
+        Grid.addWidget(self.X_End_Field,1,3)
+        Grid.addWidget(self.X_Step_Label,1,4)
+        Grid.addWidget(self.X_Step_Field,1,5)        
+        Grid.addWidget(self.X_Number_Label,1,6)
+        Grid.addWidget(self.X_Number_Field,1,7) 
+        Grid.addWidget(self.Y_Start_Label,2,0)
+        Grid.addWidget(self.Y_Start_Field,2,1)
+        Grid.addWidget(self.Y_End_Label,2,2)
+        Grid.addWidget(self.Y_End_Field,2,3)
+        Grid.addWidget(self.Y_Step_Label,2,4)
+        Grid.addWidget(self.Y_Step_Field,2,5)        
+        Grid.addWidget(self.Y_Number_Label,2,6)
+        Grid.addWidget(self.Y_Number_Field,2,7)
+        Grid.addWidget(self.Number_of_Turns_Label,3,0)
+        Grid.addWidget(self.Number_of_Turns,3,1)        
+        Grid.addWidget(self.Define_Coordinates_Button,1,8,1,3)
+        Grid.addWidget(self.User_Defined_Measurement_Parameters,2,8,1,3)
+        Grid.addWidget(self.Add_User_Defined_Measurement_Parameters_Button,3,8)
+        Grid.addWidget(self.Remove_User_Defined_Measurement_Parameters_Button,3,9)
+        Grid.addWidget(self.Set_User_Defined_Measurement_Parameters_to_Zero_Button,3,10)
+        inputhbox.addLayout(Grid)
+        
+        GlobalVBox.addLayout(inputhbox)
+        
         QtCore.QObject.connect(self.User_Defined_Measurement_Parameters, QtCore.SIGNAL('activated(int)'),self.Load_User_Defined_Parameters)
         QtCore.QObject.connect(self.Add_User_Defined_Measurement_Parameters_Button, QtCore.SIGNAL("clicked()"),self.Add_User_Defined_Measurement_Parameters)
         QtCore.QObject.connect(self.Remove_User_Defined_Measurement_Parameters_Button, QtCore.SIGNAL("clicked()"),self.Remove_User_Defined_Measurement_Parameters)
         QtCore.QObject.connect(self.Set_User_Defined_Measurement_Parameters_to_Zero_Button, QtCore.SIGNAL("clicked()"),self.Set_User_Defined_Measurement_Parameters_to_Zero)
 
 
-        
-        self.Define_Coordinates_Button = QtGui.QPushButton(Main.MappingWidget) #creation du bouton
-        self.Define_Coordinates_Button.setGeometry(300, 10, 80, 32) #taille et position (X,Y,Xsize,Ysize)
-        self.Define_Coordinates_Button.setText( "Define\nCoordinates")  
-        QtCore.QObject.connect(self.Define_Coordinates_Button, QtCore.SIGNAL("clicked()"),self.Define_Coordinates)
-        
-        self.Thresholding_Mode_Label = QtGui.QLabel(Main.MappingWidget)
-        self.Thresholding_Mode_Label.setGeometry(5, 125, 55, 20)
-        self.Thresholding_Mode_Label.setText( "Threshold :")
-        self.Thresholding_Mode = QtGui.QComboBox(Main.MappingWidget)
-        self.Thresholding_Mode.setGeometry(60, 125, 80, 20)
-        self.Thresholding_Mode.addItems(["None","pA","pC","% of Max","% of success","Combo","Events"])
-        self.Thresholding_Mode_Input_Field = QtGui.QLineEdit(Main.MappingWidget) #Lines, columns, Parent
-        self.Thresholding_Mode_Input_Field.setGeometry(145, 125, 50, 20)
-        self.Thresholding_Mode_Input_Field.setText("0")   
-        
 
-        self.averagebyposition = QtGui.QPushButton(Main.MappingWidget) #creation du bouton
+
+        self.averagebyposition = QtGui.QPushButton() #creation du bouton
         self.averagebyposition.setGeometry(120,70,100,25) #taille et position (X,Y,Xsize,Ysize)
         self.averagebyposition.setText( "Mapping Average")        
         QtCore.QObject.connect(self.averagebyposition, QtCore.SIGNAL("clicked()"),self.Average_Traces_By_Position)
              
-        self.measurebyposition = QtGui.QPushButton(Main.MappingWidget) #creation du bouton
+        self.measurebyposition = QtGui.QPushButton() #creation du bouton
         self.measurebyposition.setGeometry(10,70,100,25) #taille et position (X,Y,Xsize,Ysize)
         self.measurebyposition.setText( "Mapping Measure")        
         QtCore.QObject.connect(self.measurebyposition, QtCore.SIGNAL("clicked()"),self.Measure_Traces_By_Position)
         
-        self.Objective = QtGui.QComboBox(Main.MappingWidget)
+        hbox4=QtGui.QHBoxLayout()
+        hbox4.addWidget(self.averagebyposition)
+        hbox4.addWidget(self.measurebyposition)
+        GlobalVBox.addLayout(hbox4)
+
+        self.mappingprogress = QtGui.QProgressBar()
+        self.mappingprogress.setGeometry(230, 73, 100, 20)
+#        hbox4bis=QtGui.QHBoxLayout()
+#        hbox4bis.addWidget(self.mappingprogress)
+#        GlobalVBox.addLayout(hbox4bis)
+        
+        self.Thresholding_Mode_Label = QtGui.QLabel()
+        self.Thresholding_Mode_Label.setGeometry(5, 125, 55, 20)
+        self.Thresholding_Mode_Label.setText( "Threshold :")
+        self.Thresholding_Mode = QtGui.QComboBox()
+        self.Thresholding_Mode.setGeometry(60, 125, 80, 20)
+        self.Thresholding_Mode.addItems(["None","pA","pC","% of Max","% of success","Combo","Events"])
+        self.Thresholding_Mode_Input_Field = QtGui.QLineEdit() #Lines, columns, Parent
+        self.Thresholding_Mode_Input_Field.setGeometry(145, 125, 50, 20)
+        self.Thresholding_Mode_Input_Field.setText("0")   
+        
+        hbox5=QtGui.QHBoxLayout()
+        hbox5.addWidget(self.Thresholding_Mode_Label)
+        hbox5.addWidget(self.Thresholding_Mode)
+        hbox5.addWidget(self.Thresholding_Mode_Input_Field)        
+        GlobalVBox.addLayout(hbox5)
+
+
+        self.X_Neuron_Label = QtGui.QLabel()
+        self.X_Neuron_Label.setGeometry(100, 95, 8, 20)
+        self.X_Neuron_Label.setText( "X:")         
+        self.X_Neuron = QtGui.QLineEdit() #Lines, columns, Parent
+        self.X_Neuron.setGeometry(110,95,40,20)
+        self.X_Neuron.setText("0")
+
+
+        self.Y_Neuron_Label = QtGui.QLabel()
+        self.Y_Neuron_Label.setGeometry(160, 95, 8, 20)
+        self.Y_Neuron_Label.setText( "Y:")   
+        self.Y_Neuron = QtGui.QLineEdit() #Lines, columns, Parent
+        self.Y_Neuron.setGeometry(170,95,40,20)
+        self.Y_Neuron.setText("0")
+        
+        
+        self.SweepPosition_Label = QtGui.QLabel()
+        self.SweepPosition_Label.setGeometry(5, 95, 80, 20)
+        self.SweepPosition_Label.setText( "Sweep #")   
+        self.SweepPosition = QtGui.QLineEdit() #Lines, columns, Parent
+        self.SweepPosition.setGeometry(50, 95, 45, 20)
+        #self.SweepPosition.setText("")
+        self.SweepPosition.setValidator(QtGui.QIntValidator(0, 100,self.SweepPosition))
+
+        QtCore.QObject.connect(self.SweepPosition, QtCore.SIGNAL("editingFinished ()"),self.Find_Corresponding_Coordinates)        
+
+        self.onepositionaverage = QtGui.QPushButton() #creation du bouton
+        self.onepositionaverage.setGeometry(210,95,100,25) #taille et position (X,Y,Xsize,Ysize)
+        self.onepositionaverage.setText( "Local Average")        
+        QtCore.QObject.connect(self.onepositionaverage, QtCore.SIGNAL("clicked()"),self.One_Stim_Average)   
+
+
+        hbox5bis=QtGui.QHBoxLayout()
+        hbox5bis.addWidget(self.X_Neuron_Label)
+        hbox5bis.addWidget(self.X_Neuron)
+        hbox5bis.addWidget(self.Y_Neuron_Label)
+        hbox5bis.addWidget(self.Y_Neuron)
+        hbox5bis.addWidget(self.SweepPosition_Label)
+        hbox5bis.addWidget(self.SweepPosition)
+        hbox5bis.addWidget(self.onepositionaverage)
+        GlobalVBox.addLayout(hbox5bis)
+
+
+
+        self.Objective = QtGui.QComboBox()
         self.Objective.setGeometry(5, 145, 50, 25)
         self.Objective.addItems(["PM","CCD"])
         
-        self.Select_Experiment_Picture_Button = QtGui.QPushButton(Main.MappingWidget)
+        self.Select_Experiment_Picture_Button = QtGui.QPushButton()
         self.Select_Experiment_Picture_Button.setGeometry(55, 145, 25, 25)
         self.Select_Experiment_Picture_Button.setText( "...")
         QtCore.QObject.connect(self.Select_Experiment_Picture_Button, QtCore.SIGNAL("clicked()"),self.Change_Experiment_Picture)
 
-        self.Stim_Resolution_Label = QtGui.QLabel(Main.MappingWidget)
+        self.Stim_Resolution_Label = QtGui.QLabel()
         self.Stim_Resolution_Label.setGeometry(85, 135, 60, 40)
         self.Stim_Resolution_Label.setText( "Pixel Size")   
-        self.Stim_Resolution = QtGui.QLineEdit(Main.MappingWidget) #Lines, columns, Parent
+        self.Stim_Resolution = QtGui.QLineEdit() #Lines, columns, Parent
         self.Stim_Resolution.setGeometry(140,145,30,20)
         self.Stim_Resolution.setText("1") 
 
-        self.Transparency_Label = QtGui.QLabel(Main.MappingWidget)
+        self.Transparency_Label = QtGui.QLabel()
         self.Transparency_Label.setGeometry(170, 145, 50, 20)
         self.Transparency_Label.setText( "Opacity")   
-        self.Transparency = QtGui.QLineEdit(Main.MappingWidget) #Lines, columns, Parent
+        self.Transparency = QtGui.QLineEdit() #Lines, columns, Parent
         self.Transparency.setGeometry(210,145,30,20)
         self.Transparency.setText("0.75") 
         QtCore.QObject.connect(self.Transparency, QtCore.SIGNAL('editingFinished ()'),self.Correction_of_Abnormal_Parameters_for_Mapping)
 
-        self.Activate_Map = QtGui.QPushButton(Main.MappingWidget) #creation du bouton
+        self.Activate_Map = QtGui.QPushButton() #creation du bouton
         self.Activate_Map.setGeometry(240, 145, 60, 25) #taille et position (X,Y,Xsize,Ysize)
         self.Activate_Map.setText( "Do Map")  
         QtCore.QObject.connect(self.Activate_Map, QtCore.SIGNAL("clicked()"),self.Display_Mapping_Results)
 
-        self.ColorMap = QtGui.QComboBox(Main.MappingWidget)
+        self.ColorMap = QtGui.QComboBox()
         self.ColorMap.setGeometry(300, 145, 60, 25)
         self.ColorMap.addItems(['hot',
                                 'autumn',
@@ -303,54 +380,85 @@ class Mapping(object):
                                 'Reds',
                                 'Grays']) #others at http://www.loria.fr/~rougier/teaching/matplotlib/
         
+        hbox6=QtGui.QHBoxLayout()
+        hbox6.addWidget(self.Objective)
+        hbox6.addWidget(self.Select_Experiment_Picture_Button)
+        hbox6.addWidget(self.Stim_Resolution_Label)  
+        hbox6.addWidget(self.Transparency_Label)
+        hbox6.addWidget(self.Transparency)
+        hbox6.addWidget(self.Activate_Map)           
+        hbox6.addWidget(self.ColorMap)          
+        GlobalVBox.addLayout(hbox6)
+
+
 
         self.Charge='None'
         self.Amplitude='Color'
        
 
-        self.Amplitudes_Display_Mode_Label = QtGui.QLabel(Main.MappingWidget)
+        self.Amplitudes_Display_Mode_Label = QtGui.QLabel()
         self.Amplitudes_Display_Mode_Label.setGeometry(5, 170, 100, 25)
         self.Amplitudes_Display_Mode_Label.setText( "Show Amplitude as")
-        self.Amplitudes_Display_Mode = QtGui.QComboBox(Main.MappingWidget)
+        self.Amplitudes_Display_Mode = QtGui.QComboBox()
         self.Amplitudes_Display_Mode.setGeometry(100, 170, 60, 25)
         self.Amplitudes_Display_Mode.addItems(["Color","Surface","None"])           
-        self.Charges_Display_Mode_Label = QtGui.QLabel(Main.MappingWidget)
+        self.Charges_Display_Mode_Label = QtGui.QLabel()
         self.Charges_Display_Mode_Label.setGeometry(165, 170, 100, 25)
         self.Charges_Display_Mode_Label.setText( "and Charge as")   
-        self.Charges_Display_Mode = QtGui.QComboBox(Main.MappingWidget)
+        self.Charges_Display_Mode = QtGui.QComboBox()
         self.Charges_Display_Mode.setGeometry(240, 170, 60, 25)
         self.Charges_Display_Mode.addItems(["Color","Surface","None"])
         self.Charges_Display_Mode.setCurrentIndex(2)
-        
-        
-        self.X_Offset_Label = QtGui.QLabel(Main.MappingWidget)
-        self.X_Offset_Label.setGeometry(5, 250, 50, 20)
-        self.X_Offset_Label.setText( "X Offset")   
-        self.X_Offset = QtGui.QLineEdit(Main.MappingWidget) #Lines, columns, Parent
-        self.X_Offset.setGeometry(50,250,50,20)
-        self.X_Offset.setText("0") 
-        
-        self.Y_Offset_Label = QtGui.QLabel(Main.MappingWidget)
-        self.Y_Offset_Label.setGeometry(105, 250, 50, 20)
-        self.Y_Offset_Label.setText( "Y Offset")   
-        self.Y_Offset = QtGui.QLineEdit(Main.MappingWidget) #Lines, columns, Parent
-        self.Y_Offset.setGeometry(150,250,50,20)
-        self.Y_Offset.setText("0")         
 
+        hbox7=QtGui.QHBoxLayout()
+        hbox7.addWidget(self.Amplitudes_Display_Mode_Label)
+        hbox7.addWidget(self.Amplitudes_Display_Mode)
+        hbox7.addWidget(self.Charges_Display_Mode_Label)  
+        hbox7.addWidget(self.Charges_Display_Mode)  
+        GlobalVBox.addLayout(hbox7)
 
-        self.Manual_Min_Label = QtGui.QLabel(Main.MappingWidget)
+        self.Manual_Min_Label = QtGui.QLabel()
         self.Manual_Min_Label.setGeometry(10, 200, 80, 20)
         self.Manual_Min_Label.setText( "Manual Min")   
-        self.Manual_Min_Field = QtGui.QLineEdit(Main.MappingWidget) #Lines, columns, Parent
+        self.Manual_Min_Field = QtGui.QLineEdit() #Lines, columns, Parent
         self.Manual_Min_Field.setGeometry(100,200,80,20)
         self.Manual_Min_Field.setText("")   
 
-        self.Manual_Max_Label = QtGui.QLabel(Main.MappingWidget)
+        self.Manual_Max_Label = QtGui.QLabel()
         self.Manual_Max_Label.setGeometry(210, 200, 80, 20)
         self.Manual_Max_Label.setText( "Manual Max")   
-        self.Manual_Max_Field = QtGui.QLineEdit(Main.MappingWidget) #Lines, columns, Parent
+        self.Manual_Max_Field = QtGui.QLineEdit() #Lines, columns, Parent
         self.Manual_Max_Field.setGeometry(300,200,80,20)
-        self.Manual_Max_Field.setText("")   
+        self.Manual_Max_Field.setText("")  
+        
+        hbox8=QtGui.QHBoxLayout()
+        hbox8.addWidget(self.Manual_Min_Label)
+        hbox8.addWidget(self.Manual_Min_Field)
+        hbox8.addWidget(self.Manual_Max_Label)  
+        hbox8.addWidget(self.Manual_Max_Field)  
+        GlobalVBox.addLayout(hbox8)
+        
+        self.X_Offset_Label = QtGui.QLabel()
+        self.X_Offset_Label.setGeometry(5, 250, 50, 20)
+        self.X_Offset_Label.setText( "X Offset")   
+        self.X_Offset = QtGui.QLineEdit() #Lines, columns, Parent
+        self.X_Offset.setGeometry(50,250,50,20)
+        self.X_Offset.setText("0") 
+        
+        self.Y_Offset_Label = QtGui.QLabel()
+        self.Y_Offset_Label.setGeometry(105, 250, 50, 20)
+        self.Y_Offset_Label.setText( "Y Offset")   
+        self.Y_Offset = QtGui.QLineEdit() #Lines, columns, Parent
+        self.Y_Offset.setGeometry(150,250,50,20)
+        self.Y_Offset.setText("0")         
+
+        hbox9=QtGui.QHBoxLayout()
+        hbox9.addWidget(self.X_Offset_Label)
+        hbox9.addWidget(self.X_Offset)
+        hbox9.addWidget(self.Y_Offset_Label)  
+        hbox9.addWidget(self.Y_Offset)  
+        GlobalVBox.addLayout(hbox9)
+ 
 
 
         #TODO : Fix Image saving or remove
@@ -452,8 +560,6 @@ class Mapping(object):
         #TODO : The 4 followinf function are like their source in Analysis. Those function should be pooled together
         #Index is the position corresponding to the wanted name
         index=self.User_Defined_Measurement_Parameters.findText(name)
-        print index
-        print self.User_Defined_Measurement_Parameters
         if index != -1 :
             print "index", index
             self.User_Defined_Measurement_Parameters.setCurrentIndex(index)
@@ -495,7 +601,7 @@ class Mapping(object):
 
         self.Mapping_Preferences.append(templist)
                 
-        self.Load_User_Defined_Parameters(0)
+        self.Load_User_Defined_Parameters(len(self.User_Defined_Measurement_Parameters)-1)
         
         
     def Remove_User_Defined_Measurement_Parameters(self):
@@ -687,10 +793,10 @@ class Mapping(object):
         """
         
         self.Map_tools_Widget = QtGui.QWidget()#self.popupDialog)
-        self.Map_tools_Widget.setFixedSize(300,120) #definit la taille minimale du Widget (largeur, hauteur)          
+        self.Map_tools_Widget.setFixedSize(400,120) #definit la taille minimale du Widget (largeur, hauteur)          
 
         MapWidget = QtGui.QWidget(self.Map_tools_Widget)
-        MapWidget.setGeometry(0,0,300,120)
+        MapWidget.setGeometry(0,0,400,120)
         
         self.Vertical_Lines_Button = QtGui.QPushButton(MapWidget) #creation du bouton
         self.Vertical_Lines_Button.setGeometry(10,10,80,80) #taille et position (X,Y,Xsize,Ysize)
@@ -707,9 +813,13 @@ class Mapping(object):
         self.UserDefined_Button = QtGui.QPushButton(MapWidget) #creation du bouton
         self.UserDefined_Button.setGeometry(210,10,80,80) #taille et position (X,Y,Xsize,Ysize)
         self.UserDefined_Button.setText("User Defined")
-        #self.UserDefined_Button.setIcon(QtGui.QIcon(Main.Script_Path+"/Lines.png"))
-        #self.Horizontal_Lines_Button.setIconSize(QtCore.QSize(70, 70))
         QtCore.QObject.connect(self.UserDefined_Button, QtCore.SIGNAL("clicked()"),self.Define_Non_Grid_Positions)
+
+        self.GridGenerator_Button = QtGui.QPushButton(MapWidget) #creation du bouton
+        self.GridGenerator_Button.setGeometry(310,10,80,80) #taille et position (X,Y,Xsize,Ysize)
+        self.GridGenerator_Button.setText("AutoFill Grid")
+        QtCore.QObject.connect(self.GridGenerator_Button, QtCore.SIGNAL("clicked()"),self.AutoFill_Grid)
+
         
         for i in [self.X_Start_Field,
                   self.X_End_Field,
@@ -849,6 +959,29 @@ class Mapping(object):
                 StartY must be < EndY
                 """)
                 msgBox.exec_()      
+
+    def AutoFill_Grid(self):
+        
+        Xe=int(self.X_End_Field.text())
+        Xs=int(self.X_Start_Field.text())
+        Xn=int(self.X_Number_Field.text())
+        N=int(self.Number_of_Turns.text())
+        Ye=int(self.Y_End_Field.text())
+        Ys=int(self.Y_Start_Field.text())
+        Yn=int(self.Y_Number_Field.text())
+
+        self.X_Step_Field.setText(str((Xe-Xs)/Xn))#(Xn*N*Yn)))
+        self.Y_Step_Field.setText(str((Ye-Ys)/Xn))#(Yn*N*Xn)))
+        
+        L=Yn*Xn*N
+        print 'expected number of sweep is ', L
+        print 'actual number is', len(Requete.Analogsignal_ids)
+        
+        if L != len(Requete.Analogsignal_ids):
+            raise IOError('The number of recordings do not match your mapping plan')
+        
+        
+        
 
     def Set_Coordinates_in_Tag_Variable(self):
         
@@ -1004,9 +1137,9 @@ class Mapping(object):
             for i in self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]:
                 Requete.tag["Selection"][self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]]=1 #Keys = ids , Values = Sweepnumber
 
-            Main.mappingprogress.setMinimum(0)
-            Main.mappingprogress.setMaximum(len(self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary)-1)
-            Main.mappingprogress.setValue(counter)
+            self.mappingprogress.setMinimum(0)
+            self.mappingprogress.setMaximum(len(self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary)-1)
+            self.mappingprogress.setValue(counter)
  
             MA1,MA2,MA3,MC1,MC2,MC3,current_averaged_trace,current_List_of_Ids = Analysis.Measure_on_Average(Rendering=False)
             try:
@@ -1140,9 +1273,9 @@ class Mapping(object):
                 number_of_sweep_at_this_position+=1
                 
 
-            Main.mappingprogress.setMinimum(0)
-            Main.mappingprogress.setMaximum(len(self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary)-1)
-            Main.mappingprogress.setValue(counter)
+            self.mappingprogress.setMinimum(0)
+            self.mappingprogress.setMaximum(len(self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary)-1)
+            self.mappingprogress.setValue(counter)
 
             if self.Thresholding_Mode.currentIndex() == 6:
                 self.Types_of_Events_to_Measure = 'Positive'

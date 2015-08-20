@@ -754,8 +754,7 @@ class Main(QtGui.QWidget,object):#
         self.progress = QtGui.QProgressBar(self.NavigationWidget)
         self.progress.setGeometry(50, 170, 150, 23)
         
-        self.mappingprogress = QtGui.QProgressBar(self.MappingWidget)
-        self.mappingprogress.setGeometry(230, 73, 100, 20)
+
 
       
         #Connexion des boutons de navigation avec leur signal
