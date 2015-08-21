@@ -16,7 +16,7 @@ from math import sqrt
 #TODO : Add a tool to pool some coordinates together when they are close
 #       Add a way to gray the mapping areas where no stim was made (!= No response)
 #       Add a way to see both inhibition and excitation
-#       Add User Input for Userdefined coordinates
+#       Add Load File option for user input coordinates
 
 class Mapping(object):
     """
@@ -323,7 +323,7 @@ class Mapping(object):
         #self.SweepPosition.setText("")
         self.SweepPosition.setValidator(QtGui.QIntValidator(0, 100,self.SweepPosition))
 
-        QtCore.QObject.connect(self.SweepPosition, QtCore.SIGNAL("editingFinished ()"),self.Find_Corresponding_Coordinates)        
+        QtCore.QObject.connect(self.SweepPosition, QtCore.SIGNAL("editingFinished()"),self.Find_Corresponding_Coordinates)        
 
         self.onepositionaverage = QtGui.QPushButton() #creation du bouton
         self.onepositionaverage.setGeometry(210,95,100,25) #taille et position (X,Y,Xsize,Ysize)
@@ -662,13 +662,18 @@ class Mapping(object):
         #Load_Coordinate_Widget.setFixedSize(400,120) #definit la taille minimale du Widget (largeur, hauteur)          
 
         MapWidget = QtGui.QGridLayout(self.Load_Coordinate_Widget)
-        
         MapWidget.addWidget(QtGui.QLabel('X Coordinates'),0,0)
         MapWidget.addWidget(QtGui.QLabel('Y Coordinates'),1,0)
-        MapWidget.addWidget(QtGui.QLineEdit('X Coordinates'),0,1)        
-        MapWidget.addWidget(QtGui.QLineEdit('Y Coordinates'),1,1)
+        edita=QtGui.QLineEdit('')
+        editb=QtGui.QLineEdit('')
+        edita.setObjectName("self.Sorted_X_Coordinates")
+        editb.setObjectName("self.Sorted_Y_Coordinates")
+        MapWidget.addWidget(edita,0,1)        
+        MapWidget.addWidget(editb,1,1)
         x=QtGui.QPushButton('...')
         y=QtGui.QPushButton('...')
+        x.setObjectName("self.Sorted_X_Coordinates")
+        y.setObjectName("self.Sorted_Y_Coordinates")
         lista=QtGui.QComboBox()
         lista.setObjectName("self.Sorted_X_Coordinates")
         lista.addItems(Main.ExistingSweeps)
@@ -684,35 +689,49 @@ class Mapping(object):
         QtCore.QObject.connect(y, QtCore.SIGNAL("clicked()"),self.Load_File)
         QtCore.QObject.connect(lista, QtCore.SIGNAL("currentIndexChanged(int)"),self.UpdateCurrent)
         QtCore.QObject.connect(listb, QtCore.SIGNAL("currentIndexChanged(int)"),self.UpdateCurrent)
-
+        QtCore.QObject.connect(edita, QtCore.SIGNAL("editingFinished()"),self.UpdateCurrent)
+        QtCore.QObject.connect(editb, QtCore.SIGNAL("editingFinished()"),self.UpdateCurrent)
+        
         self.Load_Coordinate_Widget.show()
         
 
     def Load_File(self):        
         path = QtGui.QFileDialog()
-        #path.setDirectory(self.Current_Picture_Directory)
         path.setNameFilter("*.txt")
         path.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
         path.setFileMode(QtGui.QFileDialog.ExistingFiles)
         
         if (path.exec_()) :
-            print str(path.selectedFiles()[0])
-            print 'array should be saved '
+            File=str(path.selectedFiles()[0])
+            val=list(numpy.loadtxt(File))
+            name=str(QtCore.QObject().sender().objectName())
+            name=name.replace('self.','')
+            setattr(Mapping,name,val)
                     
         
     def UpdateCurrent(self):
         #TODO : Dirty, but working...
+        #if QtCore.QObject().sender() == QtGui.QComboBox:
         try:
             obj=str(QtCore.QObject().sender().objectName())
         except AttributeError: # when the file doesn't exist yet
             exec(str(QtCore.QObject().sender().objectName())+'=[]')
             obj=str(QtCore.QObject().sender().objectName())
-        val=str(QtCore.QObject().sender().currentText())
-        val=val.replace('Mapping','self')
-        obj=obj.replace('self.','')
-        setattr(Mapping,obj,eval(val))
-
-        
+        if QtCore.QObject().sender().sender().__class__.__name__ == 'QComboBox':
+            val=str(QtCore.QObject().sender().currentText())
+            val=val.replace('Mapping','self')
+            obj=obj.replace('self.','')
+            setattr(Mapping,obj,eval(val))            
+        elif QtCore.QObject().sender().__class__.__name__ == 'QLineEdit':
+            val=str(QtCore.QObject().sender().text())
+            val=val.replace('Mapping','self')
+            obj=obj.replace('self.','')
+            if val =='': #should be replaced by a if exist
+                return
+            else:
+                setattr(Mapping,obj,eval(val))
+        else:
+            return
         
     def Autofill_Coordinates_Values_from_Tag_Field(self):
         
@@ -833,10 +852,11 @@ class Mapping(object):
         #self.Sorted_Y_Coordinates=numpy.random.randint(0,100,len(Requete.Analogsignal_ids))
         #self.Sorted_X_Coordinates=numpy.random.randint(0,100,len(Requete.Analogsignal_ids))
         self.Scanning_Direction_Mode = 'UserDefined'   
-
-        self.Window=SpreadSheet(Source=[self.Sorted_X_Coordinates,self.Sorted_Y_Coordinates],Rendering=True,MustBeClosed=True)
-        
-        QtCore.QObject.connect(self.Window, QtCore.SIGNAL('destroyed()'),self.UpdateDictafterWidgetClosure)        
+        try:
+            self.Window=SpreadSheet(Source=[self.Sorted_X_Coordinates,self.Sorted_Y_Coordinates],Rendering=True,MustBeClosed=True)
+            QtCore.QObject.connect(self.Window, QtCore.SIGNAL('destroyed()'),self.UpdateDictafterWidgetClosure)        
+        except AttributeError:
+            self.Load_Coordinates()
 
 
     def UpdateDictafterWidgetClosure(self):

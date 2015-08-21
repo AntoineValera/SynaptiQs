@@ -845,7 +845,9 @@ class Infos(object):
 
                 
     def Data_Browser(self,VAR=0,STR=0):
-
+        #TODO : Explain VAR=0, STR=0
+        #       Add a silent mode where lists are updated but not shown
+        #       Add a fork function returning a list matching specific criterions
 
         self.DataBrowser=QtGui.QWidget()
          
