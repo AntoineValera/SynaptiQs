@@ -13,6 +13,10 @@ from scipy import stats
 from math import pow
 from math import sqrt
 
+#TODO : Add a tool to pool some coordinates together when they are close
+#       Add a way to gray the mapping areas where no stim was made (!= No response)
+#       Add a way to see both inhibition and excitation
+#       Add User Input for Userdefined coordinates
 
 class Mapping(object):
     """
@@ -264,14 +268,16 @@ class Mapping(object):
         self.measurebyposition.setGeometry(10,70,100,25) #taille et position (X,Y,Xsize,Ysize)
         self.measurebyposition.setText( "Mapping Measure")        
         QtCore.QObject.connect(self.measurebyposition, QtCore.SIGNAL("clicked()"),self.Measure_Traces_By_Position)
+       
+        self.mappingprogress = QtGui.QProgressBar()
+        self.mappingprogress.setGeometry(230, 73, 100, 20)
         
         hbox4=QtGui.QHBoxLayout()
         hbox4.addWidget(self.averagebyposition)
         hbox4.addWidget(self.measurebyposition)
+        hbox4.addWidget(self.mappingprogress)
         GlobalVBox.addLayout(hbox4)
 
-        self.mappingprogress = QtGui.QProgressBar()
-        self.mappingprogress.setGeometry(230, 73, 100, 20)
 #        hbox4bis=QtGui.QHBoxLayout()
 #        hbox4bis.addWidget(self.mappingprogress)
 #        GlobalVBox.addLayout(hbox4bis)
@@ -645,7 +651,68 @@ class Mapping(object):
         parameters.write(saving)       
         parameters.close()        
 
+    def Load_Coordinates(self):
+       
+        self.List1=range(180)
+        self.List2=range(180)
+        
+        
+        Infos.Actualize()
+        self.Load_Coordinate_Widget = QtGui.QWidget()#self.popupDialog)
+        #Load_Coordinate_Widget.setFixedSize(400,120) #definit la taille minimale du Widget (largeur, hauteur)          
 
+        MapWidget = QtGui.QGridLayout(self.Load_Coordinate_Widget)
+        
+        MapWidget.addWidget(QtGui.QLabel('X Coordinates'),0,0)
+        MapWidget.addWidget(QtGui.QLabel('Y Coordinates'),1,0)
+        MapWidget.addWidget(QtGui.QLineEdit('X Coordinates'),0,1)        
+        MapWidget.addWidget(QtGui.QLineEdit('Y Coordinates'),1,1)
+        x=QtGui.QPushButton('...')
+        y=QtGui.QPushButton('...')
+        lista=QtGui.QComboBox()
+        lista.setObjectName("self.Sorted_X_Coordinates")
+        lista.addItems(Main.ExistingSweeps)
+        listb=QtGui.QComboBox()
+        listb.addItems(Main.ExistingSweeps)
+        listb.setObjectName("self.Sorted_Y_Coordinates")
+        MapWidget.addWidget(lista,0,2)        
+        MapWidget.addWidget(listb,1,2)         
+        MapWidget.addWidget(x,0,3)        
+        MapWidget.addWidget(y,1,3)  
+        
+        QtCore.QObject.connect(x, QtCore.SIGNAL("clicked()"),self.Load_File)
+        QtCore.QObject.connect(y, QtCore.SIGNAL("clicked()"),self.Load_File)
+        QtCore.QObject.connect(lista, QtCore.SIGNAL("currentIndexChanged(int)"),self.UpdateCurrent)
+        QtCore.QObject.connect(listb, QtCore.SIGNAL("currentIndexChanged(int)"),self.UpdateCurrent)
+
+        self.Load_Coordinate_Widget.show()
+        
+
+    def Load_File(self):        
+        path = QtGui.QFileDialog()
+        #path.setDirectory(self.Current_Picture_Directory)
+        path.setNameFilter("*.txt")
+        path.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
+        path.setFileMode(QtGui.QFileDialog.ExistingFiles)
+        
+        if (path.exec_()) :
+            print str(path.selectedFiles()[0])
+            print 'array should be saved '
+                    
+        
+    def UpdateCurrent(self):
+        #TODO : Dirty, but working...
+        try:
+            obj=str(QtCore.QObject().sender().objectName())
+        except AttributeError: # when the file doesn't exist yet
+            exec(str(QtCore.QObject().sender().objectName())+'=[]')
+            obj=str(QtCore.QObject().sender().objectName())
+        val=str(QtCore.QObject().sender().currentText())
+        val=val.replace('Mapping','self')
+        obj=obj.replace('self.','')
+        setattr(Mapping,obj,eval(val))
+
+        
         
     def Autofill_Coordinates_Values_from_Tag_Field(self):
         
@@ -763,8 +830,8 @@ class Mapping(object):
     def Define_Non_Grid_Positions(self):
 
         # TODO : Find a way to Input Data, and implement repeats
-        self.Sorted_Y_Coordinates=numpy.random.randint(0,100,len(Requete.Analogsignal_ids))
-        self.Sorted_X_Coordinates=numpy.random.randint(0,100,len(Requete.Analogsignal_ids))
+        #self.Sorted_Y_Coordinates=numpy.random.randint(0,100,len(Requete.Analogsignal_ids))
+        #self.Sorted_X_Coordinates=numpy.random.randint(0,100,len(Requete.Analogsignal_ids))
         self.Scanning_Direction_Mode = 'UserDefined'   
 
         self.Window=SpreadSheet(Source=[self.Sorted_X_Coordinates,self.Sorted_Y_Coordinates],Rendering=True,MustBeClosed=True)

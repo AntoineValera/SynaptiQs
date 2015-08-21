@@ -198,6 +198,7 @@ class Main(QtGui.QWidget,object):#
         self.Plugins_Menu = QtGui.QMenu("Plugins")
         self.About_Menu = QtGui.QMenu("About")
         self.Options_Menu = QtGui.QMenu("Options")
+        self.Mapping_Options_Menu = QtGui.QMenu("Mapping Options")
 
         self.File_Menu.addAction("Show Main Figure",self.Show_Main_Figure,"CTRL+S")
         self.File_Menu.addAction("Navigator",Infos.Navigator)
@@ -211,6 +212,8 @@ class Main(QtGui.QWidget,object):#
         self.File_Menu.addAction("start OpenElectrophy",Infos.Start_OE,"CTRL+O")
         self.File_Menu.addAction("Exit",QtCore.QCoreApplication.instance().quit,"CTRL+Q")
         
+        self.Mapping_Options_Menu.addAction("Load Mapping Coordinate File",Mapping.Load_Coordinates)
+        self.Mapping_Options_Menu.addAction("Mapping on Negative currents",self.Update_Menu_Options)
         
 
         self.About_Menu.addAction("Help",Infos.Help,'CTRL+H')
@@ -223,7 +226,6 @@ class Main(QtGui.QWidget,object):#
    
         #self.Options_Menu.addAction("Fast Mode",self.Update_Menu_Options,'CTRL+F').setCheckable(True) OBSOLETE
         #self.Options_Menu.addAction("Sort Block by File Name (not working yet)",self.Update_Menu_Options,'CTRL+B').setCheckable(True)
-        self.Options_Menu.addAction("Mapping on Negative currents",self.Update_Menu_Options)
         self.Options_Menu.addAction("Select Saving Directory",self.Saving_Directory)
         self.Options_Menu.addAction("Fitting Tools",Fitting.Helper)
         self.Options_Menu.addAction("Histogram Manager",Histogram.Manager)
@@ -232,6 +234,7 @@ class Main(QtGui.QWidget,object):#
         self.MainWindow.menuBar().addMenu(self.File_Menu)
         self.MainWindow.menuBar().addMenu(self.Plugins_Menu)
         self.MainWindow.menuBar().addMenu(self.Options_Menu)
+        self.MainWindow.menuBar().addMenu(self.Mapping_Options_Menu)
         self.MainWindow.menuBar().addMenu(self.About_Menu)
         
 
