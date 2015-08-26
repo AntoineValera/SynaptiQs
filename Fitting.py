@@ -58,7 +58,16 @@ class Fitting(object):
         self.display_range=[0.,1.,-1.,1.] 
         self.MinGuess=[None]*10
         self.MaxGuess=[None]*10 
-
+    def _all(self,All=False):
+        List=[]
+        i=self.__name__
+        for j in dir(eval(i)):
+            if All==False and j[:2] == '__':
+                pass
+            else:
+                List.append(i+'.'+j)
+        for i in List:
+            print i
            
     def line_init(self,x): 
         p=[1.0,0.]

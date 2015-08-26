@@ -35,7 +35,16 @@ class Analysis(object):
     """
     def __init__(self):
         self.__name__="Analysis"
- 
+    def _all(self,All=False):
+        List=[]
+        i=self.__name__
+        for j in dir(eval(i)):
+            if All==False and j[:2] == '__':
+                pass
+            else:
+                List.append(i+'.'+j)
+        for i in List:
+            print i 
     def Remove_a_Leak(self,Signal):#,Leak_Removing_Interval_Start=0,Leak_Removing_Interval_End=-1):
         #SealTestStart=2500
         #SealTestStop=3600
@@ -60,7 +69,7 @@ class Analysis(object):
         return Signal
 
     
-    def Measure_on_Average(self,List_of_Ids=None,Measure_All_from_Baseline1=False,Display_Superimposed_Traces=False,Rendering=True,Position=(None,None),Origin=None,All_from_Zero=False):
+    def Measure_on_Average(self,List_of_Ids=None,Measure_All_from_Baseline1=False,Display_Superimposed_Traces=False,Rendering=True,Position=(None,None),Origin=None,All_from_Zero=False,ProgressDisplay=True):
         
         """
         This function measure the average trace of a given list of Analogsignal ids (default is Requete.Analogsignal_ids tagged traces)
@@ -94,9 +103,10 @@ class Analysis(object):
         self.List_of_Averaged_Sweeps=[]
 
         for i in range(len(List_of_Ids)):
-            Main.progress.setMinimum(0)
-            Main.progress.setMaximum(len(List_of_Ids)-1)
-            Main.progress.setValue(i)
+            if ProgressDisplay==True:
+                Main.progress.setMinimum(0)
+                Main.progress.setMaximum(len(List_of_Ids)-1)
+                Main.progress.setValue(i)
             if Main.SQLTabWidget.currentIndex() == 2: # if Local file only
                 Requete.Current_Sweep_Number=i
             if ((List_of_Ids is Requete.Analogsignal_ids) and (i >= int(Main.From.text())) and (i <= int(Main.To.text())) and (Requete.tag["Selection"][i] == 1)) or (List_of_Ids is not Requete.Analogsignal_ids):

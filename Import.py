@@ -10,6 +10,8 @@ from PyQt4 import QtGui, QtCore
 from matplotlib import numpy
 from sys import maxint
 import re
+from SynaptiQs import *
+
 
 class MyListWidget(QtGui.QListWidget,object):
     dropped = QtCore.pyqtSignal(list)
@@ -17,7 +19,16 @@ class MyListWidget(QtGui.QListWidget,object):
     def __init__(self, type, parent=None):
         super(MyListWidget, self).__init__(parent)
         self.setAcceptDrops(True)
-
+    def _all(self,All=False):
+        List=[]
+        i=self.__name__
+        for j in dir(eval(i)):
+            if All==False and j[:2] == '__':
+                pass
+            else:
+                List.append(i+'.'+j)
+        for i in List:
+            print i
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls:
             event.accept()
@@ -52,7 +63,16 @@ class MyListWidget(QtGui.QListWidget,object):
 
 class MyWindow(QtGui.QWidget,object):
     
-    
+    def _all(self,All=False):
+        List=[]
+        i=self.__name__
+        for j in dir(eval(i)):
+            if All==False and j[:2] == '__':
+                pass
+            else:
+                List.append(i+'.'+j)
+        for i in List:
+            print i    
     def __init__(self, parent=None):
         self.__name__="Import"
 
@@ -177,7 +197,6 @@ class MyWindow(QtGui.QWidget,object):
             #print tree
             #print '#############'
             b=igorpy.load(Source)
-            
             for i in b:
                 if isinstance(i, igorpy.Wave):
                     Waves[str(i.name)]=i.data
@@ -235,6 +254,7 @@ class MyWindow(QtGui.QWidget,object):
                 #if isinstance(Array, dict):
                 Filter,ok = QtGui.QInputDialog.getText(Main.FilteringWidget, 'To filter names, add text here', 
                 "",QtGui.QLineEdit.Normal,"RecordA")
+                
                 Filter=str(Filter) 
                 templist1=[]
                 templist2=[]
@@ -252,6 +272,7 @@ class MyWindow(QtGui.QWidget,object):
                         Main.LoadedList.append(i)
                         
                         if "RecordA" in i:
+                            
                             shortname=i[i.index('dA')+2:]
                             shortname=shortname.zfill(4)
                             i2="RecordA"+shortname
@@ -303,11 +324,11 @@ class MyWindow(QtGui.QWidget,object):
                 Main.AnalysisWidget.setEnabled(True)
                 Main.NavigationWidget.setEnabled(True)
                 Main.MappingWidget.setEnabled(True)
-                
+                print Navigate.ArrayList
                 self.Update_Navigate()
                 Requete.Add_Dictionnary_Arrays()
                 Infos.Actualize()
-
+                
                 #QtGui.QListWidgetItem(filePath+" added as self."+filePath.split("/")[-1][:-4], self.listWidgetFiles)
                 QtGui.QListWidgetItem(filePath+" opened", self.listWidgetFiles)
                  
@@ -376,29 +397,45 @@ class MyWindow(QtGui.QWidget,object):
             <p>No data match your filter paramterers
             Caution, Filtering is case-sensitive
             """)
-            msgBox.exec_()            
+            msgBox.exec_()  
+            return
         Requete.url=None
         Requete.Current_Signal=RecordA0
+        
         
         #if Navigate.VarList.has_key("sampling_rate") == True:
         #    Navigate.VarList["sampling_rate"]=Navigate.VarList["sampling_rate"]*1000.
         #    Navigate.VarList["SampleInterval"]=Navigate.VarList["sampling_rate"]
-            
-        if self.FileType == "Neuromatic":#Navigate.VarList.has_key("SampleInterval") == True:
-            Requete.timescale=(Navigate.VarList["SampleInterval"])*numpy.array(range(len(RecordA0)))
-            Requete.Analogsignal_sampling_rate=list([1000./Navigate.VarList["SampleInterval"]]*len(Navigate.ArrayList))
-        elif self.FileType=="Synaptics":#Navigate.VarList.has_key("sampling_rate") == True:
-            Requete.timescale=(1./Navigate.VarList["sampling_rate"])*numpy.array(range(len(RecordA0)))
-            Requete.Analogsignal_sampling_rate=list([1000.*Navigate.VarList["sampling_rate"]]*len(Navigate.ArrayList))
-        elif self.FileType=="WinWCP":#Navigate.VarList.has_key("sampling_rate") == True:
-            Requete.timescale=(1000./Navigate.VarList["sampling_rate"])*numpy.array(range(len(RecordA0)))
-            Requete.Analogsignal_sampling_rate=list([Navigate.VarList["sampling_rate"]]*len(Navigate.ArrayList))
-        else:
+        try:    
+            if self.FileType == "Neuromatic":#Navigate.VarList.has_key("SampleInterval") == True:
+                Requete.timescale=(Navigate.VarList["SampleInterval"])*numpy.array(range(len(RecordA0)))
+                Requete.Analogsignal_sampling_rate=list([1000./Navigate.VarList["SampleInterval"]]*len(Navigate.ArrayList))
+            elif self.FileType=="Synaptics":#Navigate.VarList.has_key("sampling_rate") == True:
+                Requete.timescale=(1./Navigate.VarList["sampling_rate"])*numpy.array(range(len(RecordA0)))
+                Requete.Analogsignal_sampling_rate=list([1000.*Navigate.VarList["sampling_rate"]]*len(Navigate.ArrayList))
+            elif self.FileType=="WinWCP":#Navigate.VarList.has_key("sampling_rate") == True:
+                Requete.timescale=(1000./Navigate.VarList["sampling_rate"])*numpy.array(range(len(RecordA0)))
+                Requete.Analogsignal_sampling_rate=list([Navigate.VarList["sampling_rate"]]*len(Navigate.ArrayList))
+        except KeyError:
+            val, ok = QtGui.QInputDialog.getText(self,'Sampling rate not found', 
+                'Please enter sampling rate')
+            val=float(val)                
+            Navigate.VarList["SampleInterval"] = val
+            Requete.timescale = val*numpy.array(range(len(RecordA0)))
+            Requete.Analogsignal_sampling_rate=list([len(Requete.Current_Signal)]*len(Navigate.ArrayList)) 
+            msgBox = QtGui.QMessageBox()
+            msgBox.setText(
+            """
+            <b>NeuroMatic Import Error</b>
+            <p>Sampling rate not found, and set to %s
+            """ %val)
+            msgBox.exec_()        
+        #else:
             # TODO : Add manual SR input
-            print "filtype not identified, Auto sampling rate ignored"
-            Navigate.VarList["SampleInterval"] = 1.
-            Requete.timescale = 1.*numpy.array(range(len(RecordA0)))
-            Requete.Analogsignal_sampling_rate=list([len(Requete.Current_Signal)]*len(Navigate.ArrayList))
+            #print "filtype not identified, Auto sampling rate ignored"
+            #Navigate.VarList["SampleInterval"] = 1.
+            #Requete.timescale = 1.*numpy.array(range(len(RecordA0)))
+            #Requete.Analogsignal_sampling_rate=list([len(Requete.Current_Signal)]*len(Navigate.ArrayList))
 
         
         Requete.Shortest_Sweep_Length=(Requete.timescale[-1]+(Requete.timescale[1]-Requete.timescale[0]))/1000. #in s
@@ -431,9 +468,19 @@ class MyWindow(QtGui.QWidget,object):
         Requete.Spiketrain_t_start=list([None]*len(Navigate.ArrayList))
         Requete.Spiketrain_Neuid=list([None]*len(Navigate.ArrayList))  
 
+        for i in [Mapping.X_Start_Field,
+                  Mapping.X_End_Field,
+                  Mapping.X_Step_Field,
+                  Mapping.Y_Start_Field,
+                  Mapping.Y_End_Field,
+                  Mapping.Y_Step_Field]:
+                i.setEnabled(True)
+        Mapping.Scanning_Direction_Mode = None
+        
         
         Main.To.setText(str(len(Requete.Analogsignal_ids)-1))
         Navigate.Check_From_To()
         Navigate.Display_First_Trace()
+
 
                 

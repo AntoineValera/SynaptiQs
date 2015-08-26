@@ -93,7 +93,16 @@ class Plugins(object):
                     
             else:
                 print plugin,' Not Loaded'
-    
+    def _all(self,All=False):
+        List=[]
+        i=self.__name__
+        for j in dir(eval(i)):
+            if All==False and j[:2] == '__':
+                pass
+            else:
+                List.append(i+'.'+j)
+        for i in List:
+            print i    
     def _Info(self,name):
         print 'This are the avaible methods in Plugins.%s Module : ' % name
         List=[method for method in dir(eval('Plugins.'+name)) if callable(getattr(eval('Plugins.'+name), method))]

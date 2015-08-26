@@ -12,18 +12,19 @@ from matplotlib import pyplot,numpy,image
 from scipy import stats
 from math import pow
 from math import sqrt
+import weakref
 
 #TODO : Add a tool to pool some coordinates together when they are close
 #       Add a way to gray the mapping areas where no stim was made (!= No response)
 #       Add a way to see both inhibition and excitation
-#       Add Load File option for user input coordinates
+#       Find a way to define the number of repeat with user defined coordinates
 
 class Mapping(object):
     """
     C'est l'ensemble des fonctions qui concernent le mapping
     """
     def __init__(self):
-        self.__name__="Mapping"        
+        self.__name__="Mapping" 
         self.Current_Picture_Directory=os.getenv("HOME")
         self.Reset_Mapping_Variables()
         self.Display_Red=True
@@ -35,6 +36,17 @@ class Mapping(object):
         self.DB_Picture=False
         self.XPositions=numpy.array([None]*10)
         self.YPositions=numpy.array([None]*10)
+        
+    def _all(self,All=False):
+        List=[]
+        i=self.__name__
+        for j in dir(eval(i)):
+            if All==False and j[:2] == '__':
+                pass
+            else:
+                List.append(i+'.'+j)
+        for i in List:
+            print i
 
     def Reset_Mapping_Variables(self):        
         for variable_to_delete in ['self.Sorted_X_and_Y_Coordinates',
@@ -710,8 +722,7 @@ class Mapping(object):
                     
         
     def UpdateCurrent(self):
-        #TODO : Dirty, but working...
-        #if QtCore.QObject().sender() == QtGui.QComboBox:
+
         try:
             obj=str(QtCore.QObject().sender().objectName())
         except AttributeError: # when the file doesn't exist yet
@@ -1059,6 +1070,15 @@ class Mapping(object):
 
     def AutoFill_Grid(self):
         
+        if self.X_Start_Field.text() == '' or self.X_End_Field.text() == '':
+            self.X_Start_Field.setText('-100')
+            self.X_End_Field.setText('100')
+        if self.Y_Start_Field.text() == '' or self.Y_End_Field.text() == '':
+            self.Y_Start_Field.setText('-100')
+            self.Y_End_Field.setText('100')
+        if self.Number_of_Turns.text() == '':    
+            self.Number_of_Turns.setText('1') 
+            
         Xe=int(self.X_End_Field.text())
         Xs=int(self.X_Start_Field.text())
         Xn=int(self.X_Number_Field.text())-1 #because if there are 6 points on a line, there are 5 intervals
@@ -1068,7 +1088,7 @@ class Mapping(object):
         Yn=int(self.Y_Number_Field.text())-1 #because if there are 6 points on a line, there are 5 intervals
 
         self.X_Step_Field.setText(str((Xe-Xs)/abs(Xn)))#(Xn*N*Yn)))
-        self.Y_Step_Field.setText(str((Ye-Ys)/abs(Xn)))#(Yn*N*Xn)))
+        self.Y_Step_Field.setText(str((Ye-Ys)/abs(Yn)))#(Yn*N*Xn)))
         
         L=(Yn+1)*(Xn+1)*N
         print 'expected number of sweep is ', L
@@ -1240,21 +1260,19 @@ class Mapping(object):
             self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary : {id:sweep#}
             self.Initially_Excluded_AnalogSignal_Ids : {sweep#:id} #It's a blacklist
         """        
-        
 
         abort=self.Create_Dictionnaries()        
-        
+        AllC1values=[]
+        AllA1values=[]
         if abort == True:
             return
-            
-            
-            
+
         counter=0
         #On fait une moyenne par position
 
         for keys in self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary:
             time.sleep(0.1)
-            Navigate.UnTag_All_Traces()
+            Navigate.UnTag_All_Traces(ProgressDisplay=False)
             for i in self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]:
                 Requete.tag["Selection"][self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]]=1 #Keys = ids , Values = Sweepnumber
 
@@ -1262,13 +1280,15 @@ class Mapping(object):
             self.mappingprogress.setMaximum(len(self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary)-1)
             self.mappingprogress.setValue(counter)
  
-            MA1,MA2,MA3,MC1,MC2,MC3,current_averaged_trace,current_List_of_Ids = Analysis.Measure_on_Average(Rendering=False)
+            MA1,MA2,MA3,MC1,MC2,MC3,current_averaged_trace,current_List_of_Ids = Analysis.Measure_on_Average(Rendering=False,ProgressDisplay=False)
             try:
                 self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary[keys]=MA1 #one point array
                 self.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary[keys]=MC1 #one point array
                 self.Coordinates_and_Corresponding_Amplitudes1_Dictionnary=None
                 self.Coordinates_and_Corresponding_Charges1_Dictionnary=None
                 self.Coordinates_and_Corresponding_Success_Rate_Dictionnary[keys]=None
+                AllC1values.append(MC1)
+                AllA1values.append(MA1)
                 counter+=1
             except TypeError:
                 msgBox = QtGui.QMessageBox()
@@ -1282,10 +1302,23 @@ class Mapping(object):
                 counter+=1
 
         
-        Navigate.Tag_All_Traces()
+        Navigate.Tag_All_Traces(ProgressDisplay=False)
         for i in self.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
             Requete.tag["Selection"][i]=0
-            
+        
+        # TODO: if the mapping contains more theoretical points than real point, ther eis a value error here
+        # this should be raised somewhere to warn the user
+#        if self.Analysis_mode=="Analysis.Amplitudes_1":
+#            self.Manual_Min_Field.setText(str(numpy.nanmin(AllA1values)))
+#            self.Manual_Max_Field.setText(str(numpy.nanmax(AllA1values)))
+#        elif self.Analysis_mode=="Analysis.Charges_1":
+        Min=numpy.nanmin(AllC1values)
+        Max=numpy.nanmax(AllC1values)
+        if self.Types_of_Events_to_Measure == 'Negative':
+            Min*=-1
+            Max*=-1
+        self.Manual_Min_Field.setText(str(Min))
+        self.Manual_Max_Field.setText(str(Max))   
         self.SuccessRate_Ready=False
 
     def Measure_Traces_By_Position(self,Measure_Filtered=False,Silent=False):
@@ -1306,7 +1339,9 @@ class Mapping(object):
         """        
  
 
-        abort=self.Create_Dictionnaries()        
+        abort=self.Create_Dictionnaries()  
+        AllC1values=[]
+        AllA1values=[]
         if abort == True:
             return 
             
@@ -1377,75 +1412,75 @@ class Mapping(object):
             self.mean_threshold=-1
             
         counter=0
-        
-        
+
+        if self.Thresholding_Mode.currentIndex() == 6:
+            self.Types_of_Events_to_Measure = 'Positive'
+            A1,A2,A3,C1,C2,C3=Analysis.Count_Events()
+            for i,j in enumerate(A1):
+                if j==0:
+                   A1[i]=1E-30
+                   C1[i]=1E-30          
+        else:
+            A1,A2,A3,C1,C2,C3 = Analysis.Measure(Rendering=False,Measure_Filtered=Measure_Filtered,Silent=Silent)
+
         #For each point, the measure is done. Average of individual measures is stored in self.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary and self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary
         #array of all measured values is stored in self.Coordinates_and_Corresponding_Amplitudes1_Dictionnary and self.Coordinates_and_Corresponding_Charges1_Dictionnary
         for keys in self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary:
-            time.sleep(0.1)
+            accepted=0
             number_of_sweep_at_this_position=0
-            
-            for i in range(len(Requete.Analogsignal_ids)):
-                Requete.tag["Selection"][i]=int(0)
-                
+            currentIdsofInterest=[]
+
             #Navigate.UnTag_All_Traces()
             for i in self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]:
-                Requete.tag["Selection"][self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]]=1 #Keys = ids , Values = Sweepnumber
+                #i are all Analogsigna id at this point
+                currentIdsofInterest.append(self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i])
                 number_of_sweep_at_this_position+=1
-                
+            for i in A1:#eval(self.Analysis_mode):
+                if self.Types_of_Events_to_Measure == 'Negative' and float(i) <= float(thr):
+                   accepted+=1 
+                elif self.Types_of_Events_to_Measure == 'Positive' and float(i) >= float(thr):
+                   accepted+=1  
+            
+            A1loc=[]
+            C1loc=[]
+            for i in range(len(A1)) :
+                if i in currentIdsofInterest:
+                    A1loc.append(A1[i])
+                    C1loc.append(C1[i])
+                else:
+                    A1loc.append(numpy.nan)
+                    C1loc.append(numpy.nan)                    
+            
+            if Silent == False:
+                print "on a total of "+str(number_of_sweep_at_this_position)+" ,"+str(accepted)+" were accepted"
+            success_rate=float(accepted)/float(number_of_sweep_at_this_position)
 
-            self.mappingprogress.setMinimum(0)
-            self.mappingprogress.setMaximum(len(self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary)-1)
-            self.mappingprogress.setValue(counter)
-
-            if self.Thresholding_Mode.currentIndex() == 6:
-                self.Types_of_Events_to_Measure = 'Positive'
-                A1,A2,A3,C1,C2,C3=Analysis.Count_Events()
-                for i,j in enumerate(A1):
-                    if j==0:
-                       A1[i]=0.001
-                       C1[i]=0.001
-                #self.Types_of_Events_to_Measure = 'Negative'
-                
-            else:
-                if Silent == False:
-                    print "Measure On",len(self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]),"Sweeps"
-                    print "position is ",keys
-                A1,A2,A3,C1,C2,C3 = Analysis.Measure(Rendering=False,Measure_Filtered=Measure_Filtered,Silent=Silent)
-                
-            accepted=0
+            self.Coordinates_and_Corresponding_Amplitudes1_Dictionnary[keys]=A1loc
+            self.Coordinates_and_Corresponding_Charges1_Dictionnary[keys]=C1loc
+            self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary[keys]=stats.nanmean(A1loc)
+            self.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary[keys]=stats.nanmean(C1loc)                
+            self.Coordinates_and_Corresponding_Success_Rate_Dictionnary[keys]=success_rate   
+            AllC1values.append(stats.nanmean(C1loc))  
+            AllA1values.append(stats.nanmean(A1loc)) 
 
             #The % of values over thr is stored self.Coordinates_and_Corresponding_Success_Rate_Dictionnary
-            try:
-                for i in A1:#eval(self.Analysis_mode):
-                    if self.Types_of_Events_to_Measure == 'Negative' and float(i) <= float(thr):
-                       accepted+=1 
-                    elif self.Types_of_Events_to_Measure == 'Positive' and float(i) >= float(thr):
-                       accepted+=1  
-                       
-                if Silent == False:
-                    print "on a total of "+str(number_of_sweep_at_this_position)+" ,"+str(accepted)+" were accepted"
-                success_rate=float(accepted)/float(number_of_sweep_at_this_position)
 
-                self.Coordinates_and_Corresponding_Amplitudes1_Dictionnary[keys]=A1
-                self.Coordinates_and_Corresponding_Charges1_Dictionnary[keys]=C1
-                self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary[keys]=stats.nanmean(A1)
-                self.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary[keys]=stats.nanmean(C1)                
-                self.Coordinates_and_Corresponding_Success_Rate_Dictionnary[keys]=success_rate
-                
-                counter+=1
-            except TypeError:
-                msgBox = QtGui.QMessageBox()
-                msgBox.setText(
-                """
-                <b>Tag Error</b>
-                <p>You must set correctly the Coordinates!
-                """)   
-                msgBox.exec_()
-                counter+=1
+#                
+#                counter+=1
+#            except TypeError:
+#                msgBox = QtGui.QMessageBox()
+#                msgBox.setText(
+#                """
+#                <b>Tag Error</b>
+#                <p>You must set correctly the Coordinates!
+#                """)   
+#                msgBox.exec_()
+#                counter+=1         
+        
+             
 
         #On restaure les tags initiaux
-        Navigate.Tag_All_Traces()
+        Navigate.Tag_All_Traces(ProgressDisplay=False)
         for i in range(len(Requete.Analogsignal_ids)):
             Requete.tag["Selection"][i]=int(1)
         for i in self.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
@@ -1460,7 +1495,23 @@ class Mapping(object):
         else:
             self.Thresholding_Mode.setCurrentIndex(4) 
             self.Thresholding_Mode_Input_Field.setText('0.0')    
-        
+
+        if self.Analysis_mode=="Analysis.Amplitudes_1":
+            Min=numpy.nanmin(AllA1values)
+            Max=numpy.nanmax(AllA1values)
+            if self.Types_of_Events_to_Measure == 'Negative':
+                Min*=-1
+                Max*=-1            
+            self.Manual_Min_Field.setText(str(Min))
+            self.Manual_Max_Field.setText(str(Max))
+        elif self.Analysis_mode=="Analysis.Charges_1":
+            Min=numpy.nanmin(AllC1values)
+            Max=numpy.nanmax(AllC1values)
+            if self.Types_of_Events_to_Measure == 'Negative':
+                Min*=-1
+                Max*=-1
+            self.Manual_Min_Field.setText(str(Min))
+            self.Manual_Max_Field.setText(str(Max))            
         self.SuccessRate_Ready=True
             
     def Correspondance(self):
@@ -1616,7 +1667,7 @@ class Mapping(object):
 
         self.Correction_of_Abnormal_Parameters_for_Mapping()
 
-
+        #TODO : Move to a parameter file
         #Entrer ici les limites du champ CCD [Xupperleft, Yupperleft, Xlowerright,Ylowerright]
         if self.Objective.currentIndex() == 1:
             self.CCDlimit=[-205+int(self.X_Offset.text()),-126+int(self.Y_Offset.text()),186+int(self.X_Offset.text()),175+int(self.Y_Offset.text())]#x=391,y=301
@@ -1895,7 +1946,7 @@ class Mapping(object):
         Depending on if you want to display positive or negative or both currents, you can change
         
         """
-        
+        #TODO : IMPORTANT, This should be improved
         #For display purpose, all value are set to positive, so negative currents are inverted    
         if self.Types_of_Events_to_Measure == 'Negative':
             self.Local_Amplitude*=-1
@@ -1904,7 +1955,7 @@ class Mapping(object):
         elif self.Types_of_Events_to_Measure == 'Positive':
             print 'Your displaying Positive currents only'
  
-
+        #TODO : IMPORTANT,0 should be replaced by Nan
         for i,j in enumerate(self.Local_Amplitude):
             if j<=float(0.0):
                 self.Local_Amplitude[i]=0.0 
@@ -1930,7 +1981,6 @@ class Mapping(object):
         
         
         for param in [[self.Charge,self.Normalized_Surface,self.Local_Surface],[self.Amplitude,self.Normalized_Amplitude,self.Local_Amplitude]]:
-            print param
             if param[0] == 'Color':
                 try:
                     if Bypass_Measuring == False:
@@ -1948,7 +1998,7 @@ class Mapping(object):
                         param[1]=numpy.array(param[2])*500./1.0                       
                 except ZeroDivisionError:
                     print 'error detected'
-                    param[1]=numpy.array([0.0000001]*len(param[2]))                  
+                    param[1]=numpy.array([1E-30]*len(param[2]))                  
                 surface=list(param[1])
                 
                 
@@ -1977,7 +2027,7 @@ class Mapping(object):
             for i in range(0,len(values)):
                 dist = sqrt((x-xv[i])*(x-xv[i])+(y-yv[i])*(y-yv[i])+smoothing*smoothing);
                 #If the point is really close to one of the data points, return the data point value to avoid singularities
-                if(dist<0.0000000001):
+                if(dist<1E-30):
                     return values[i]
                 nominator=nominator+(values[i]/pow(dist,power))
                 denominator=denominator+(1/pow(dist,power))
@@ -2012,7 +2062,7 @@ class Mapping(object):
             power=power
             smoothing=smoothing
             subsampling=subsampling
-
+            
             xv = X
             yv = Y
             values = Val
@@ -2027,7 +2077,7 @@ class Mapping(object):
             XI, YI = numpy.meshgrid(ti, ti)
             #Creating the interpolation function and populating the output matrix value
             ZI = invDist(xv,yv,values,TotRange/subsampling,TotRange/subsampling,power,smoothing,subsampling,minRange)
-
+            
                
             #n = pyplot.normalize(0.0, 100.0)
             if self.Manual_Min_Field.text() != "":

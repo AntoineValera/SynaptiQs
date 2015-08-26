@@ -24,7 +24,16 @@ class Navigate(object):
         self.SpikeTrainEdited = False
         #self.Wired=False #testing... for a second filtering if needed
     
-
+    def _all(self,All=False):
+        List=[]
+        i=self.__name__
+        for j in dir(eval(i)):
+            if All==False and j[:2] == '__':
+                pass
+            else:
+                List.append(i+'.'+j)
+        for i in List:
+            print i
     def Load_This_Sweep_Number(self,Current_Displayed_Sweep_Number=None,SkipUpdate=False):
         """
         This function use the Main.Sweep_Number_Input_Field Value to set a Sweep Number
@@ -369,39 +378,44 @@ class Navigate(object):
             Requete.tag["Selection"][Requete.Current_Sweep_Number]=int(0)
         
  
-    def Tag_All_Traces(self):
+    def Tag_All_Traces(self,ProgressDisplay=True):
         
         for i in range(len(Requete.Analogsignal_ids)):
-            Main.progress.setMinimum(0)
-            Main.progress.setMaximum(len(Requete.Analogsignal_ids)-1)
-            Main.progress.setValue(i)
+            if ProgressDisplay == True:
+                Main.progress.setMinimum(0)
+                Main.progress.setMaximum(len(Requete.Analogsignal_ids)-1)
+                Main.progress.setValue(i)
          
             if i >= int(Main.From.text()) and i <= int(Main.To.text()):
                 Requete.tag["Selection"][i]=int(1)
-            
-        Info_Message="Everything is Tagged"
-        Main.status_text.setText(Info_Message) 
         
-    def UnTag_All_Traces(self):
+        if ProgressDisplay == True:            
+            Info_Message="Everything is Tagged"
+            Main.status_text.setText(Info_Message) 
+        
+    def UnTag_All_Traces(self,ProgressDisplay=True):
         
 
         for i in range(len(Requete.Analogsignal_ids)):
-            Main.progress.setMinimum(0)
-            Main.progress.setMaximum(len(Requete.Analogsignal_ids)-1)
-            Main.progress.setValue(i)
+            if ProgressDisplay == True:
+                Main.progress.setMinimum(0)
+                Main.progress.setMaximum(len(Requete.Analogsignal_ids)-1)
+                Main.progress.setValue(i)
          
             if i >= int(Main.From.text()) and i <= int(Main.To.text()):
                 Requete.tag["Selection"][i]=int(0)
-           
-        Info_Message="Everything is UnTagged"
-        Main.status_text.setText(Info_Message) 
+                
+        if ProgressDisplay == True:           
+            Info_Message="Everything is UnTagged"
+            Main.status_text.setText(Info_Message) 
         
-    def Invert_All_Tag_Values(self):
+    def Invert_All_Tag_Values(self,ProgressDisplay=True):
         
         for i in range(len(Requete.Analogsignal_ids)):
-            Main.progress.setMinimum(0)
-            Main.progress.setMaximum(len(Requete.Analogsignal_ids)-1)
-            Main.progress.setValue(i)
+            if ProgressDisplay == True:
+                Main.progress.setMinimum(0)
+                Main.progress.setMaximum(len(Requete.Analogsignal_ids)-1)
+                Main.progress.setValue(i)
             
             if i >= int(Main.From.text()) and i <= int(Main.To.text()):
 
@@ -409,8 +423,10 @@ class Navigate(object):
                     Requete.tag["Selection"][i]=int(0)
                 elif Requete.tag["Selection"][i]==0:
                     Requete.tag["Selection"][i]=int(1)
-        Info_Message="All Tags are Inverted"
-        Main.status_text.setText(Info_Message) 
+                    
+        if ProgressDisplay == True:
+            Info_Message="All Tags are Inverted"
+            Main.status_text.setText(Info_Message) 
 
            
         

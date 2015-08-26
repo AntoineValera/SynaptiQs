@@ -52,7 +52,16 @@ class MyMplCanvas(FigureCanvasQTAgg):
         QtCore.QObject.connect(Main.ModifySpikes, QtCore.SIGNAL("stateChanged(int)"), self.Add_or_Remove_Spikes)
    
 
-             
+    def _all(self,All=False):
+        List=[]
+        i=self.__name__
+        for j in dir(eval(i)):
+            if All==False and j[:2] == '__':
+                pass
+            else:
+                List.append(i+'.'+j)
+        for i in List:
+            print i             
                     
             
     def format_labels(self):

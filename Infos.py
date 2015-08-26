@@ -19,7 +19,16 @@ class Infos(object):
     """
     def __init__(self):
         self.__name__="Infos"
-    
+    def _all(self,All=False):
+        List=[]
+        i=self.__name__
+        for j in dir(eval(i)):
+            if All==False and j[:2] == '__':
+                pass
+            else:
+                List.append(i+'.'+j)
+        for i in List:
+            print i    
     def Help(self,File_Path=None): 
         """
         This function display a text file
@@ -805,7 +814,7 @@ class Infos(object):
         for i in Plugins.Plugin_List:
             L.append("__builtin__."+i)
         
-        for i in self.Class_List:
+        for i in self.Class_List: #Coming from Main SynaptiQs
             L.append(i.__name__)
         
         LList=[]

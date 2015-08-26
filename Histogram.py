@@ -12,7 +12,16 @@ class Histogram(object):
     def __init__(self):
         self.__name__='Histogram'
  
-        
+    def _all(self,All=False):
+        List=[]
+        i=self.__name__
+        for j in dir(eval(i)):
+            if All==False and j[:2] == '__':
+                pass
+            else:
+                List.append(i+'.'+j)
+        for i in List:
+            print i        
     def Manager(self):
         
         try:

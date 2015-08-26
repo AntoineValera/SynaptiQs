@@ -70,7 +70,17 @@ class MyMplWidget(QtGui.QWidget,QtGui.QLayout):
             QtCore.QObject.connect(Main.Autoscale, QtCore.SIGNAL("stateChanged()"),self.canvas.Update_Figure)
         except:
             pass
-            
+
+    def _all(self,All=False):
+        List=[]
+        i=self.__name__
+        for j in dir(eval(i)):
+            if All==False and j[:2] == '__':
+                pass
+            else:
+                List.append(i+'.'+j)
+        for i in List:
+            print i            
     def Untag_Selected_Sweep(self):
         
         """
