@@ -13,7 +13,7 @@ from scipy import stats
 from math import pow
 from math import sqrt
 import weakref
-
+import scipy
 #TODO : Add a tool to pool some coordinates together when they are close
 #       Add a way to gray the mapping areas where no stim was made (!= No response)
 #       Add a way to see both inhibition and excitation
@@ -36,6 +36,7 @@ class Mapping(object):
         self.DB_Picture=False
         self.XPositions=numpy.array([None]*10)
         self.YPositions=numpy.array([None]*10)
+        self.Max_Valid_Dist=50
         
     def _all(self,All=False):
         List=[]
@@ -92,7 +93,7 @@ class Mapping(object):
             self.Transparency.setText("0.75") 
             self.X_Offset.setText("0") 
             self.Y_Offset.setText("0")                 
-            
+            self.Activate_Map.setEnabled(False)
             if len(Requete.Spiketrain_ids) > 0 or Main.SQLTabWidget.currentIndex() == 2:
                 if numpy.isnan(Requete.Spiketrain_ids[0]) == True:
                     self.Thresholding_Mode.clear()
@@ -381,7 +382,8 @@ class Mapping(object):
 
         self.Activate_Map = QtGui.QPushButton() #creation du bouton
         self.Activate_Map.setGeometry(240, 145, 60, 25) #taille et position (X,Y,Xsize,Ysize)
-        self.Activate_Map.setText( "Do Map")  
+        self.Activate_Map.setText( "Do Map")
+        self.Activate_Map.setEnabled(False)
         QtCore.QObject.connect(self.Activate_Map, QtCore.SIGNAL("clicked()"),self.Display_Mapping_Results)
 
         self.ColorMap = QtGui.QComboBox()
@@ -500,6 +502,30 @@ class Mapping(object):
         #if "Analysis.Amplitudes_1", analyse sur les amplitudes, si "Analysis.Charges_1", analyse sur les charges
         self.Analysis_mode="Analysis.Amplitudes_1"
         self.Update_Display_Parameters()
+        
+
+        
+    def More_Options(self):
+        
+        self.OptionWid=QtGui.QWidget()            
+        hbox=QtGui.QVBoxLayout()
+
+        ListofVar=[self.__name__+'.Max_Valid_Dist',
+                   self.__name__+'.Analysis_mode',
+                   self.__name__+'.Transparency']
+        for i in ListofVar:
+            Option_Label=QtGui.QLabel(i)
+            Option=QtGui.QLineEdit()
+            Option.setObjectName(i)
+            i=i.replace(self.__name__,'self')
+            Option.setText(str(eval(i)))
+            hbox.addWidget(Option_Label)
+            hbox.addWidget(Option) 
+            QtCore.QObject.connect(Option, QtCore.SIGNAL('editingFinished()'),Infos.LineEdited)
+        self.OptionWid.setLayout(hbox)
+        
+                
+        self.OptionWid.show()
         
     def Update_Display_Parameters(self):
         
@@ -663,11 +689,21 @@ class Mapping(object):
         parameters.write(saving)       
         parameters.close()        
 
+
+    def UpdateUsableArrayList(self):
+        FilteredList=[]
+        for i in Main.ExistingSweeps:
+            i=i.replace('Mapping.','self.')
+            if len(eval(i)) == len(Requete.Analogsignal_ids):
+                #if eval(i)
+                FilteredList.append(i) 
+                
+        return FilteredList
+        
     def Load_Coordinates(self):
        
-        self.List1=range(180)
-        self.List2=range(180)
-        
+        #self.List1=range(180)
+        #self.List2=range(180)
         
         Infos.Actualize()
         self.Load_Coordinate_Widget = QtGui.QWidget()#self.popupDialog)
@@ -676,33 +712,36 @@ class Mapping(object):
         MapWidget = QtGui.QGridLayout(self.Load_Coordinate_Widget)
         MapWidget.addWidget(QtGui.QLabel('X Coordinates'),0,0)
         MapWidget.addWidget(QtGui.QLabel('Y Coordinates'),1,0)
-        edita=QtGui.QLineEdit('')
-        editb=QtGui.QLineEdit('')
-        edita.setObjectName("self.Sorted_X_Coordinates")
-        editb.setObjectName("self.Sorted_Y_Coordinates")
-        MapWidget.addWidget(edita,0,1)        
-        MapWidget.addWidget(editb,1,1)
+        self.XArrayInputField=QtGui.QLineEdit('')
+        self.YArrayInputField=QtGui.QLineEdit('')
+        self.XArrayInputField.setObjectName("self.Sorted_X_Coordinates")
+        self.YArrayInputField.setObjectName("self.Sorted_Y_Coordinates")
+        MapWidget.addWidget(self.XArrayInputField,0,1)        
+        MapWidget.addWidget(self.YArrayInputField,1,1)
         x=QtGui.QPushButton('...')
         y=QtGui.QPushButton('...')
         x.setObjectName("self.Sorted_X_Coordinates")
         y.setObjectName("self.Sorted_Y_Coordinates")
-        lista=QtGui.QComboBox()
-        lista.setObjectName("self.Sorted_X_Coordinates")
-        lista.addItems(Main.ExistingSweeps)
-        listb=QtGui.QComboBox()
-        listb.addItems(Main.ExistingSweeps)
-        listb.setObjectName("self.Sorted_Y_Coordinates")
-        MapWidget.addWidget(lista,0,2)        
-        MapWidget.addWidget(listb,1,2)         
+        
+        FilteredList=self.UpdateUsableArrayList()
+         
+        self.ListOfXArrays=QtGui.QComboBox()
+        self.ListOfXArrays.setObjectName("self.Sorted_X_Coordinates")
+        self.ListOfXArrays.addItems(FilteredList)
+        self.ListOfYArrays=QtGui.QComboBox()
+        self.ListOfYArrays.addItems(FilteredList)
+        self.ListOfYArrays.setObjectName("self.Sorted_Y_Coordinates")
+        MapWidget.addWidget(self.ListOfXArrays,0,2)        
+        MapWidget.addWidget(self.ListOfYArrays,1,2)         
         MapWidget.addWidget(x,0,3)        
         MapWidget.addWidget(y,1,3)  
         
         QtCore.QObject.connect(x, QtCore.SIGNAL("clicked()"),self.Load_File)
         QtCore.QObject.connect(y, QtCore.SIGNAL("clicked()"),self.Load_File)
-        QtCore.QObject.connect(lista, QtCore.SIGNAL("currentIndexChanged(int)"),self.UpdateCurrent)
-        QtCore.QObject.connect(listb, QtCore.SIGNAL("currentIndexChanged(int)"),self.UpdateCurrent)
-        QtCore.QObject.connect(edita, QtCore.SIGNAL("editingFinished()"),self.UpdateCurrent)
-        QtCore.QObject.connect(editb, QtCore.SIGNAL("editingFinished()"),self.UpdateCurrent)
+        #QtCore.QObject.connect(self.ListOfXArrays, QtCore.SIGNAL("currentIndexChanged(int)"),self.UpdateCurrent)
+        #QtCore.QObject.connect(self.ListOfYArrays, QtCore.SIGNAL("currentIndexChanged(int)"),self.UpdateCurrent)
+        QtCore.QObject.connect(self.XArrayInputField, QtCore.SIGNAL("editingFinished()"),self.UpdateCurrent)
+        QtCore.QObject.connect(self.YArrayInputField, QtCore.SIGNAL("editingFinished()"),self.UpdateCurrent)
         
         self.Load_Coordinate_Widget.show()
         
@@ -719,20 +758,35 @@ class Mapping(object):
             name=str(QtCore.QObject().sender().objectName())
             name=name.replace('self.','')
             setattr(Mapping,name,val)
+            self.UpdateCurrent()
+            #print str(QtCore.QObject().sender().objectName())
+            
+            #if str(QtCore.QObject().sender().objectName()) == 'self.Sorted_X_Coordinates':
+            #    idx=self.ListOfXArrays.findText('Mapping.'+name)
+            #    self.ListOfXArrays.setCurrentIndex(idx)
+            #elif str(QtCore.QObject().sender().objectName()) == 'self.Sorted_Y_Coordinates':
+            #    idx=self.ListOfXArrays.findText('Mapping.'+name)
+            #    self.ListOfYArrays.setCurrentIndex(idx)
                     
         
     def UpdateCurrent(self):
-
+        
+        FilteredList=self.UpdateUsableArrayList()
+        self.ListOfXArrays.clear()
+        self.ListOfXArrays.addItems(FilteredList)
+        self.ListOfYArrays.clear()
+        self.ListOfYArrays.addItems(FilteredList)        
+        
         try:
             obj=str(QtCore.QObject().sender().objectName())
         except AttributeError: # when the file doesn't exist yet
             exec(str(QtCore.QObject().sender().objectName())+'=[]')
             obj=str(QtCore.QObject().sender().objectName())
-        if QtCore.QObject().sender().sender().__class__.__name__ == 'QComboBox':
+        if QtCore.QObject().sender().sender().__class__.__name__ == 'QFrame':
             val=str(QtCore.QObject().sender().currentText())
             val=val.replace('Mapping','self')
             obj=obj.replace('self.','')
-            setattr(Mapping,obj,eval(val))            
+            setattr(Mapping,obj,eval(val)) 
         elif QtCore.QObject().sender().__class__.__name__ == 'QLineEdit':
             val=str(QtCore.QObject().sender().text())
             val=val.replace('Mapping','self')
@@ -859,11 +913,17 @@ class Mapping(object):
         
     def Define_Non_Grid_Positions(self):
 
-        # TODO : Find a way to Input Data, and implement repeats
-        #self.Sorted_Y_Coordinates=numpy.random.randint(0,100,len(Requete.Analogsignal_ids))
-        #self.Sorted_X_Coordinates=numpy.random.randint(0,100,len(Requete.Analogsignal_ids))
         self.Scanning_Direction_Mode = 'UserDefined'   
+        self.Set_Auto_Coordinates_Visible()        
+        
+        
         try:
+            #Wid=QtGui.QWidget()
+            #self.repeats, ok = QtGui.QInputDialog.getInt(Wid,'Number of pattern repeats', 
+            #    'Enter the number of time your coordinates are repeated',value=1)
+            #self.repeats=int(self.repeats)
+            
+            #if ok:
             self.Window=SpreadSheet(Source=[self.Sorted_X_Coordinates,self.Sorted_Y_Coordinates],Rendering=True,MustBeClosed=True)
             QtCore.QObject.connect(self.Window, QtCore.SIGNAL('destroyed()'),self.UpdateDictafterWidgetClosure)        
         except AttributeError:
@@ -871,14 +931,16 @@ class Mapping(object):
 
 
     def UpdateDictafterWidgetClosure(self):
-        
-        self.Sorted_Y_Coordinates_Full=self.Sorted_Y_Coordinates
-        self.Sorted_X_Coordinates_Full=self.Sorted_X_Coordinates
+        """
+        This function edit the coordiantes list if you manually changed some values
+        """
+        self.Sorted_Y_Coordinates_Full=self.Sorted_Y_Coordinates*int(self.Number_of_Turns.text())
+        self.Sorted_X_Coordinates_Full=self.Sorted_X_Coordinates*int(self.Number_of_Turns.text())
         self.Sorted_X_and_Y_Coordinates=[None]*len(self.Sorted_X_Coordinates)
         for i,j in enumerate(self.Sorted_Y_Coordinates):
             self.Sorted_X_and_Y_Coordinates[i]=(self.Sorted_X_Coordinates[i],j)    
             
-        self.Sorted_X_and_Y_Coordinates_Full=self.Sorted_X_and_Y_Coordinates#*int(self.Number_of_Turns.text())
+        self.Sorted_X_and_Y_Coordinates_Full=self.Sorted_X_and_Y_Coordinates*int(self.Number_of_Turns.text())
         self.Set_Coordinates_in_Tag_Variable()
         
        
@@ -925,7 +987,12 @@ class Mapping(object):
             self.GridGenerator_Button.setGeometry(310,10,80,80) #taille et position (X,Y,Xsize,Ysize)
             self.GridGenerator_Button.setText("AutoFill Grid")
             QtCore.QObject.connect(self.GridGenerator_Button, QtCore.SIGNAL("clicked()"),self.AutoFill_Grid)
-
+  
+            
+        self.Map_tools_Widget.show()  
+        
+     
+    def Set_Auto_Coordinates_Visible(self):        
         #TODO : Add Number of Steps
         for i in [self.X_Start_Field,
                   self.X_End_Field,
@@ -937,14 +1004,9 @@ class Mapping(object):
                 i.setEnabled(False)
             else:
                 i.setEnabled(True)
-              
-          
-            
-        self.Map_tools_Widget.show()  
-        
-     
-        
-           
+                
+                
+                
     def Create_Mapping_Pathway(self):
         
         """
@@ -967,7 +1029,7 @@ class Mapping(object):
         
 
         self.Correction_of_Abnormal_Parameters_for_Mapping()
-
+        
         if QtCore.QObject().sender() ==  self.Vertical_Lines_Button or QtCore.QObject().sender() ==  self.Horizontal_Lines_Button:
             self.Scanning_Direction_Mode = None   
 
@@ -1033,6 +1095,7 @@ class Mapping(object):
             self.Sorted_X_and_Y_Coordinates_Full=self.Sorted_X_and_Y_Coordinates*int(self.Number_of_Turns.text())
 
         try:
+            self.Set_Auto_Coordinates_Visible() 
             self.Sorted_X_Coordinates_Full=self.Sorted_X_Coordinates*int(self.Number_of_Turns.text()) #et on refait la trajectoire autant de fois qu'il y a de tours
             self.Sorted_Y_Coordinates_Full=self.Sorted_Y_Coordinates*int(self.Number_of_Turns.text())
             self.Set_Coordinates_in_Tag_Variable()
@@ -1070,6 +1133,7 @@ class Mapping(object):
 
     def AutoFill_Grid(self):
         
+        
         if self.X_Start_Field.text() == '' or self.X_End_Field.text() == '':
             self.X_Start_Field.setText('-100')
             self.X_End_Field.setText('100')
@@ -1098,6 +1162,7 @@ class Mapping(object):
             raise IOError('The number of recordings do not match your mapping plan')
         else:
             self.Define_Coordinates(Available=[1,2])
+            
             
     def AutoComplete_Missing_Fields(self):
         
@@ -1318,7 +1383,8 @@ class Mapping(object):
             Min*=-1
             Max*=-1
         self.Manual_Min_Field.setText(str(Min))
-        self.Manual_Max_Field.setText(str(Max))   
+        self.Manual_Max_Field.setText(str(Max))
+        self.Activate_Map.setEnabled(True)
         self.SuccessRate_Ready=False
 
     def Measure_Traces_By_Position(self,Measure_Filtered=False,Silent=False):
@@ -1511,7 +1577,8 @@ class Mapping(object):
                 Min*=-1
                 Max*=-1
             self.Manual_Min_Field.setText(str(Min))
-            self.Manual_Max_Field.setText(str(Max))            
+            self.Manual_Max_Field.setText(str(Max))
+        self.Activate_Map.setEnabled(True)            
         self.SuccessRate_Ready=True
             
     def Correspondance(self):
@@ -2055,7 +2122,8 @@ class Mapping(object):
                       subsampling=10.,
                       cmap='gnuplot',
                       Manual_Min_Field=None,
-                      Manual_Max_Field=None):
+                      Manual_Max_Field=None,
+                      Max_Valid_Dist=None):
             
             #TODO : Normalize map if necessary
             pyplot.figure()
@@ -2070,7 +2138,9 @@ class Mapping(object):
             minRange=min(min(xv),min(yv)) #it's the negative value of x-axis AND y-axis
             maxRange=max(max(xv),max(yv))
             TotRange=maxRange-minRange
-            print float(TotRange)/subsampling, 'should be an int'
+            print 'maximal extent is', TotRange
+            print 'point resolution is', subsampling 
+            print float(TotRange)/subsampling, "should be an integer. If it's not, check code"
             
             #Creating the output grid (100x100, in the example)
             ti = numpy.linspace(minRange,maxRange,TotRange/subsampling)
@@ -2078,7 +2148,16 @@ class Mapping(object):
             #Creating the interpolation function and populating the output matrix value
             ZI = invDist(xv,yv,values,TotRange/subsampling,TotRange/subsampling,power,smoothing,subsampling,minRange)
             
-               
+            points=zip(X.ravel(), Y.ravel())
+            refpoints=zip(XI.ravel(), YI.ravel())
+            tree = scipy.spatial.cKDTree(points)
+            z=ZI.ravel()
+            
+            for j,i in enumerate(refpoints):
+                if len(tree.query_ball_point((i[0],i[1]), float(Max_Valid_Dist))) == 0:
+                    z[j]=0.0
+
+   
             #n = pyplot.normalize(0.0, 100.0)
             if self.Manual_Min_Field.text() != "":
                 Min=float(self.Manual_Min_Field.text())
@@ -2105,9 +2184,9 @@ class Mapping(object):
     
 
         if self.Charge=='Surface':
-            SmoothMap(self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:],self.Local_Surface,power=3,smoothing=10,subsampling=5,cmap=cmap)
+            SmoothMap(self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:],self.Local_Surface,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
         else:
-            SmoothMap(self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:],self.Local_Amplitude,power=3,smoothing=10,subsampling=5,cmap=cmap)
+            SmoothMap(self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:],self.Local_Amplitude,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
             
 
         if ColorBar==True:

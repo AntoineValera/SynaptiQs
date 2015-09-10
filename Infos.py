@@ -70,6 +70,11 @@ class Infos(object):
         
         self.HelpWidget.show()
 
+    def LineEdited(self):
+        obj=QtCore.QObject().sender().objectName()
+        obj=obj.split('.')
+        val = str(QtCore.QObject().sender().text())
+        setattr(eval(obj[0]),obj[1],val)
         
     def Retag(self):
         

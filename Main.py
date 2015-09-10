@@ -213,16 +213,18 @@ class Main(QtGui.QWidget,object):#
         self.File_Menu.addAction("Navigator",Infos.Navigator)
         self.File_Menu.addAction("Create db",Infos.Create_DB)
         self.File_Menu.addAction("Edit DB Structure",Requete.Modify_DB_Structure,"CTRL+E")
-        self.File_Menu.addAction("Import Data",Infos.Import_Data,"CTRL+I")
+        self.File_Menu.addAction("Import Data",Infos.Import_Data,"CTRL+L")
 
         self.File_Menu.addAction("Data Browser",Infos.Data_Browser,"CTRL+D")
         self.File_Menu.addAction("SpikeSorting",Infos.SpikeSorting)
         self.File_Menu.addAction("Tree View",Infos.Tree_View,"CTRL+T")
         self.File_Menu.addAction("start OpenElectrophy",Infos.Start_OE,"CTRL+O")
+        self.File_Menu.addAction("IPython Console",self.EmbeddedIpython,"CTRL+I")
         self.File_Menu.addAction("Exit",QtCore.QCoreApplication.instance().quit,"CTRL+Q")
         
         self.Mapping_Options_Menu.addAction("Load Mapping Coordinate File",Mapping.Load_Coordinates)
         self.Mapping_Options_Menu.addAction("Mapping on Negative currents",self.Update_Menu_Options)
+        self.Mapping_Options_Menu.addAction("More Options",Mapping.More_Options)
         
 
         self.About_Menu.addAction("Help",Infos.Help,'CTRL+H')
@@ -742,7 +744,7 @@ class Main(QtGui.QWidget,object):#
 
 #        self.displaying = QtGui.QDockWidget(self.MainWindow)
 #        self.MainWindow.addDockWidget(8, self.displaying) #8 est la position; cf documentation 
-        
+        self.IPythonOpened=False
         self.Show_Main_Figure()
 
 
@@ -1112,56 +1114,68 @@ class Main(QtGui.QWidget,object):#
             if Val == True:
                self.Save_Trace() 
 
-
-
+    def IpythonClosed(self):
+        self.IPythonOpened=False
+        
+        
     def EmbeddedIpython(self):
+        
+        if self.IPythonOpened==False:
+            from IPython.frontend.qt.console.rich_ipython_widget import RichIPythonWidget
+            from IPython.frontend.qt.inprocess import QtInProcessKernelManager
+            from IPython.lib import guisupport
+            
+            self.Shell_Widget = QtGui.QDockWidget()
+            self.MainWindow.addDockWidget(4,self.Shell_Widget) #On attache le Widget au WIdget parent, et on definit sa position
+            self.Shell_Widget.setMinimumSize(640,480)  
+            self.Shell_Widget.setAttribute(QtCore.Qt.WA_DeleteOnClose)
     
-        from IPython.frontend.qt.console.rich_ipython_widget import RichIPythonWidget
-        from IPython.frontend.qt.inprocess import QtInProcessKernelManager
-        from IPython.lib import guisupport
-        
-        self.Shell_Widget = QtGui.QDockWidget()
-        self.MainWindow.addDockWidget(4,self.Shell_Widget) #On attache le Widget au WIdget parent, et on definit sa position
-        self.Shell_Widget.setMinimumSize(640,480)      
-
-        #QtCore.QObject.connect(widget, QtCore.SIGNAL("closeEvent()"), self.closed)
-        #print Main.test.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-
-#        QtCore.QObject.connect(Main.test, QtCore.SIGNAL("close()"), self.closed)
-#        QtCore.QEvent.Close
-        
-        
-        kernel_manager = QtInProcessKernelManager()
-        kernel_manager.start_kernel()
-        kernel = kernel_manager.kernel
-        kernel.gui = 'qt4'
-        
-        kernel_client = kernel_manager.client()
-        kernel_client.start_channels()
-        
-        def stop():
-            kernel_client.stop_channels()
-            kernel_manager.shutdown_kernel()
-            # here you should exit your application with a suitable call
-            sys.exit()
-        
-        widget = RichIPythonWidget()
-        widget.kernel_manager = kernel_manager
-        widget.kernel_client = kernel_client
-        widget.exit_requested.connect(stop)
-        widget.setWindowTitle("IPython shell")
-        widget.setMinimumSize(640,480)
-        widget.setGeometry(0, 20, 640, 500)
-        widget.setParent(self.Shell_Widget)
-        
-        self.Shell_Widget = widget
-        self.Shell_Widget.show()
-        
-
+            QtCore.QObject.connect(self.Shell_Widget, QtCore.SIGNAL('destroyed()'),self.IpythonClosed)            
+           
+  
+            kernel_manager = QtInProcessKernelManager()
+            kernel_manager.start_kernel()
+            kernel = kernel_manager.kernel
+            kernel.gui = 'qt4'
+            
+            kernel_client = kernel_manager.client()
+            kernel_client.start_channels()
+            
+            def stop():
+                kernel_client.stop_channels()
+                kernel_manager.shutdown_kernel()
+                # here you should exit your application with a suitable call
+                sys.exit()
+            
+            widget = RichIPythonWidget()
+            widget.kernel_manager = kernel_manager
+            widget.kernel_client = kernel_client
+            widget.exit_requested.connect(stop)
+            widget.setWindowTitle("IPython shell")
+            widget.setMinimumSize(640,480)
+            widget.setGeometry(0, 20, 640, 500)
+            widget.setParent(self.Shell_Widget)
+            
+            self.Shell_Widget = widget
+            self.Shell_Widget.show()
+            
     
-        self.Shell_Widget.show()        
-     
         
+            self.Shell_Widget.show()        
+            self.IPythonOpened=True
+        else:
+            #self.Shell_Widget.deleteLater()
+            self.Shell_Widget.setVisible(False)
+            #self.Shell_Widget.stop()
+            self.Shell_Widget.hide()
+            self.Shell_Widget.destroy()
+            
+            #self.Shell_Widget.close()
+            self.IPythonOpened=False
+            
+
+        
+       
 #    def Backup_All(self):
 #        
 #        import shelve

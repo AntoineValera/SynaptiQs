@@ -90,7 +90,6 @@ if __name__ == "__main__": #Executé si l'application est en StandAlone
         Main.File_loading() #Chargement des parametres
         Main.Create_Window() #Execute l'initialisation de l'appli
         Plugins=Plugins.Plugins()
-        #Import.MyWindow()
         Import=Import.MyWindow()
         
         setattr(__builtin__,'Plugins',Plugins)
