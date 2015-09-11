@@ -884,12 +884,14 @@ class ModelSpikeList(QAbstractItemModel):
                     c = self.spikesorter.spikeLabels[row]
                     return str(row in self.spikesorter.shuffledSpikeSubset[c])
             else:
+                return None 
         elif role == Qt.DecorationRole :
             if col == 0:
                 return self.icons[self.spikesorter.spikeLabels[row]]
             else:
-                return QVariant()
+                return None
         else :
+            return None
 
     def flags(self, index):
         if not index.isValid():
