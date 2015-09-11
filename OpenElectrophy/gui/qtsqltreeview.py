@@ -326,15 +326,16 @@ class MyModel(QAbstractItemModel):
             
             if  col ==0:
                 #~ return QVariant( '<b>%s</b> : %d'%( item.tablename, item.id) )
-                return QVariant( '%s : %d'%( item.tablename, item.id) )
+                
+                return str( '%s : %d'%( item.tablename, item.id) )
             else :
                 fieldnames = self.showColumns[item.tablename]
                 if col > len(fieldnames):
-                    return QVariant('')
+                    return ''
                 fieldname= fieldnames[col-1]
                 if hasattr(item, fieldname):
                     value = getattr(item, fieldname)
-                    return QVariant( '%s : %s'%( fieldname, str(value)) )
+                    return str( '%s : %s'%( fieldname, str(value)) )
                 else:
                     return None
         
@@ -347,7 +348,7 @@ class MyModel(QAbstractItemModel):
                 
                 return QIcon(':/'+ item.tablename+'.png')
             else:
-                return QVariant()
+                return None
         elif role == 'table_and_id':
             return  item.tablename, item.id
             
@@ -358,7 +359,7 @@ class MyModel(QAbstractItemModel):
             #~ #for drag and drop
             #~ return table+':'+str(id_principal)
         else :
-            return QVariant()
+            return None
 
     #~ def hasChildren ( self, parentIndex) :
         #~ if not parentIndex.isValid():

@@ -94,6 +94,7 @@ class Mapping(object):
             self.X_Offset.setText("0") 
             self.Y_Offset.setText("0")                 
             self.Activate_Map.setEnabled(False)
+            self.Use_Number_of_Turns=True
             if len(Requete.Spiketrain_ids) > 0 or Main.SQLTabWidget.currentIndex() == 2:
                 if numpy.isnan(Requete.Spiketrain_ids[0]) == True:
                     self.Thresholding_Mode.clear()
@@ -511,6 +512,7 @@ class Mapping(object):
         hbox=QtGui.QVBoxLayout()
 
         ListofVar=[self.__name__+'.Max_Valid_Dist',
+                   self.__name__+'.Use_Number_of_Turns',
                    self.__name__+'.Analysis_mode',
                    self.__name__+'.Transparency']
         for i in ListofVar:
@@ -681,7 +683,7 @@ class Mapping(object):
         
     def Save_User_Defined_Parameters(self):
         
-        print "--> Mapping parameters saved"
+        print "-----------> Mapping parameters valid and saved"
         parameters = open(Main.Mapping_Preferences_Path,'w')
         saving =''
         for i in self.Mapping_Preferences:
@@ -827,7 +829,6 @@ class Mapping(object):
             self.X_Step_Field.setText(str(Requete.tag['XSteps'][0]))   
             self.Y_Step_Field.setText(str(Requete.tag['YSteps'][0]))
             
-            
             if int(self.X_Step_Field.text()) > 0:
                 self.X_Start_Field.setText(str(min(List_of_X_Coordinates)))   
                 self.X_End_Field.setText(str(max(List_of_X_Coordinates)))
@@ -934,13 +935,18 @@ class Mapping(object):
         """
         This function edit the coordiantes list if you manually changed some values
         """
-        self.Sorted_Y_Coordinates_Full=self.Sorted_Y_Coordinates*int(self.Number_of_Turns.text())
-        self.Sorted_X_Coordinates_Full=self.Sorted_X_Coordinates*int(self.Number_of_Turns.text())
+        if self.Use_Number_of_Turns == False:
+            Number_of_Turns = 1
+        else:
+            Number_of_Turns=int(self.Number_of_Turns.text())
+            
+        self.Sorted_Y_Coordinates_Full=self.Sorted_Y_Coordinates*Number_of_Turns
+        self.Sorted_X_Coordinates_Full=self.Sorted_X_Coordinates*Number_of_Turns
         self.Sorted_X_and_Y_Coordinates=[None]*len(self.Sorted_X_Coordinates)
         for i,j in enumerate(self.Sorted_Y_Coordinates):
             self.Sorted_X_and_Y_Coordinates[i]=(self.Sorted_X_Coordinates[i],j)    
             
-        self.Sorted_X_and_Y_Coordinates_Full=self.Sorted_X_and_Y_Coordinates*int(self.Number_of_Turns.text())
+        self.Sorted_X_and_Y_Coordinates_Full=self.Sorted_X_and_Y_Coordinates*Number_of_Turns
         self.Set_Coordinates_in_Tag_Variable()
         
        

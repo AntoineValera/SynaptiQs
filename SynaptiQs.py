@@ -15,28 +15,28 @@ from OpenElectrophy import *
 from scipy import *
 
 
-#try:
-#    sip.setapi('QString', 1)
-#    Ipython=True
-#except ValueError:
-#    app = QtGui.QApplication(sys.argv)
-#    msgBox = QtGui.QMessageBox()
-#    msgBox.setText(
-#    """
-#    <b>API Error</b>
-#    <p>API 'QString' has already been set to version 1
-#    <p>Ipython will not work. You can change this option in 
-#    <b>Spyder->Tools-->Preference->External Module->PyQt->API #2</b>
-#    <p>SynaptiQs will now start without Ipython
-#    """)
-#    msgBox.exec_()   
-#    Ipython=False
+try:
+    sip.setapi('QString', 2)
+    Ipython=True
+except ValueError:
+    app = QtGui.QApplication(sys.argv)
+    msgBox = QtGui.QMessageBox()
+    msgBox.setText(
+    """
+    <b>API Error</b>
+    <p>API 'QString' has already been set to version 1
+    <p>Ipython will not work. You can change this option in 
+    <b>Spyder->Tools-->Preference->External Module->PyQt->API #2</b>
+    <p>SynaptiQs will now start without Ipython
+    """)
+    msgBox.exec_()   
+    Ipython=False
     
     
 
 import sys,os,atexit,glob,warnings
 from matplotlib import *
-warnings.filterwarnings("ignore", category=DeprecationWarning) 
+#warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
 
 

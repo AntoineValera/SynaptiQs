@@ -13,7 +13,7 @@ from matplotlib.pyplot import get_cmap
 from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon, Circle
 from matplotlib.widgets import Lasso
-from matplotlib.path import Path as points_inside_poly
+from matplotlib.path import Path
 from matplotlib.cm import get_cmap
 
 from enhancedmatplotlib import SimpleCanvasAndTool,  SimpleCanvas
@@ -541,7 +541,11 @@ class NDViewer(QWidget):
         
     def stopLasso(self, verts):
         #~ print 'stopLasso', self.canvas.widgetlock.locked()
-        self.actualSelection,  = where(points_inside_poly(dot( self.data, self.projection ), verts))
+    
+
+        verts=Path(verts)
+        
+        self.actualSelection,  = where(verts.contains_points(dot( self.data, self.projection )))
         #~ self.canvas.draw()
         self.canvas.widgetlock.release(self.lasso)
         #~ print self.canvas.artists
@@ -557,7 +561,7 @@ class NDViewer(QWidget):
         
         # new contour
         if self.poly is None:
-            self.poly = Polygon( [[event.xdata , event.ydata]] , animated=False , alpha = .3 , color = 'g')
+            self.poly = Polygon( [(event.xdata , event.ydata)] , animated=False , alpha = .3 , color = 'g')
             self.ax.add_patch(self.poly)
             self.line, = self.ax.plot([event.xdata] , [event.ydata] , 
                                     color = 'g',
@@ -568,29 +572,45 @@ class NDViewer(QWidget):
             #~ self.canvas.draw()
             self.redraw()
             return
+            
         
-        
+
         # event near a point
         xy = asarray(self.poly.xy)
         xyt = self.poly.get_transform().transform(xy)
         xt, yt = xyt[:, 0], xyt[:, 1]
+        
+        print '#######'
         d = sqrt((xt-event.x)**2 + (yt-event.y)**2)
         indseq = nonzero(equal(d, amin(d)))[0]
         self._ind = indseq[0]
         if d[self._ind]>=self.epsilon:
             self._ind = None
 
+        self.a=list(numpy.copy(self.poly.xy))
+        for i,j in enumerate(self.a):
+            self.a[i]=tuple(j)
         
         # new point
         if self._ind is None:
-            self.poly.xy = array( list(self.poly.xy) +  [[event.xdata , event.ydata]])
-            self.line.set_xdata( array(list(self.line.get_xdata()) + [ event.xdata]) )
-            self.line.set_ydata( array(list(self.line.get_ydata()) + [ event.ydata]) )
+            b=float(event.xdata)
+            c=float(event.ydata)
+            d=(b,c)
+            e=[d]
+            #self.a=numpy.append(self.a,e)
+            self.a.extend(e)
+            self.line.set_xdata( list(self.line.get_xdata()) + [ event.xdata] )
+            self.line.set_ydata( list(self.line.get_ydata()) + [ event.ydata] )
+            
             #~ self.canvas.draw()
             self.redraw()
-        
-        self.actualSelection, = where(points_inside_poly(dot( self.data, self.projection ), self.poly.xy))
-        self.emit(SIGNAL('selectionChanged'))
+
+        #self.poly.xy=a
+        print self.a, type(self.a)
+        if self.a != None:    
+            test=Path(self.a)
+            self.actualSelection, = where(test.contains_points(dot( self.data, self.projection )))
+            self.emit(SIGNAL('selectionChanged'))
     
     
     def releaseContour(self , event):
@@ -604,11 +624,14 @@ class NDViewer(QWidget):
         x,y = event.xdata, event.ydata
 
         self.poly.xy[self._ind] = x,y
-        self.line.set_data(zip(*self.poly.xy))
+        #self.line.set_data(zip(*self.poly.xy))
         #~ self.canvas.draw()
         self.redraw()
         
-        self.actualSelection, = where(points_inside_poly(dot( self.data, self.projection ), self.poly.xy))
+        #self.poly.xy=list(self.poly.xy)
+        #print self.poly.xy
+        self.poly.xy=Path(self.poly.xy)
+        self.actualSelection, = where(self.poly.xy.contains_points(dot( self.data, self.projection )))
         self.emit(SIGNAL('selectionChanged'))
     
     def redrawSelection(self):

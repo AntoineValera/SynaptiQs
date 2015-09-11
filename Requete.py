@@ -12,7 +12,7 @@ import os
 from PyQt4 import QtCore, QtGui
 from matplotlib import numpy
 from OpenElectrophy import gui,AnalogSignal,SpikeTrain,Session,open_db,sql,sqlalchemy
-
+import time
 
 
 
@@ -180,23 +180,24 @@ class Requete(object):
             self.url is the currently used URL
         
         """
+        
         # Ouverture de la base de données
-        print "////////////////////////////////////////////////////////////////////////////" 
-        print "////////////////////////////////////////////////////////////////////////////" 
-        print "////////////////////////   THIS IS THE REAL REQUEST   //////////////////////" 
+        print '################################################################################' 
+        print '################################################################################'
+        print "########################   THIS IS THE FINAL QUERY   ##########################" 
         Main.Current_or_Average.clear()
         Main.ExistingSweeps=[]
         Main.Current_or_Average.addItems(Main.ExistingSweeps)
         
         if Main.SQLTabWidget.currentIndex() == 0 :
-            print "/////////////// You are using a MySQL DataBase"
+            print "-----------> You are using a MySQL DataBase"
             self.url = 'mysql://'+str(Main.User.text())+':'+str(Main.Password.text())+'@'+str(Main.IPAdress.text())+'/'+str(Main.DBname.text())
             Info_Message="You Are Using a MySQL DataBase with "+self.url+" URL"
             Main.status_text.setText(Info_Message)  
 
 
         if Main.SQLTabWidget.currentIndex() == 1 :
-            print "/////////////// You are using a SQLite DataBase"
+            print "-----------> You are using a SQLite DataBase"
             self.url = "sqlite:///"+str(Main.SQLite_path.text()) 
             Info_Message="You Are Using a SQLite DataBase with "+self.url+" URL"
             Main.status_text.setText(Info_Message)  
@@ -209,7 +210,7 @@ class Requete(object):
 
         
         
-        print "/////////////// used URL is :  ",self.url,"\n\n\n"
+        print "-----------> used URL is :  ",self.url,"\n\n\n"
         
         try :
             
@@ -217,8 +218,8 @@ class Requete(object):
             Main.SpikesWidget.setEnabled(True)
             
             
-            print "/////////////// This is the whole query\n", self.query
-            print "/////////////// End of the Query"
+            print "-----------> This is the whole query command\n", self.query
+            print "-----------> End of the Query"
             
         except:
             try:
@@ -229,8 +230,8 @@ class Requete(object):
                 self.Spiketrain_Neuid = list(numpy.zeros(int(len(self.Block_ids)))*numpy.NaN)
                 Main.SpikesWidget.setEnabled(False)
                 
-                print "/////////////// This is the whole query\n", self.query,"\n\n\n"
-                print "/////////////// End of the Query"
+                print "-----------> This is the whole query command\n", self.query,"\n\n\n"
+                print "-----------> End of the Query"
 
 
             except sqlalchemy.exc.ResourceClosedError:  
@@ -345,7 +346,7 @@ class Requete(object):
         Info_Message="sampling rate =" + str(Initial_Points_by_ms)+"points per ms. The total number of sweeps is "+str(len(self.Analogsignal_ids))
         Main.status_text.setText(Info_Message)          
 
-        print "/////////////// Spiketrains Ids (if exist) are :",self.Spiketrain_ids
+        print "-----------> Spiketrains Ids (if exist) are :",self.Spiketrain_ids
         
         self.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary={}
         for i,j in enumerate(self.Spiketrain_ids):
@@ -517,13 +518,12 @@ class Requete(object):
             
             
     def Request_ComboBoxes_update(self):
-        print "/////////////// NEW DYNAMIC QUERY ////////////////////" 
+        print "############################ NEW DYNAMIC QUERY #################################" 
         # Ouverture de la base de données
         
-        
         if Main.SQLTabWidget.currentIndex() == 0 :
-            print "/////////////// You are using a MySQL DataBase"
-            print "/////////////// MySQL used parameters are: ",Main.DBinf
+            print "-----------> You are using a MySQL DataBase"
+            print "-----------> MySQL used parameters are: ",Main.DBinf
             self.url = 'mysql://'+str(Main.User.text())+':'+str(Main.Password.text())+'@'+str(Main.IPAdress.text())+'/'+str(Main.DBname.text())
             Info_Message="You Are Using a MySQL DataBase with "+self.url+" URL"
             Main.status_text.setText(Info_Message)
@@ -532,7 +532,7 @@ class Requete(object):
         elif Main.SQLTabWidget.currentIndex() == 1 :
             self.url = "sqlite:///"+str(Main.SQLite_path.text()) 
             
-            print "/////////////// You are using SQLite DataBase : ",self.url
+            print "-----------> You are using SQLite DataBase : ",self.url
             Info_Message="You Are Using a SQLite DataBase with "+self.url+" URL"
             Main.status_text.setText(Info_Message) 
             
@@ -545,15 +545,6 @@ class Requete(object):
         self.Global_Meta=open_db( url = self.url)
         self.Global_Session=Session()
             #self.globalApplicationDict = gui.guiutil.globalapplicationdict.GlobalApplicationDict()
-
-#        except sqlalchemy.exc.OperationalError:
-#            Main.error = QtGui.QMessageBox.about(Main, "SQL Error",
-#            """
-#            <b>No Database or Database not responding</b>
-#            <p>Please Select an existing database first or check connexion
-#            """)
-#            #self.Resetfields()
-#            return
 
         # Eléments de la requete    
         
@@ -623,7 +614,6 @@ class Requete(object):
             
             try :
                 exec(self.Arraylist+"self.Block_ids,self.Block_date,channels,ids,self.Analogsignal_name,self.tag,self.Analogsignal_channel,samprate,self.Block_fileOrigin,self.Block_Info,self.Analogsignal_signal_shape = sql(self.query)")
-                print self.query
             except sqlalchemy.exc.OperationalError:
                 msgBox = QtGui.QMessageBox()
                 msgBox.setText(
@@ -692,8 +682,8 @@ class Requete(object):
         
         
         #La requete
-        print "/////////////// Current dynamic query is;\n",self.query
-        print "/////////////// End of the Dynamic query"                
+        print "-----------> Current dynamic query is;\n",self.query
+        print "-----------> End of the Dynamic query"                
 
 
         self.Comboboxes_Field_Autofill()
@@ -734,6 +724,7 @@ class Requete(object):
             self.Block_fileOrigin=[None]
             
         if Main.Filter_BlockId.currentText()=='None':
+            #TODO :
             #developper un tri par numero de fichier
             #temp=zip(self.Block_fileOrigin,self.Block_ids)
             
@@ -1117,18 +1108,18 @@ class Requete(object):
             Main.DBinf = [str(Main.User.text()),str(Main.Password.text()),str(Main.DBname.text()),str(Main.IPAdress.text())]
             
             #Then the whole Userpref.txt file is saved
-            print "############ Saving Parameters in Userpref.txt ################"
+            #print "############ Saving Parameters in Userpref.txt ################"
             
             parameters = open(Main.path,'w')
             saving = ''
             for i in Main.param_inf:
-                print "--> ",i, " saved"
+                #print "--> ",i, " saved"
                 saving=saving+str(i)+"\n"
                 
                         
             parameters.write(saving)       
             parameters.close()
-            print "############ Userpref.txt saved ################"
+            print "-----------> Userpref.txt saved"
             
             
             
@@ -1161,7 +1152,7 @@ class Requete(object):
         except (IndexError,TypeError):
             self.Current_Spike_Times=[]
             self.Amplitude_At_Spike_Time=[]
-            print "///////////////No Spiketrains in this segment"
+            print "!!!!!  INFO  !!!!! No Spiketrains in this segment"
 
     
     def Save_Tags_To_Db(self):

@@ -53,7 +53,9 @@ class Main(QtGui.QWidget,object):#
         self.Analysis_Preferences_Path=self.userpath+"/.SynaptiQs/Core/Analysis_Pref.txt"
         self.Mapping_Preferences_Path=self.userpath+"/.SynaptiQs/Core/Mapping_Pref.txt"
         if os.path.isfile(self.path) == True: #Si le fichier Userpref existe:
-            print "/////////////// Userpref.txt Loaded correctly"
+            print "########### SynaptiQs Started ############"
+            print "-----------> Loading Preference Files"
+            print "-----------> Userpref.txt Loaded correctly"
             parameters = open(self.path) #On ouvre
             self.user_parameters=parameters.readlines() #on lit
             if len(self.user_parameters) != 40: #S'il Ny a pas 10 lignes, on etend le fichier à 30 lignes
@@ -155,7 +157,7 @@ class Main(QtGui.QWidget,object):#
         #Then, we open the Analysis_Pref.txt file, which contains user defined parameters for measurments 
         try:
 
-            print "/////////////// Analysis_Pref.txt Loaded correctly"
+            print "-----------> Analysis_Pref.txt Loaded correctly"
             parameters = open(self.Analysis_Preferences_Path)
             Analysis_Preferences=parameters.readlines() #on lit
             self.Analysis_Preferences=['']*len(Analysis_Preferences)

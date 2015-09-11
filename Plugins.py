@@ -23,8 +23,6 @@ class Plugins(object):
     """
     
     def __init__(self):
-  
-        print 'PLUGINS INITIATED'
         self.__name__="Plugins"
 
         newpath = str(Main.userpath)+"/.SynaptiQs/"
@@ -92,7 +90,7 @@ class Plugins(object):
                     
                     
             else:
-                print plugin,' Not Loaded'
+                print plugin,' was not Loaded'
     def _all(self,All=False):
         List=[]
         i=self.__name__
@@ -148,7 +146,7 @@ class Plugins(object):
         """
         This function actualize the Plugin Menu
         """
-        print 'PLUGINS RELOADED'
+        print '-----------> Plugins were Reloaded'
         self.Plugin_List=[]
         
 

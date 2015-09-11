@@ -12,21 +12,12 @@ import scipy
 from OpenElectrophy import AnalogSignal,SpikeTrain,gui,sql
 from matplotlib import pyplot,numpy
 
+import warnings
+warnings.filterwarnings("ignore")
 
-print "reloaded now"
+#TODO :
+#Remove_a_Leak still contains some manual parameters
 
-
-
-"""
-
-
-WARNING
-
-Remove_a_Leak still contains some manual parameters
-
-
-
-"""
 
 class Analysis(object):
 
@@ -893,7 +884,7 @@ class Analysis(object):
         
     def Save_User_Defined_Parameters(self):
         
-        print "--> user parameters saved"
+        print "-----------> user parameters valid and saved"
         parameters = open(Main.Analysis_Preferences_Path,'w')
         saving =''
         for i in Main.Analysis_Preferences:

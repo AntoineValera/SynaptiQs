@@ -8,7 +8,6 @@ Created on Tue May 21 23:56:10 2013
 import sys
 from matplotlib import *
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-#from matplotlib.backends.backend_tkagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 import time
 from PyQt4 import QtCore, QtGui
@@ -120,7 +119,7 @@ class MyMplCanvas(FigureCanvasQTAgg):
 #            pass
         
     def Return_Coordinates(self,event):
-        print event,event.xdata,event.ydata
+        #print event,event.xdata,event.ydata
         
         if self.already_displayed == False:
         
