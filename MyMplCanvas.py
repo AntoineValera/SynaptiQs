@@ -104,7 +104,6 @@ class MyMplCanvas(FigureCanvasQTAgg):
             
     def Clicked_Object(self,event):
         
-        
         if self.Object_Selection_Mode == 'Coordinates': 
             self.already_displayed = False
             self.mpl_connect('button_press_event', self.Return_Coordinates)
@@ -113,9 +112,7 @@ class MyMplCanvas(FigureCanvasQTAgg):
         elif self.Object_Selection_Mode == 'Trace':
             self.already_clicked = False
             self.mpl_connect('button_press_event', self.Focus_on_Clicked_Sweep)
-            
-#        else:
-#            print 'No widget.canvas.Object_Selection_Mode programmed for this widget'
+
 #            pass
         
     def Return_Coordinates(self,event):
@@ -123,7 +120,7 @@ class MyMplCanvas(FigureCanvasQTAgg):
         
         if self.already_displayed == False:
         
-            correction=1/float(Mapping.Stim_Resolution.text())  #so the clicked coordinate, in microns, select the coordinate in pixels
+            correction=1./float(Mapping.Stim_Resolution.text())  #so the clicked coordinate, in microns, select the coordinate in pixels
             
             x = (event.xdata*correction, event.ydata*correction)
             sys.stdout.flush()
@@ -171,6 +168,9 @@ class MyMplCanvas(FigureCanvasQTAgg):
         x[0] est la position exacte du clic
         closest est le spike le plus proche
         """
+        #TODO : Put Analysis.Use_t_Start in a menu somewhere
+        Analysis.Use_t_Start=False
+        
         def find_nearest_index(array,value):
             return (numpy.abs(array-value)).argmin()
         def find_nearest_value(array,value):
@@ -179,35 +179,53 @@ class MyMplCanvas(FigureCanvasQTAgg):
 
         if Main.ModifySpikes.checkState() == 2:
             xclick = event.xdata
+            
             #self.flush_events()
             q=list(Requete.Current_Spike_Times)
             tstart=Requete.Spiketrain_t_start[0]
             f = SpikeTrain().load(Requete.Spiketrain_ids[Requete.Current_Sweep_Number])
             if event.button==1:
-
-                if xclick+tstart not in q:
-                    q.append(xclick+tstart)
-                    q.sort()
-                    f._spike_times = numpy.array(q)/1000+f.t_start
-                    f.save()
-     
+                if Analysis.Use_t_Start == True:
+                    if xclick+tstart not in q:
+                        q.append(xclick+tstart)
+                        q.sort()
+                        f._spike_times = numpy.array(q)/1000.+f.t_start
+                        f.save()
+                else:
+                    if xclick not in q:
+                        q.append(xclick)
+                        q.sort()
+                        f._spike_times = numpy.array(q)/1000.
+                        f.save()     
             
             if event.button==3:
-                #self.flush_events()
-                if len(q) == 0:
-                    print "can't remove spike, the list is empty"
-                    return
-                ind=find_nearest_index(q,xclick)
-
-                q.pop(ind)
-                f._spike_times = numpy.array(q)/1000+f.t_start
-                f.save()                
-
-
-            Requete.Current_Spike_Times=(f._spike_times-f.t_start)*1000
+                if Analysis.Use_t_Start == True:
+                    if len(q) == 0:
+                        print "can't remove spike, the list is empty"
+                        return
+                    ind=find_nearest_index(q,xclick)
+    
+                    q.pop(ind)
+                    f._spike_times = numpy.array(q)/1000.+f.t_start
+                    f.save()  
+                    
+                else:
+                    if len(q) == 0:
+                        print "can't remove spike, the list is empty"
+                        return
+                    ind=find_nearest_index(q,xclick)
+    
+                    q.pop(ind)
+                    f._spike_times = numpy.array(q)/1000.
+                    f.save() 
+            
+            if Analysis.Use_t_Start == True: 
+                Requete.Current_Spike_Times=(f._spike_times-f.t_start)*1000
+            else:
+                Requete.Current_Spike_Times=(f._spike_times)*1000.
             Requete.Amplitude_At_Spike_Time=numpy.ones(len(Requete.Current_Spike_Times))
             for i in range(len(Requete.Current_Spike_Times)):
-                Requete.Amplitude_At_Spike_Time[i]=Navigate.si[Requete.Current_Spike_Times[i]/1000*Requete.Analogsignal_sampling_rate[Requete.Current_Sweep_Number]]    
+                Requete.Amplitude_At_Spike_Time[i]=Navigate.si[Requete.Current_Spike_Times[i]/1000.*Requete.Analogsignal_sampling_rate[Requete.Current_Sweep_Number]]    
             self.Update_Figure()
 
         self.mpl_disconnect(self.cid)
@@ -219,7 +237,7 @@ class MyMplCanvas(FigureCanvasQTAgg):
         if self.already_clicked == False:     
     
             x = (event.xdata, event.ydata)
-            print 'clicked point', (event.xdata, event.ydata)
+            #print 'clicked point', (event.xdata, event.ydata)
             
             try:
                 self.LowX=Analysis.Wid.canvas.axes.get_xbound()[0]
@@ -386,8 +404,8 @@ class MyMplCanvas(FigureCanvasQTAgg):
 
         if Main.Display_Spikes_Button.checkState() == 2:
             try:
-                print Requete.Current_Spike_Times
-                print Requete.Amplitude_At_Spike_Time
+                #print Requete.Current_Spike_Times
+                #print Requete.Amplitude_At_Spike_Time
                 self.axes.plot(Requete.Current_Spike_Times,Requete.Amplitude_At_Spike_Time,'ro',linewidth=10)
             except:
                 Requete.Current_Spike_Times=[]
