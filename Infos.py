@@ -19,6 +19,7 @@ class Infos(object):
     """
     def __init__(self):
         self.__name__="Infos"
+        self.NumberOfFilesSentToIgor=-1
     def _all(self,All=False):
         List=[]
         i=self.__name__
@@ -1269,29 +1270,50 @@ class Infos(object):
 
            
         
-    def SendToIgor(self,array=None):
+    def SendToIgor(self,array=None,name=None):
+        '''
+        Send an array to igor. The array will be in in :root
+        and will be named Wave0
+        
+        '''
+        
+        
+        
         from win32com.client import Dispatch
 
-
-        if array == None:
+        self.NumberOfFilesSentToIgor+=1
+        
+        
+        if array == None and name== None:
+            #TODO :
+            #       -Use the real name of the array for importation
             currentname = str(Main.Current_or_Average.currentText())
-            print currentname, ' sent to Igor as Wave0'
+            print currentname, ' sent to Igor as Wave'+str(self.NumberOfFilesSentToIgor)
             savename = currentname.split(".")[1]
+            currentpath = str(Main.desktop)+'/'+'Wave'+str(self.NumberOfFilesSentToIgor)+'.txt'
+            print 'temp file is ', currentpath
+        elif array != None and name== None:
+            savename= 'Wave'+str(self.NumberOfFilesSentToIgor)
+            currentname = 'Wave'+str(self.NumberOfFilesSentToIgor)
             currentpath = str(Main.desktop)+'/'+savename+'.txt'
-            print 'temp file in ', currentpath
         else:
             currentname=array
             currentpath = str(Main.desktop)+'/'+str(array)+'.txt'
            
         try:
-            numpy.savetxt(currentpath, eval(currentname))
+            if savename == 'Wave'+str(self.NumberOfFilesSentToIgor):
+                numpy.savetxt(currentpath, array)
+            else:
+                numpy.savetxt(currentpath, eval(currentname))
             Igor = Dispatch('IgorPro.Application')
             Igor.Visible = True
-            Igor.Execute('NewDataFolder/O/S root:localstring')
+            #Igor.Execute('NewDataFolder/O/S root:localstring')
             Igor.Execute('SetDataFolder root:')
             Igor.Execute('newpath/o/q path "%s"' %(str(Main.desktop).replace('\\',':').replace('::',':')))#%(os.environ['USERPROFILE'].replace('\\',':').replace('::',':')))
-            Igor.Execute('LoadWave/N/J/D/O/P=path "%s.txt"' % (savename)) #See N option for overwriting options
-            Igor.Execute('Display wave0')
+            cmd = 'LoadWave/J/W/A/D/O/P=path "%s.txt"' % (savename) #/T for textwaves
+            Igor.Execute(cmd) #See N option for overwriting options
+            cmd='Display wave'+str(self.NumberOfFilesSentToIgor)
+            Igor.Execute(cmd)
             os.remove(currentpath)
             
          
@@ -1300,7 +1322,8 @@ class Infos(object):
             msgBox.setText(
             """
             <b>Saving Error</b>
-            <p>It is text, not number. Fix this bug!
+            <p>Did you set a name for your variable?
+            use name=''
             """)
             msgBox.exec_()       
         except IOError: 
@@ -1311,14 +1334,14 @@ class Infos(object):
             <p>This Folder do not exist, please set a new Saving folder
             """)
             msgBox.exec_()            
-        except pywintypes.com_error: 
-            msgBox = QtGui.QMessageBox()
-            msgBox.setText(
-            """
-            <b>Software not Found</b>
-            <p>This error usually happens when Igor is not installed
-            """)
-            msgBox.exec_()            
+#        except pywintypes.com_error: 
+#            msgBox = QtGui.QMessageBox()
+#            msgBox.setText(
+#            """
+#            <b>Software not Found</b>
+#            <p>This error usually happens when Igor is not installed
+#            """)
+#            msgBox.exec_()            
 
 
         
