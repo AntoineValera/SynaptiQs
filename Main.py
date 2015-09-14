@@ -49,6 +49,8 @@ class Main(QtGui.QWidget,object):#
         self.userpath=os.getenv("HOME")
         
         self.Script_Path=os.path.dirname(os.path.realpath(__file__))
+        if self.userpath == None:
+            self.userpath='C:\\Users\\Downstairs-PC\\WinPython-32bit-2.7.10.2\\settings'
         self.path = self.userpath+"/.SynaptiQs/Core/Userpref.txt" #Adresse du Fichier de parametres. Penser a laisser les droits d'ecriture
         self.Analysis_Preferences_Path=self.userpath+"/.SynaptiQs/Core/Analysis_Pref.txt"
         self.Mapping_Preferences_Path=self.userpath+"/.SynaptiQs/Core/Mapping_Pref.txt"

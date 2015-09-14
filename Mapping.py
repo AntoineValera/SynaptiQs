@@ -37,6 +37,8 @@ class Mapping(object):
         self.XPositions=numpy.array([None]*10)
         self.YPositions=numpy.array([None]*10)
         self.Max_Valid_Dist=50
+        self.Use_Number_of_Turns=True
+        self.Image_ColorMap='Greys'
         
     def _all(self,All=False):
         List=[]
@@ -359,7 +361,7 @@ class Mapping(object):
 
         self.Objective = QtGui.QComboBox()
         self.Objective.setGeometry(5, 145, 50, 25)
-        self.Objective.addItems(["PM","CCD"])
+        self.Objective.addItems(["UCL","PM","CCD"])
         
         self.Select_Experiment_Picture_Button = QtGui.QPushButton()
         self.Select_Experiment_Picture_Button.setGeometry(55, 145, 25, 25)
@@ -513,6 +515,7 @@ class Mapping(object):
 
         ListofVar=[self.__name__+'.Max_Valid_Dist',
                    self.__name__+'.Use_Number_of_Turns',
+                   self.__name__+'.Image_ColorMap',
                    self.__name__+'.Analysis_mode',
                    self.__name__+'.Transparency']
         for i in ListofVar:
@@ -901,7 +904,7 @@ class Mapping(object):
         
         path = QtGui.QFileDialog()
         path.setDirectory(self.Current_Picture_Directory)
-        path.setNameFilter("Image files (*.png *.xpm *.jpg *.bmp)")
+        path.setNameFilter("Image files (*.png *.xpm *.jpg *.bmp *.tif)")
         path.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
         path.setFileMode(QtGui.QFileDialog.ExistingFiles)
         
@@ -1053,6 +1056,8 @@ class Mapping(object):
             Was each mapping complete, or was your mapping interrupted?
             The total number of sweeps must be EXACTLY #points in a grid X #turns
             If the mapping is irregular you might consider a user defined mapping
+            
+            If it's a regular mapping, did you defined a direction
             """)  
             msgBox.exec_()
             return
@@ -1383,6 +1388,15 @@ class Mapping(object):
 #            self.Manual_Min_Field.setText(str(numpy.nanmin(AllA1values)))
 #            self.Manual_Max_Field.setText(str(numpy.nanmax(AllA1values)))
 #        elif self.Analysis_mode=="Analysis.Charges_1":
+        if len(AllC1values)<1:
+            msgBox = QtGui.QMessageBox()
+            msgBox.setText(
+            """
+            <b>No Data</b>
+            <p>Did you tag any trace?
+            """) 
+            msgBox.exec_()    
+            return
         Min=numpy.nanmin(AllC1values)
         Max=numpy.nanmax(AllC1values)
         if self.Types_of_Events_to_Measure == 'Negative':
@@ -1718,7 +1732,8 @@ class Mapping(object):
         
         if Objective == 'PM' : self.Objective.setCurrentIndex(0)
         elif Objective == 'CCD' : self.Objective.setCurrentIndex(1)
-        
+        elif Objective == 'UCL' : self.Objective.setCurrentIndex(2)
+            
         if Display == 1 :
             self.Thresholding_Mode.setCurrentIndex(0)            
             self.Amplitudes_Display_Mode.setCurrentIndex(0)
@@ -1746,6 +1761,8 @@ class Mapping(object):
             self.CCDlimit=[-205+int(self.X_Offset.text()),-126+int(self.Y_Offset.text()),186+int(self.X_Offset.text()),175+int(self.Y_Offset.text())]#x=391,y=301
         elif self.Objective.currentIndex() == 0:
             self.CCDlimit=[-400*float(self.Stim_Resolution.text()),400*float(self.Stim_Resolution.text()),400*float(self.Stim_Resolution.text()),-400*float(self.Stim_Resolution.text())]
+        elif self.Objective.currentIndex() == 2:
+            self.CCDlimit=[-320,320,260,-212]
 
         self.Mapping_Field_Length=abs(self.CCDlimit[0]-self.CCDlimit[2])
         self.Mapping_Field_Height=abs(self.CCDlimit[1]-self.CCDlimit[3])
@@ -2132,7 +2149,7 @@ class Mapping(object):
                       Max_Valid_Dist=None):
             
             #TODO : Normalize map if necessary
-            pyplot.figure()
+            
             power=power
             smoothing=smoothing
             subsampling=subsampling
@@ -2177,8 +2194,9 @@ class Mapping(object):
             elif Manual_Max_Field!= None:
                 Max=float(Manual_Max_Field)                
             else:
-                Max=float(numpy.max(ZI))                
+                Max=float(numpy.max(ZI))  
                 
+            pyplot.figure()   
             pyplot.subplot(1, 1, 1)
             pyplot.pcolor(XI, YI, ZI,cmap=cmap,vmin=Min,vmax=Max)
             pyplot.title('Inv dist interpolation - power: ' + str(power) + ' smoothing: ' + str(smoothing))
@@ -2186,6 +2204,17 @@ class Mapping(object):
             pyplot.ylim(minRange, maxRange)
             pyplot.colorbar()
 
+            pyplot.figure()
+            
+            pyplot.contour(XI, YI, ZI,10)
+            pyplot.xlim(minRange, maxRange)
+            pyplot.ylim(minRange, maxRange) 
+            
+            try:
+                self.pic = image.imread(str(self.Current_Picture_for_the_Map))
+                pyplot.imshow(self.pic,extent=(-320,320,-260,252),cmap=self.Image_ColorMap)
+            except:
+                pass
             pyplot.show()
     
 
@@ -2198,9 +2227,11 @@ class Mapping(object):
         if ColorBar==True:
             self.Wid.canvas.fig.colorbar(n)
             
-        self.Wid.canvas.axes.set_xlim(-400*float(self.Stim_Resolution.text()), 400*float(self.Stim_Resolution.text()))
-        self.Wid.canvas.axes.set_ylim(-400*float(self.Stim_Resolution.text()), 400*float(self.Stim_Resolution.text()))
-        
+        #self.Wid.canvas.axes.set_xlim(-400*float(self.Stim_Resolution.text()), 400*float(self.Stim_Resolution.text()))
+        #self.Wid.canvas.axes.set_ylim(-400*float(self.Stim_Resolution.text()), 400*float(self.Stim_Resolution.text()))
+        self.Wid.canvas.axes.set_xlim(-320, 320)
+        self.Wid.canvas.axes.set_ylim(-260, 252)
+                
         if Labels==True:
             self.Wid.canvas.axes.set_xlabel("X Distance (in um)")
             self.Wid.canvas.axes.set_ylabel("Y Distance (in um)")
@@ -2272,8 +2303,8 @@ class Mapping(object):
         if self.Display_Blue==False:
             self.pic[:,:,2]=0
 
-        self.Wid.canvas.axes.imshow(self.pic,extent=[self.CCDlimit[0],self.CCDlimit[2],self.CCDlimit[1],self.CCDlimit[3]])
-
+        self.Wid.canvas.axes.imshow(self.pic,extent=(-320,320,-260,252),cmap=self.Image_ColorMap)#,extent=[self.CCDlimit[0],self.CCDlimit[2],self.CCDlimit[3],self.CCDlimit[1]])
+        #[-320,320,260,-212]
         self.Wid.canvas.Object_Selection_Mode = 'Coordinates'
    
         self.Wid.show()        
