@@ -887,7 +887,10 @@ class ModelSpikeList(QAbstractItemModel):
                 return None 
         elif role == Qt.DecorationRole :
             if col == 0:
-                return self.icons[self.spikesorter.spikeLabels[row]]
+                try:
+                    return self.icons[self.spikesorter.spikeLabels[row]]
+                except TypeError:
+                    return None
             else:
                 return None
         else :

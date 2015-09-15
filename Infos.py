@@ -1276,9 +1276,7 @@ class Infos(object):
         and will be named Wave0
         
         '''
-        
-        
-        
+
         from win32com.client import Dispatch
 
         self.NumberOfFilesSentToIgor+=1
@@ -1287,6 +1285,7 @@ class Infos(object):
         if array == None and name== None:
             #TODO :
             #       -Use the real name of the array for importation
+            #       -check more carefully all situations
             currentname = str(Main.Current_or_Average.currentText())
             print currentname, ' sent to Igor as Wave'+str(self.NumberOfFilesSentToIgor)
             savename = currentname.split(".")[1]

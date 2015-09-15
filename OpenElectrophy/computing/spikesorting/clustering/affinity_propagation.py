@@ -53,7 +53,7 @@ class AffinityPropagation :
     
     def compute(self , waveforms , spike_times ,  ) :
         
-        import scikits.learn.cluster
+        import sklearn.cluster
         
         # Compute similarities
         X = waveforms
@@ -62,7 +62,7 @@ class AffinityPropagation :
         p = 10*np.median(S)
         
         # Compute Affinity Propagation
-        af = scikits.learn.cluster.AffinityPropagation()
+        af = sklearn.cluster.AffinityPropagation()
         af.fit(S, p)
         cluster_centers_indices = af.cluster_centers_indices_
         labels = af.labels_
