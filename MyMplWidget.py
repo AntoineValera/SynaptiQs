@@ -18,7 +18,7 @@ class MyMplWidget(QtGui.QWidget,QtGui.QLayout):
     
     The Widget contains a MyMplCanvas Figure
     """
-    def __init__(self, parent = None, subplots = 111 , sharex = None, sharey = None, title = 'No Title' , No_Toolbar = False):
+    def __init__(self, parent = None, subplots = [1,1,1] , sharex = None, sharey = None, title = 'No Title' , No_Toolbar = False):
         self.__name__="MyMplWidget"  
 
         QtGui.QWidget.__init__(self, parent)

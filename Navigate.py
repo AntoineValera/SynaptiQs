@@ -22,7 +22,7 @@ class Navigate(object):
         self.highvalue=5000
         self.Color_of_Standard_Trace='g'
         self.SpikeTrainEdited = False
-        #self.Wired=False #testing... for a second filtering if needed
+        #self.Weired=False #testing... for a second filtering if needed
     
     def _all(self,All=False):
         List=[]
@@ -99,10 +99,9 @@ class Navigate(object):
                 Requete.tag["Selection"][Requete.Current_Sweep_Number]=int(0)
                 Requete.sig.save()
     
-            self.timescale=numpy.array(range(len(self.si)))/self.Points_by_ms
             if Main.Display_Spikes_Button.checkState() == 2:
                 if Main.SQLTabWidget.currentIndex() == 2:
-                    print "under devloppement"
+                    print "No spiketrain here, under devloppement"
                     pass
                 else:
                     Requete.Call_Spikes()            
@@ -167,12 +166,32 @@ class Navigate(object):
         #Loading the signal
         # TODO : Check that filtered signal is implemented everywhere it should
         if Main.SQLTabWidget.currentIndex() == 0 or Main.SQLTabWidget.currentIndex() == 1:
-            self.sig = AnalogSignal().load(Analogisgnal_id_to_Load,session=Requete.Global_Session)
-            #Resampling to the lowest sampling rate in the selection. It doesn't change anything if there is only one sampling rate
-            self.si = scipy.signal.resample(self.sig.signal,(Requete.BypassedSamplingRate)*(len(self.sig.signal)/self.sig.sampling_rate))
-            self.Filtered_Signal = scipy.signal.resample(self.sig.signal,(Requete.BypassedSamplingRate)*(len(self.sig.signal)/self.sig.sampling_rate))            
-            
+#            if Requete.NumberofChannels==1:
+#                for i in Analogisgnal_id_to_Load:
+#                    self.sig = AnalogSignal().load(Analogisgnal_id_to_Load,session=Requete.Global_Session)
+#                    #Resampling to the lowest sampling rate in the selection. It doesn't change anything if there is only one sampling rate
+#                    self.si = scipy.signal.resample(self.sig.signal,(Requete.BypassedSamplingRate)*(len(self.sig.signal)/self.sig.sampling_rate))
+#                    self.Filtered_Signal = scipy.signal.resample(self.sig.signal,(Requete.BypassedSamplingRate)*(len(self.sig.signal)/self.sig.sampling_rate))            
+            #else:
+            '''
+            Even if Requete.NumberofChannels ==1, we put self.si and self.Filtered_Signal as a list of len=1
+            it allows a more homogeneous processing of the signal
+            However, for backward compatibility, if len=1 a normal array is resataured in the end of the script
+            '''
+            if Requete.NumberofChannels == 1:
+                Analogisgnal_id_to_Load=[int(Analogisgnal_id_to_Load)] # otherwise the number is of long type, and not iterable
+            else:
+                Analogisgnal_id_to_Load=list(Analogisgnal_id_to_Load)
+            self.si=[]
+            self.Filtered_Signal=[]
+            for i in Analogisgnal_id_to_Load:
+                self.sig = AnalogSignal().load(i,session=Requete.Global_Session)
+                #Resampling to the lowest sampling rate in the selection. It doesn't change anything if there is only one sampling rate
+                self.si.append(scipy.signal.resample(self.sig.signal,(Requete.BypassedSamplingRate)*(len(self.sig.signal)/self.sig.sampling_rate)))
+                self.Filtered_Signal.append(scipy.signal.resample(self.sig.signal,(Requete.BypassedSamplingRate)*(len(self.sig.signal)/self.sig.sampling_rate)))            
+              
         elif Main.SQLTabWidget.currentIndex() == 2:#For local Files
+            #TODO:Implement multichannel
             self.si = self.ArrayList[Requete.Current_Sweep_Number]
             self.Filtered_Signal = self.ArrayList[Requete.Current_Sweep_Number]
             try:
@@ -181,9 +200,12 @@ class Navigate(object):
             except :
                 Requete.Current_Spike_Times=[]
                 Requete.Amplitude_At_Spike_Time=[]
+                
         #Croping of the signal to the shortest duration of the selection. It doesn't change anything if there is only one sampling rate
-        self.si = self.si[0:Requete.BypassedSamplingRate*Requete.Shortest_Sweep_Length+1]
-        self.Filtered_Signal = self.Filtered_Signal[0:Requete.BypassedSamplingRate*Requete.Shortest_Sweep_Length]
+        for i,j in enumerate(self.si):
+            self.si[i] = self.si[i][0:Requete.BypassedSamplingRate*Requete.Shortest_Sweep_Length+1]
+        for i,j in enumerate(self.Filtered_Signal):   
+            self.Filtered_Signal[i] = self.Filtered_Signal[i][0:Requete.BypassedSamplingRate*Requete.Shortest_Sweep_Length]
 
         
         Analysis.Measure_On_Off()
@@ -192,31 +214,35 @@ class Navigate(object):
         
         #Leak Removal for RAW signal
         if Main.Remove_Leak_Button.checkState() == 2:
-            self.si=Analysis.Remove_a_Leak(self.si)
+            for i,j in enumerate(self.si):
+                self.si[i]=Analysis.Remove_a_Leak(self.si[i])
             
         #Leak Removal for filtered signal
         #If Analyze_Filtered_Traces_Button is checked, then we apply Leak Removal and Filtering on self.Filtered_Signal
         if Main.Analyze_Filtered_Traces_Button.checkState () == 2 or Main.Filtered_Display.checkState() == 2:
             Main.Filtered_Display.setCheckState(2)
             if Main.Remove_Leak_Button.checkState() == 2:
-                self.Filtered_Signal=Analysis.Remove_a_Leak(self.Filtered_Signal)            
+                for i,j in enumerate(self.Filtered_Signal):
+                    self.Filtered_Signal[i]=Analysis.Remove_a_Leak(self.Filtered_Signal[i])                
 
         #Filtering. 
         #Both FFT AND/OR median Filtering can be used, on RAW AND/OR Filtered signal
         if Main.Filtered_Display.checkState() == 2:
             nq = self.Points_by_ms*1000/2
-            self.Filtered_Signal = computing.filter.fft_passband_filter(self.si, f_low = int(Main.low_freq.text())/nq , f_high = int(Main.high_freq.text())/nq)
-            if Main.Median_Filtered_Display.checkState() == 2: 
-                c=running_median_insort(self.Filtered_Signal,win=int(Main.median_filt.text()))
-                b=running_median_insort(c,win=int(Main.median_filt.text()))
-                a=running_median_insort(b,win=int(Main.median_filt.text()))
-                self.Filtered_Signal=self.Filtered_Signal-a            
+            for i,j in enumerate(self.Filtered_Signal):
+                self.Filtered_Signal[i] = computing.filter.fft_passband_filter(self.si[i], f_low = int(Main.low_freq.text())/nq , f_high = int(Main.high_freq.text())/nq)
+                if Main.Median_Filtered_Display.checkState() == 2: 
+                    c=running_median_insort(self.Filtered_Signal[i],win=int(Main.median_filt.text()))
+                    b=running_median_insort(c,win=int(Main.median_filt.text()))
+                    a=running_median_insort(b,win=int(Main.median_filt.text()))
+                    self.Filtered_Signal[i]=self.Filtered_Signal[i]-a            
         else:
             if Main.Median_Filtered_Display.checkState() == 2: 
-                c=running_median_insort(self.Filtered_Signal,win=int(Main.median_filt.text()))
-                b=running_median_insort(c,win=int(Main.median_filt.text()))
-                a=running_median_insort(b,win=int(Main.median_filt.text()))
-                self.Filtered_Signal=self.Filtered_Signal-a         
+                for i,j in enumerate(self.Filtered_Signal):
+                    c=running_median_insort(self.Filtered_Signal[i],win=int(Main.median_filt.text()))
+                    b=running_median_insort(c,win=int(Main.median_filt.text()))
+                    a=running_median_insort(b,win=int(Main.median_filt.text()))
+                    self.Filtered_Signal[i]=self.Filtered_Signal[i]-a         
 
 
         #Je sais plus pourquoi c'est la
@@ -228,18 +254,19 @@ class Navigate(object):
         #self.Filtered_Signal=Analysis.Remove_a_Leak(self.Filtered_Signal,Leak_Removing_Interval_Start=0*self.Points_by_ms,Leak_Removing_Interval_End=200*self.Points_by_ms)                    
   
         #OBSOLETE, A corriger  
-        self.Signal_Length_in_Points=len(self.si) #durée du signal en pnts
-        self.signal_length_in_ms=len(self.si)/(Requete.Analogsignal_sampling_rate[Requete.Current_Sweep_Number]) #durée du signal en ms
+        self.Signal_Length_in_Points=len(self.si[0]) #durée du signal en pnts
+        self.signal_length_in_ms=len(self.si[0])/(Requete.Analogsignal_sampling_rate[Requete.Current_Sweep_Number]) #durée du signal en ms
         
         #print "Pb to be solved : I'm loaded 2 times",Requete.Current_Sweep_Number
         self.Points_by_ms=Requete.Analogsignal_sampling_rate[Requete.Current_Sweep_Number]/1000
-                
+        self.timescale=numpy.array(range(len(self.si[0])))/self.Points_by_ms                
 
         self.Color_of_Standard_Trace=Color_of_Standard_Trace
         self.Color_of_Filtered_Traces=Color_of_Filtered_Traces
 
-
-        #print "loaded", Analogisgnal_id_to_Load
+        #if Requete.NumberofChannels == 1:
+        #    self.si=self.si[0]
+        #    self.Filtered_Signal=self.Filtered_Signal[0]
 
         
     def Update_SweepNumber_Slider(self):
@@ -373,9 +400,11 @@ class Navigate(object):
         """
         
         if Main.Tagging_Button.isChecked():
-            Requete.tag["Selection"][Requete.Current_Sweep_Number]=int(1)
+            for n in range(Requete.NumberofChannels):
+                Requete.tag["Selection"][Requete.Current_Sweep_Number*Requete.NumberofChannels+n]=int(1)
         else:
-            Requete.tag["Selection"][Requete.Current_Sweep_Number]=int(0)
+            for n in range(Requete.NumberofChannels):
+                Requete.tag["Selection"][Requete.Current_Sweep_Number*Requete.NumberofChannels+n]=int(0)
         
  
     def Tag_All_Traces(self,ProgressDisplay=True):
@@ -387,14 +416,15 @@ class Navigate(object):
                 Main.progress.setValue(i)
          
             if i >= int(Main.From.text()) and i <= int(Main.To.text()):
-                Requete.tag["Selection"][i]=int(1)
+                
+                for n in range(Requete.NumberofChannels):
+                    Requete.tag["Selection"][i*Requete.NumberofChannels+n]=int(1)
         
         if ProgressDisplay == True:            
             Info_Message="Everything is Tagged"
             Main.status_text.setText(Info_Message) 
         
     def UnTag_All_Traces(self,ProgressDisplay=True):
-        
 
         for i in range(len(Requete.Analogsignal_ids)):
             if ProgressDisplay == True:
@@ -403,7 +433,9 @@ class Navigate(object):
                 Main.progress.setValue(i)
          
             if i >= int(Main.From.text()) and i <= int(Main.To.text()):
-                Requete.tag["Selection"][i]=int(0)
+                
+                for n in range(Requete.NumberofChannels):
+                    Requete.tag["Selection"][i*Requete.NumberofChannels+n]=int(0)
                 
         if ProgressDisplay == True:           
             Info_Message="Everything is UnTagged"
@@ -418,11 +450,11 @@ class Navigate(object):
                 Main.progress.setValue(i)
             
             if i >= int(Main.From.text()) and i <= int(Main.To.text()):
-
-                if Requete.tag["Selection"][i]==1:
-                    Requete.tag["Selection"][i]=int(0)
-                elif Requete.tag["Selection"][i]==0:
-                    Requete.tag["Selection"][i]=int(1)
+                for n in range(Requete.NumberofChannels):
+                    if Requete.tag["Selection"][i*Requete.NumberofChannels+n]==1:
+                        Requete.tag["Selection"][i*Requete.NumberofChannels+n]=int(0)
+                    elif Requete.tag["Selection"][i*Requete.NumberofChannels+n]==0:
+                        Requete.tag["Selection"][i*Requete.NumberofChannels+n]=int(1)
                     
         if ProgressDisplay == True:
             Info_Message="All Tags are Inverted"

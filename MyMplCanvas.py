@@ -24,12 +24,12 @@ class MyMplCanvas(FigureCanvasQTAgg):
     Il est parametrable, et vient avec une barre
     
     """
-    def __init__(self, parent=None, width = 5, height = 5, dpi = 100, sharex = None, sharey = None, parameters=None,subplots=None ):
+    def __init__(self, parent=None, width = 5, height = 5, dpi = 100, sharex = None, sharey = None, parameters=None,subplots=None):
         self.__name__="MyMplCanvas"
         self.fig = Figure(figsize = (width, height), dpi=dpi, facecolor ='white')
         
         if subplots != None:
-            self.axes = self.fig.add_subplot(subplots, sharex = sharex, sharey = sharey)
+            self.axes = self.fig.add_subplot(*subplots, sharex = sharex, sharey = sharey)
             #self.fig.subplots_adjust(left=0.15, bottom=0.15, right=0.85, top=0.85)
             self.xtitle="x-Axis"
             self.ytitle="y-Axis"
@@ -234,11 +234,24 @@ class MyMplCanvas(FigureCanvasQTAgg):
         
     def Focus_on_Clicked_Sweep(self,event):
         
+        def open_new_figure(event):
+            if event.inaxes is not None:
+        		i = 0
+        		axisNr = None
+        		for axis in self.fig.axes:
+        			if axis == event.inaxes:
+        				axisNr = i		
+        				break
+        			i += 1
+        		return axisNr+1
+          
         if self.already_clicked == False:     
     
             x = (event.xdata, event.ydata)
             #print 'clicked point', (event.xdata, event.ydata)
-            
+            # TODO :
+            # Only works for channel 0 for now.
+            #must find a way to get subplot number
             try:
                 self.LowX=Analysis.Wid.canvas.axes.get_xbound()[0]
                 self.HighX=Analysis.Wid.canvas.axes.get_xbound()[1]
@@ -253,12 +266,16 @@ class MyMplCanvas(FigureCanvasQTAgg):
                 
                 Analysis.Wid.canvas.axes.clear()
                 
+                #The coordinates of the click will first be sepecific of a window
+                n=open_new_figure(event)
+                print 'subplot %s clicked' %(n)
+                
                 #this is very slow if there are a lot of superimposed traces
                 for i in q:
     
                     Navigate.Load_This_Trace(Requete.Analogsignal_ids[i])
 #                    if Main.Analyze_Filtered_Traces_Button.checkState() == 0:
-                    si = Navigate.si
+                    si = Navigate.si[n]
 #                    elif Main.Analyze_Filtered_Traces_Button.checkState() == 2:
 #                        si = Navigate.Filtered_Signal                 
                     Analysis.Wid.canvas.axes.plot(Requete.timescale,si,'grey',alpha=0.3,picker=1)
@@ -269,9 +286,9 @@ class MyMplCanvas(FigureCanvasQTAgg):
                 Navigate.Load_This_Trace(Requete.Analogsignal_ids[min(t)[1]])
                 
                 if Main.Analyze_Filtered_Traces_Button.checkState() == 0:
-                    si = Navigate.si
+                    si = Navigate.si[n]
                 elif Main.Analyze_Filtered_Traces_Button.checkState() == 2:
-                    si = Navigate.Filtered_Signal   
+                    si = Navigate.Filtered_Signal[n] 
                     
                 self.Current_Selected_Id = min(t)[1]
                 
@@ -334,91 +351,88 @@ class MyMplCanvas(FigureCanvasQTAgg):
         Color_of_Filtered_Traces=Navigate.Color_of_Filtered_Traces
         Main.MainFigure.canvas.Object_Selection_Mode = None #just in case there is a bug somewhere
         
-        tot=len(list(set(Requete.Analogsignal_name)))
-        
-        self.axes = Main.MainFigure.canvas.fig.add_subplot(tot,1,1)
-       
-       
-       
-        self.LowX=self.axes.get_xbound()[0]
-        self.HighX=self.axes.get_xbound()[1]
-        self.LowY=self.axes.get_ybound()[0]
-        self.HighY=self.axes.get_ybound()[1]
-            
-          
-        if Main.Superimposetraces.checkState() == 0:
-            self.axes.clear()
-            
-        if Main.Measure_From_Zero_Button.checkState() == 2:
-            Main.Remove_Leak_Button.setCheckState(2) 
-            
-        if Main.Remove_Leak_Button.checkState() == 2: #it's a line at 0
-            self.axes.plot(Requete.timescale,numpy.zeros(int(len(Requete.timescale))),'r--',picker=0)
-            
-        if Main.RAW_Display.checkState() == 2:
-            try:
-                self.axes.plot(Requete.timescale,Navigate.si,Color_of_Standard_Trace,picker=1)
-            except ValueError:
-                print len(Requete.timescale),len(Navigate.si)
-                print "Requete.timescale and Navigate.si do not have the same number of points, loading skipped"
-                return
-            
-        if Main.Filtered_Display.checkState() == 2 or Main.Median_Filtered_Display.checkState() == 2:
-            self.axes.plot(Requete.timescale,Navigate.Filtered_Signal,Color_of_Filtered_Traces,picker=1)
-        else:
-            Main.RAW_Display.setCheckState(2)
-            try:
-                self.axes.plot(Requete.timescale,Navigate.si,Color_of_Standard_Trace,picker=1)
-            except ValueError:
-                print len(Requete.timescale),len(Navigate.si)
-                print "Caution, the timescale is causing some issues..."
-            except AttributeError:
-                pass
+        for n in range(Requete.NumberofChannels):
+            self.axes = Main.MainFigure.canvas.fig.add_subplot(Requete.NumberofChannels,1,n+1)
 
-        self.axes.set_xlabel("Time (ms)")
-        self.axes.set_ylabel("Amplitude (pA)")
-
-        if Main.Display_Charge_Button.checkState() == 2 and Main.Display_Measures_Button.checkState() == 0:
-           Main.Display_Measures_Button.setCheckState(2)
-           
-        if Main.Display_Measures_Button.checkState() == 2:
-            Analysis.Measure_On_Off()
-            self.axes.plot(Analysis.Base1_coord/Navigate.Points_by_ms,Analysis.Base1,'r',linewidth=3)
-            self.axes.plot(Analysis.Peak1_coord/Navigate.Points_by_ms,Analysis.Peak1,'r',linewidth=3)
-            self.axes.plot(Analysis.Base2_coord/Navigate.Points_by_ms,Analysis.Base2,'r',linewidth=3)
-            self.axes.plot(Analysis.Peak2_coord/Navigate.Points_by_ms,Analysis.Peak2,'r',linewidth=3)
-            self.axes.plot(Analysis.Base3_coord/Navigate.Points_by_ms,Analysis.Base3,'r',linewidth=3)
-            self.axes.plot(Analysis.Peak3_coord/Navigate.Points_by_ms,Analysis.Peak3,'r',linewidth=3)
-       
-        if Main.Display_Charge_Button.checkState() == 2:
+            self.LowX=self.axes.get_xbound()[0]
+            self.HighX=self.axes.get_xbound()[1]
+            self.LowY=self.axes.get_ybound()[0]
+            self.HighY=self.axes.get_ybound()[1]
+                
+              
+            if Main.Superimposetraces.checkState() == 0:
+                self.axes.clear()
+                
             if Main.Measure_From_Zero_Button.checkState() == 2:
-                if Mapping.Types_of_Events_to_Measure == 'Negative':
-                    self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,0.,where=0.>Analysis.Charge_trace,alpha=0.3)
-                elif Mapping.Types_of_Events_to_Measure == 'Positive':
-                    self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,0.,where=0.<Analysis.Charge_trace,alpha=0.3)                    
+                Main.Remove_Leak_Button.setCheckState(2) 
+                
+            if Main.Remove_Leak_Button.checkState() == 2: #it's a line at 0
+                self.axes.plot(Requete.timescale,numpy.zeros(int(len(Requete.timescale))),'r--',picker=0)
+                
+            if Main.RAW_Display.checkState() == 2:
+                try:
+                    self.axes.plot(Requete.timescale,Navigate.si[n],Color_of_Standard_Trace,picker=1)
+                except ValueError:
+                    print len(Requete.timescale),len(Navigate.si[n])
+                    print "Requete.timescale and Navigate.si do not have the same number of points, loading skipped"
+                    return
+                
+            if Main.Filtered_Display.checkState() == 2 or Main.Median_Filtered_Display.checkState() == 2:
+                self.axes.plot(Requete.timescale,Navigate.Filtered_Signal[n],Color_of_Filtered_Traces,picker=1)
             else:
-                if Mapping.Types_of_Events_to_Measure == 'Negative':
-                    self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,Analysis.Base1[0],where=Analysis.Base1[0]>Analysis.Charge_trace,alpha=0.3)
-                elif Mapping.Types_of_Events_to_Measure == 'Positive':
-                    self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,Analysis.Base1[0],where=Analysis.Base1[0]<Analysis.Charge_trace,alpha=0.3)
-
-        if Main.Display_Spikes_Button.checkState() == 2:
-            try:
-                #print Requete.Current_Spike_Times
-                #print Requete.Amplitude_At_Spike_Time
-                self.axes.plot(Requete.Current_Spike_Times,Requete.Amplitude_At_Spike_Time,'ro',linewidth=10)
-            except:
+                Main.RAW_Display.setCheckState(2)
+                try:
+                    self.axes.plot(Requete.timescale,Navigate.si[n],Color_of_Standard_Trace,picker=1)
+                except ValueError:
+                    print len(Requete.timescale),len(Navigate.si[n])
+                    print "Caution, the timescale is causing some issues..."
+                except AttributeError:
+                    pass
+    
+            self.axes.set_xlabel("Time (ms)")
+            self.axes.set_ylabel("Amplitude (pA)")
+    
+            if Main.Display_Charge_Button.checkState() == 2 and Main.Display_Measures_Button.checkState() == 0:
+               Main.Display_Measures_Button.setCheckState(2)
+               
+            if Main.Display_Measures_Button.checkState() == 2:
+                Analysis.Measure_On_Off(n)
+                self.axes.plot(Analysis.Base1_coord/Navigate.Points_by_ms,Analysis.Base1,'r',linewidth=3)
+                self.axes.plot(Analysis.Peak1_coord/Navigate.Points_by_ms,Analysis.Peak1,'r',linewidth=3)
+                self.axes.plot(Analysis.Base2_coord/Navigate.Points_by_ms,Analysis.Base2,'r',linewidth=3)
+                self.axes.plot(Analysis.Peak2_coord/Navigate.Points_by_ms,Analysis.Peak2,'r',linewidth=3)
+                self.axes.plot(Analysis.Base3_coord/Navigate.Points_by_ms,Analysis.Base3,'r',linewidth=3)
+                self.axes.plot(Analysis.Peak3_coord/Navigate.Points_by_ms,Analysis.Peak3,'r',linewidth=3)
+           
+            if Main.Display_Charge_Button.checkState() == 2:
+                if Main.Measure_From_Zero_Button.checkState() == 2:
+                    if Mapping.Types_of_Events_to_Measure == 'Negative':
+                        self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,0.,where=0.>Analysis.Charge_trace,alpha=0.3)
+                    elif Mapping.Types_of_Events_to_Measure == 'Positive':
+                        self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,0.,where=0.<Analysis.Charge_trace,alpha=0.3)                    
+                else:
+                    if Mapping.Types_of_Events_to_Measure == 'Negative':
+                        self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,Analysis.Base1[0],where=Analysis.Base1[0]>Analysis.Charge_trace,alpha=0.3)
+                    elif Mapping.Types_of_Events_to_Measure == 'Positive':
+                        self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,Analysis.Base1[0],where=Analysis.Base1[0]<Analysis.Charge_trace,alpha=0.3)
+    
+            if Main.Display_Spikes_Button.checkState() == 2:
+                try:
+                    #print Requete.Current_Spike_Times
+                    #print Requete.Amplitude_At_Spike_Time
+                    self.axes.plot(Requete.Current_Spike_Times,Requete.Amplitude_At_Spike_Time,'ro',linewidth=10)
+                except:
+                    Requete.Current_Spike_Times=[]
+                    print "No spikes to plot here"
+            elif Main.Display_Spikes_Button.checkState() == 0:
                 Requete.Current_Spike_Times=[]
-                print "No spikes to plot here"
-        elif Main.Display_Spikes_Button.checkState() == 0:
-            Requete.Current_Spike_Times=[]
-        else:
-            pass
-            
-        if Main.Autoscale.checkState() == 0:            
-            self.axes.set_xbound(self.LowX,self.HighX)
-            self.axes.set_ybound(self.LowY,self.HighY)
-        elif Main.Autoscale.checkState() == 2:
-            self.axes.set_autoscale_on(True)  
+            else:
+                pass
+                
+            if Main.Autoscale.checkState() == 0:            
+                self.axes.set_xbound(self.LowX,self.HighX)
+                self.axes.set_ybound(self.LowY,self.HighY)
+            elif Main.Autoscale.checkState() == 2:
+                self.axes.set_autoscale_on(True)  
 
         self.draw() 

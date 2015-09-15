@@ -2206,7 +2206,7 @@ class Mapping(object):
 
             pyplot.figure()
             
-            pyplot.contour(XI, YI, ZI,10)
+            pyplot.contour(XI, YI, ZI, 10)
             pyplot.xlim(minRange, maxRange)
             pyplot.ylim(minRange, maxRange) 
             
@@ -2217,7 +2217,7 @@ class Mapping(object):
                 pass
             pyplot.show()
     
-
+        print self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:],self.Local_Surface
         if self.Charge=='Surface':
             SmoothMap(self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:],self.Local_Surface,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
         else:
