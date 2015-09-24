@@ -100,10 +100,10 @@ class Mapping(object):
             if len(Requete.Spiketrain_ids) > 0 or Main.SQLTabWidget.currentIndex() == 2:
                 if numpy.isnan(Requete.Spiketrain_ids[0]) == True:
                     self.Thresholding_Mode.clear()
-                    self.Thresholding_Mode.addItems(["None","pA","pC","% of Max","% of success","Combo"])
+                    self.Thresholding_Mode.addItems(["None","pA","pC","% of Max","% of success","Combo","Variance"])
                 else:
                     self.Thresholding_Mode.clear()
-                    self.Thresholding_Mode.addItems(["None","pA","pC","% of Max","% of success","Combo","Events"])                
+                    self.Thresholding_Mode.addItems(["None","pA","pC","% of Max","% of success","Combo","Variance","Events"])                
         except AttributeError: #First launch error
             pass
 
@@ -303,7 +303,7 @@ class Mapping(object):
         self.Thresholding_Mode_Label.setText( "Threshold :")
         self.Thresholding_Mode = QtGui.QComboBox()
         self.Thresholding_Mode.setGeometry(60, 125, 80, 20)
-        self.Thresholding_Mode.addItems(["None","pA","pC","% of Max","% of success","Combo","Events"])
+        self.Thresholding_Mode.addItems(["None","pA","pC","% of Max","% of success","Combo","Variance","Events"])
         self.Thresholding_Mode_Input_Field = QtGui.QLineEdit() #Lines, columns, Parent
         self.Thresholding_Mode_Input_Field.setGeometry(145, 125, 50, 20)
         self.Thresholding_Mode_Input_Field.setText("0")   
@@ -586,6 +586,13 @@ class Mapping(object):
             self.Thresholding_Mode_Input_Field.setEnabled(True)  
 
         if self.Thresholding_Mode.currentIndex()==6:
+            self.Amplitudes_Display_Mode.setEnabled(True)
+            self.Charges_Display_Mode.setEnabled(True)  
+            self.averagebyposition.setEnabled(True)
+            self.measurebyposition.setEnabled(True)
+            self.Thresholding_Mode_Input_Field.setEnabled(True)
+
+        if self.Thresholding_Mode.currentIndex()==7: #for spikes
             self.Amplitudes_Display_Mode.setEnabled(True)
             self.Charges_Display_Mode.setEnabled(True)  
             self.averagebyposition.setEnabled(False)
@@ -1303,7 +1310,7 @@ class Mapping(object):
         self.Coordinates_and_Corresponding_Amplitudes1_Dictionnary={}
         self.Coordinates_and_Corresponding_Charges1_Dictionnary={}        
         self.Coordinates_and_Corresponding_Success_Rate_Dictionnary={}
-
+        self.Coordinates_and_Corresponding_Mean_Variance1_Dictionnary={}
 
     def Find_Corresponding_Coordinates(self):
         
@@ -1360,6 +1367,7 @@ class Mapping(object):
             try:
                 self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary[keys]=MA1 #one point array
                 self.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary[keys]=MC1 #one point array
+                self.Coordinates_and_Corresponding_Mean_Variance1_Dictionnary[keys]=0
                 self.Coordinates_and_Corresponding_Amplitudes1_Dictionnary=None
                 self.Coordinates_and_Corresponding_Charges1_Dictionnary=None
                 self.Coordinates_and_Corresponding_Success_Rate_Dictionnary[keys]=None
@@ -1428,6 +1436,7 @@ class Mapping(object):
         abort=self.Create_Dictionnaries()  
         AllC1values=[]
         AllA1values=[]
+        AllV1values=[]
         if abort == True:
             return 
             
@@ -1484,7 +1493,11 @@ class Mapping(object):
             else:
                 raise "Measure Cancelled"    
 
-        elif self.Thresholding_Mode.currentIndex() == 6: #of events
+        elif self.Thresholding_Mode.currentIndex() == 6: #Variance
+            thr=float(self.Thresholding_Mode_Input_Field.text())  
+            self.Analysis_mode="Analysis.Variance_1"            
+
+        elif self.Thresholding_Mode.currentIndex() == 7: #of events
             self.Analysis_mode="Analysis.Events"
             thr=float(self.Thresholding_Mode_Input_Field.text())
        
@@ -1499,7 +1512,7 @@ class Mapping(object):
             
         counter=0
 
-        if self.Thresholding_Mode.currentIndex() == 6:
+        if self.Thresholding_Mode.currentIndex() == 7:
             self.Types_of_Events_to_Measure = 'Positive'
             A1,A2,A3,C1,C2,C3=Analysis.Count_Events()
             for i,j in enumerate(A1):
@@ -1529,13 +1542,16 @@ class Mapping(object):
             
             A1loc=[]
             C1loc=[]
+            V1loc=[]
             for i in range(len(A1)) :
                 if i in currentIdsofInterest:
                     A1loc.append(A1[i])
                     C1loc.append(C1[i])
+                    V1loc.append(A1[i])
                 else:
                     A1loc.append(numpy.nan)
-                    C1loc.append(numpy.nan)                    
+                    C1loc.append(numpy.nan)  
+                    V1loc.append(numpy.nan) 
             
             if Silent == False:
                 print "on a total of "+str(number_of_sweep_at_this_position)+" ,"+str(accepted)+" were accepted"
@@ -1544,11 +1560,12 @@ class Mapping(object):
             self.Coordinates_and_Corresponding_Amplitudes1_Dictionnary[keys]=A1loc
             self.Coordinates_and_Corresponding_Charges1_Dictionnary[keys]=C1loc
             self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary[keys]=stats.nanmean(A1loc)
+            self.Coordinates_and_Corresponding_Mean_Variance1_Dictionnary[keys]=stats.nanstd(V1loc)
             self.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary[keys]=stats.nanmean(C1loc)                
             self.Coordinates_and_Corresponding_Success_Rate_Dictionnary[keys]=success_rate   
             AllC1values.append(stats.nanmean(C1loc))  
             AllA1values.append(stats.nanmean(A1loc)) 
-
+            AllV1values.append(stats.nanstd(V1loc))
             #The % of values over thr is stored self.Coordinates_and_Corresponding_Success_Rate_Dictionnary
 
 #                
@@ -1576,7 +1593,7 @@ class Mapping(object):
         #Except in Combo mode, after every other measure, the self.Thresholding_Mode is set to % of success (--> 4)
         if self.Thresholding_Mode.currentIndex() == 5:
             pass
-        elif self.Thresholding_Mode.currentIndex() == 6:
+        elif self.Thresholding_Mode.currentIndex() == 7:
             self.Thresholding_Mode.setCurrentIndex(0) 
         else:
             self.Thresholding_Mode.setCurrentIndex(4) 
@@ -1590,6 +1607,7 @@ class Mapping(object):
                 Max*=-1            
             self.Manual_Min_Field.setText(str(Min))
             self.Manual_Max_Field.setText(str(Max))
+            
         elif self.Analysis_mode=="Analysis.Charges_1":
             Min=numpy.nanmin(AllC1values)
             Max=numpy.nanmax(AllC1values)
@@ -1598,9 +1616,20 @@ class Mapping(object):
                 Max*=-1
             self.Manual_Min_Field.setText(str(Min))
             self.Manual_Max_Field.setText(str(Max))
-        self.Activate_Map.setEnabled(True)            
-        self.SuccessRate_Ready=True
+
+
+        elif self.Analysis_mode=="Analysis.Variance_1":
+            Min=numpy.nanmin(AllV1values)
+            Max=numpy.nanmax(AllV1values)
+            if self.Types_of_Events_to_Measure == 'Negative':
+                Min*=-1
+                Max*=-1            
+            self.Manual_Min_Field.setText(str(Min))
+            self.Manual_Max_Field.setText(str(Max))
             
+        self.Activate_Map.setEnabled(True)            
+        self.SuccessRate_Ready=True 
+           
     def Correspondance(self):
         
         self.ASid_to_SweepNb={}
@@ -1964,7 +1993,7 @@ class Mapping(object):
                 #First, we use the good list, depending if thr was computed on amplitudes or charges
                 if self.Analysis_mode=="Analysis.Charges_1":
                     Local_to_use=self.Local_Surface
-                elif self.Analysis_mode=="Analysis.Amplitudes_1":
+                elif self.Analysis_mode=="Analysis.Amplitudes_1" or self.Analysis_mode=="Analysis.Variance_1":
                     Local_to_use=self.Local_Amplitude   
                     
                 for i,j in enumerate(Local_to_use): 
@@ -1998,8 +2027,37 @@ class Mapping(object):
                 """)      
                 msgBox.exec_()
                 
-                
         elif self.Thresholding_Mode.currentIndex() == 6:
+            print "variance of Amplitude Thresholded view"   
+            
+            try:
+                thr=float(self.Thresholding_Mode_Input_Field.text())
+                for i,j in enumerate(self.Local_Amplitude):
+                    if self.Types_of_Events_to_Measure == 'Negative':
+                        if j<thr:
+                            self.Local_Amplitude[i]=-0.75
+                            self.Local_Surface[i]=-1
+                        else:
+                            self.Local_Amplitude[i]=0.0
+                            self.Local_Surface[i]=0.0
+                    elif self.Types_of_Events_to_Measure == 'Positive':
+                        if j>thr:
+                            self.Local_Amplitude[i]=0.75
+                            self.Local_Surface[i]=1
+                        else:
+                            self.Local_Amplitude[i]=0.0
+                            self.Local_Surface[i]=0.0                            
+                       
+            except ValueError:
+                msgBox = QtGui.QMessageBox()
+                msgBox.setText(
+                """
+                <b>Error</b>
+                <p>Please set a value in pA
+                """)   
+                msgBox.exec_()  
+                
+        elif self.Thresholding_Mode.currentIndex() == 7:
             print "Spike Counting Mode"   
 
             thr=0.0

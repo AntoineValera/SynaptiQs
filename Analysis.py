@@ -26,6 +26,8 @@ class Analysis(object):
     """
     def __init__(self):
         self.__name__="Analysis"
+        self.UseUserDefinedColorset = False
+        self.Color = 'k'
     def _all(self,All=False):
         List=[]
         i=self.__name__
@@ -60,7 +62,7 @@ class Analysis(object):
         return Signal
 
     
-    def Measure_on_Average(self,List_of_Ids=None,Measure_All_from_Baseline1=False,Display_Superimposed_Traces=False,Rendering=True,Position=(None,None),Origin=None,All_from_Zero=False,ProgressDisplay=True):
+    def Measure_on_Average(self,List_of_Ids=None,Measure_All_from_Baseline1=False,Display_Superimposed_Traces=False,Rendering=True,Position=(None,None),Origin=None,All_from_Zero=False,ProgressDisplay=True,Color='k'):
         
         """
         This function measure the average trace of a given list of Analogsignal ids (default is Requete.Analogsignal_ids tagged traces)
@@ -70,6 +72,7 @@ class Analysis(object):
         If Measure_All_from_Baseline1 is True, mean amplitude 1, 2 and 3 and mean charge 1, 2 and 3 are calculated from baseline 1 value
         If All_from_Zero is True, mean amplitude 1, 2 and 3 and mean charge 1, 2 and 3 are calculated from 0 after leak substraction
         
+        color can be a string, or a vector
         """   
         
         ##scipy.signal.decimate could accelerate the display
@@ -78,8 +81,14 @@ class Analysis(object):
         if List_of_Ids == None:
             List_of_Ids = Requete.Analogsignal_ids
 
-                
-        
+        #TODO : Temporary implementation
+        if self.UseUserDefinedColorset == True:
+            Color=self.Color
+            
+        if type(Color) == str:
+            Color=[Color]*len(List_of_Ids)
+
+
         self.Check_Measuring_Parameters_Validity()
         
 #        if Main.SQLTabWidget.currentIndex() == 0 or Main.SQLTabWidget.currentIndex() == 1:
@@ -276,9 +285,6 @@ class Analysis(object):
                 
                 self.Currently_Used_Sweep_nb_for_Local_Average=[]
                 for i,j in enumerate(List_of_Ids):
-                    
-                        
-                    
                     if ((List_of_Ids is Requete.Analogsignal_ids) and (i >= int(Main.From.text())) and (i <= int(Main.To.text())) and (Requete.tag["Selection"][i] == 1)) or (List_of_Ids is not Requete.Analogsignal_ids):
                         if Main.SQLTabWidget.currentIndex() == 2:
                             Requete.Current_Sweep_Number=i
@@ -295,7 +301,7 @@ class Analysis(object):
                             self.Currently_Used_Sweep_nb_for_Local_Average.append(i)
                         else:
                             self.Currently_Used_Sweep_nb_for_Local_Average.append(j)
-                        self.Wid.canvas.axes.plot(Requete.timescale,eval("Displayed_"+str(i)),'k',alpha=0.3,picker=1)
+                        self.Wid.canvas.axes.plot(Requete.timescale,eval("Displayed_"+str(i)),Color[i],alpha=0.3,picker=1)
                         self.Wid.Status.setText("It's an average of "+str(counter)+" Sweeps"+" at position "+str(Position)+
                                                 "<p>"+"Average A1 = "+str(self.Mean_Amplitude_1)+"\t Average C1 = "+str(self.Mean_Charge_1)+
                                                 "<p>"+"Average A2 = "+str(self.Mean_Amplitude_2)+"\t Average C2 = "+str(self.Mean_Charge_2)+
