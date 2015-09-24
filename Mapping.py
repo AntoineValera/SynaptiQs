@@ -1204,7 +1204,7 @@ class Mapping(object):
                 self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[j].append(i)
                 if self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary.has_key(None) == True: #None coordinates are deleted
                     del self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[None]         
-
+            
         except TypeError:
             msg="""
             <b>Error</b>
@@ -1279,7 +1279,7 @@ class Mapping(object):
                 #self.Coordinates_and_Corresponding_Mean_Variance1_Dictionnary[keys]=0
                 self.Coordinates_and_Corresponding_Amplitudes1_Dictionnary=None
                 self.Coordinates_and_Corresponding_Charges1_Dictionnary=None
-                #self.Coordinates_and_Corresponding_Success_Rate_Dictionnary[keys]=None
+                self.Coordinates_and_Corresponding_Success_Rate_Dictionnary[keys]=None
                 AllC1values.append(MC1)
                 AllA1values.append(MA1)
                 counter+=1
@@ -1433,6 +1433,7 @@ class Mapping(object):
         #For each point, the measure is done. Average of individual measures is stored in self.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary and self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary
         #array of all measured values is stored in self.Coordinates_and_Corresponding_Amplitudes1_Dictionnary and self.Coordinates_and_Corresponding_Charges1_Dictionnary
         for keys in self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary:
+            
             accepted=0
             number_of_sweep_at_this_position=0
             currentIdsofInterest=[]
@@ -1652,20 +1653,10 @@ class Mapping(object):
                 Requete.tag["Selection"][i]=0              
 
 
-        
-    def Display_Mapping_Results(self,Objective=None,Display=None,Picture=None,BypassReMapping=False,Title='Mapping',Marker='s',Bypass_Measuring=False): 
-        
-        """
-        This function compute all the values to do the mapping. It reads SynaptiQs Comboboxes to apply some thresholding
-        You can use it manually in a simplified mode, by setting some paramters
-        Picture is the full path of the wanted picture
-        """
-        
-        
-        if Objective == 'PM' : self.Objective.setCurrentIndex(0)
-        elif Objective == 'CCD' : self.Objective.setCurrentIndex(1)
-        elif Objective == 'UCL' : self.Objective.setCurrentIndex(2)
-            
+    def DisplayMode(self,Display):
+        '''
+        This function allow to preprogram some specific set of config
+        '''
         if Display == 1 :
             self.Thresholding_Mode.setCurrentIndex(0)            
             self.Amplitudes_Display_Mode.setCurrentIndex(0)
@@ -1680,174 +1671,86 @@ class Mapping(object):
             self.Thresholding_Mode.setCurrentIndex(0)
             self.Amplitudes_Display_Mode.setCurrentIndex(0)
             self.Charges_Display_Mode.setCurrentIndex(1)  
-            self.Update_Display_Parameters()
+            self.Update_Display_Parameters()        
         
-        if Picture != None:
-            self.Current_Picture_for_the_Map=Picture
-
-        self.Correction_of_Abnormal_Parameters_for_Mapping()
-
+    def ObjectiveParameters(self,ObjectiveIndex):
         #TODO : Move to a parameter file
         #Entrer ici les limites du champ CCD [Xupperleft, Yupperleft, Xlowerright,Ylowerright]
-        if self.Objective.currentIndex() == 1:
+        if ObjectiveIndex == 1:
             self.CCDlimit=[-205+int(self.X_Offset.text()),-126+int(self.Y_Offset.text()),186+int(self.X_Offset.text()),175+int(self.Y_Offset.text())]#x=391,y=301
-        elif self.Objective.currentIndex() == 0:
+        elif ObjectiveIndex == 0:
             self.CCDlimit=[-400*float(self.Stim_Resolution.text()),400*float(self.Stim_Resolution.text()),400*float(self.Stim_Resolution.text()),-400*float(self.Stim_Resolution.text())]
-        elif self.Objective.currentIndex() == 2:
-            self.CCDlimit=[-320,320,260,-212]
-
-        self.Mapping_Field_Length=abs(self.CCDlimit[0]-self.CCDlimit[2])
-        self.Mapping_Field_Height=abs(self.CCDlimit[1]-self.CCDlimit[3])
-
-
-        self.Wid = MyMplWidget()
-        self.Wid.canvas.axes.set_axis_bgcolor('black')
-        self.Wid.canvas.axes.grid(41,color='r')
+        elif ObjectiveIndex == 2:
+            self.CCDlimit=[-320,320,260,-212] 
         
-        if BypassReMapping == False:
-            if self.Scanning_Direction_Mode != 'UserDefined':
-                self.Create_Mapping_Pathway()
+        #Could be used
+        Mapping_Field_Length=abs(self.CCDlimit[0]-self.CCDlimit[2])
+        Mapping_Field_Height=abs(self.CCDlimit[1]-self.CCDlimit[3])        
         
-        if Bypass_Measuring == False:    
-            #To avoid to alter the recorded values, a copy of individual and average measures is done
-            try:
-                self.Local_Amplitude=numpy.array([None]*len(self.Sorted_X_and_Y_Coordinates))
-                self.Local_Amplitude_sd=numpy.array([None]*len(self.Sorted_X_and_Y_Coordinates))
-                self.Local_Surface=numpy.array([None]*len(self.Sorted_X_and_Y_Coordinates))
-                self.Local_Surface_sd=numpy.array([None]*len(self.Sorted_X_and_Y_Coordinates))
-                self.Local_Success=numpy.array([None]*len(self.Sorted_X_and_Y_Coordinates)) 
-            except AttributeError:    
-                msg="""
-                <b>Mapping Error</b>
-                <p>Please define correct coordinates first
-                """
-                Infos.Error(msg)    
-                return
-            
-
-            for i,j in enumerate(self.Sorted_X_and_Y_Coordinates):
-                try:
-                    
-                    self.Local_Amplitude[i]=self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary[j]
-                    try:
-                        self.Local_Amplitude_sd[i]=numpy.std(self.Coordinates_and_Corresponding_Amplitudes1_Dictionnary[j])
-                        self.Local_Surface_sd[i]=numpy.std(self.Coordinates_and_Corresponding_Charges1_Dictionnary[j])
-                    except TypeError: 
-                        self.Local_Amplitude_sd[i]=0
-                        self.Local_Surface_sd[i]=0
-                    self.Local_Surface[i]=self.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary[j]
-                    self.Local_Success[i]=self.Coordinates_and_Corresponding_Success_Rate_Dictionnary[j]
-                except KeyError:
-                    print 'KEYERROR at ', j #if some coordinates dissapeared, because completely Untagged     
-                    self.Local_Amplitude[i]=0#numpy.NaN
-                    self.Local_Amplitude_sd[i]=0
-                    self.Local_Surface[i]=0#numpy.NaN 
-                    self.Local_Surface_sd[i]=0
-                    self.Local_Success[i]=0#numpy.NaN  
-                except AttributeError: #if 'Mapping' object has no attribute 'Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary'
-                    self.Define_Coordinates()
-                    return
-                    
-        #####################        
-        ##################### 
-        
-        #Because NaN are bad...
-        for i,j in enumerate(self.Local_Amplitude):
-            if numpy.math.isnan(j) == True :
-                self.Local_Amplitude[i]=float(0.0)
+    def ModeSpecificProcessing(self,Mode,Local_Amplitude,Local_Surface,Local_Success):
         #In this condition, no threshold is applied, and all view are possible, because Amplitudes and charges were measured correctly
-        if self.Thresholding_Mode.currentIndex() == 0:
+        if Mode == 0:
             print "Classic Normalized view"
-        #In this condition, the value in self.Thresholding_Mode_Input_Field is used as threshold. Every value smaller is set to zero
-        elif self.Thresholding_Mode.currentIndex() == 1:
+        elif Mode == 1 or Mode == 2:
+            if Mode == 1: var=Local_Amplitude
+            if Mode == 2: var=Local_Surface   
             print "Amplitude Thresholded view"   
-            
             try:
                 thr=float(self.Thresholding_Mode_Input_Field.text())
-                for i,j in enumerate(self.Local_Amplitude):
+                for i,j in enumerate(var):
                     if self.Types_of_Events_to_Measure == 'Negative':
                         if j<thr:
-                            self.Local_Amplitude[i]=-0.75
-                            self.Local_Surface[i]=-1
+                            Local_Amplitude[i]=-0.75
+                            Local_Surface[i]=-1
                         else:
-                            self.Local_Amplitude[i]=0.0
-                            self.Local_Surface[i]=0.0
+                            Local_Amplitude[i]=0.0
+                            Local_Surface[i]=0.0
                     elif self.Types_of_Events_to_Measure == 'Positive':
                         if j>thr:
-                            self.Local_Amplitude[i]=0.75
-                            self.Local_Surface[i]=1
+                            Local_Amplitude[i]=0.75
+                            Local_Surface[i]=1
                         else:
-                            self.Local_Amplitude[i]=0.0
-                            self.Local_Surface[i]=0.0                            
-                       
+                            Local_Amplitude[i]=0.0
+                            Local_Surface[i]=0.0                            
             except ValueError:
                 msg="""
                 <b>Error</b>
-                <p>Please set a value in pA
+                <p>Please set correct Threshold value
                 """  
-                Infos.Error(msg) 
-        #In this condition, the value in self.Thresholding_Mode_Input_Field is used as threshold. Every value smaller is set to zero
-        elif self.Thresholding_Mode.currentIndex() == 2:
-            print "Charge Thresholded view"            
-            
-            try:
-                thr=float(self.Thresholding_Mode_Input_Field.text())
-                for i,j in enumerate(self.Local_Surface):
-                    if self.Types_of_Events_to_Measure == 'Negative':
-                        if j<thr:
-                            self.Local_Amplitude[i]=-0.75
-                            self.Local_Surface[i]=-1
-                        else:
-                            self.Local_Amplitude[i]=0.0
-                            self.Local_Surface[i]=0.0
-                    elif self.Types_of_Events_to_Measure == 'Positive':
-                        if j>thr:
-                            self.Local_Amplitude[i]=0.75
-                            self.Local_Surface[i]=1
-                        else:
-                            self.Local_Amplitude[i]=0.0
-                            self.Local_Surface[i]=0.0  
-                       
-            except ValueError:
-                msg="""
-                <b>Error</b>
-                <p>Please set a value in pC
-                """ 
-                Infos.Error(msg)            
-        #In this condition, the value in self.Thresholding_Mode_Input_Field is used as threshold. 
-        #self.Local_Amplitude is first Normalized, then, every value smaller than threshold is set to zero  
-        #if needed, same protocol could be implemented for charges...              
-        elif self.Thresholding_Mode.currentIndex() == 3:
+                Infos.Error(msg)                            
+        elif Mode == 3:
             print "% of Max amplitude Thresholded view"     
             
             try:
                 thr=float(self.Thresholding_Mode_Input_Field.text())
                 if self.Types_of_Events_to_Measure == 'Negative':
-                    Max=float(numpy.min(self.Local_Amplitude))
+                    Max=float(numpy.min(Local_Amplitude))
                 elif self.Types_of_Events_to_Measure == 'Positive':
-                    Max=float(numpy.max(self.Local_Amplitude))  
+                    Max=float(numpy.max(Local_Amplitude))  
                     
-                for i,j in enumerate(self.Local_Amplitude):
+                for i,j in enumerate(Local_Amplitude):
                     
                     if (j*100)/Max > thr:
-                        if self.Types_of_Events_to_Measure == 'Negative': self.Local_Amplitude[i]=-0.75
-                        elif self.Types_of_Events_to_Measure == 'Positive': self.Local_Amplitude[i]=0.75    
-                        self.Local_Surface[i]=1
+                        if self.Types_of_Events_to_Measure == 'Negative': Local_Amplitude[i]=-0.75
+                        elif self.Types_of_Events_to_Measure == 'Positive': Local_Amplitude[i]=0.75    
+                        Local_Surface[i]=1
                     else:
-                        self.Local_Amplitude[i]=0.0
-                        self.Local_Surface[i]=0.0
+                        Local_Amplitude[i]=0.0
+                        Local_Surface[i]=0.0
 
             except ValueError:
                 msg="""
                 <b>Error</b>
                 <p>Please set a value in % (between 0 and 100)
                 """       
-                Infos.Error(msg)
+                Infos.Error(msg)          
+        
+
         #In this condition, the value in self.Thresholding_Mode_Input_Field is used as threshold. 
-        #self.Local_Success corresponds to the % of events over the defined threshold (which must be between 0 and 100).
+        #Local_Success corresponds to the % of events over the defined threshold (which must be between 0 and 100).
         #It can only be used if a measure was done before with self.Thresholding_Mode.currentIndex() == 1, 2 or 3 (then self.SuccessRate_Ready = True)
         #if needed, same protocol could be implemented for charges...  
-        elif self.Thresholding_Mode.currentIndex() == 4:
+        elif Mode == 4:
 
             if self.SuccessRate_Ready==True:
                 print "Success Rate Thresholded view"
@@ -1855,12 +1758,12 @@ class Mapping(object):
                 #if self.Charge == 'Color' and self.Amplitude == 'None':
                 try:
                     thr=float(self.Thresholding_Mode_Input_Field.text())/100
-                    for i,j in enumerate(self.Local_Success):
+                    for i,j in enumerate(Local_Success):
                         if j>thr:
                             print 'Position validated, ',i," > ",thr,j
-                            self.Local_Success[i]=j
+                            Local_Success[i]=j
                         else:
-                            self.Local_Success[i]=0.0
+                            Local_Success[i]=0.0
                            
                 except ValueError:
                     msg="""
@@ -1875,7 +1778,7 @@ class Mapping(object):
                 """ 
                 Infos.Error(msg)                    
 
-        elif self.Thresholding_Mode.currentIndex() == 5:# to check, and implement self.Local_Success
+        elif Mode == 5:# to check, and implement Local_Success
             if self.SuccessRate_Ready==True:
                 print "Amplitude or Charge AND success rate Thresholded view"  
                 #if self.Charge == 'Color' and self.Amplitude == 'None':
@@ -1883,9 +1786,9 @@ class Mapping(object):
                 
                 #First, we use the good list, depending if thr was computed on amplitudes or charges
                 if self.Analysis_mode=="Analysis.Charges_1":
-                    Local_to_use=self.Local_Surface
+                    Local_to_use=Local_Surface
                 elif self.Analysis_mode=="Analysis.Amplitudes_1" or self.Analysis_mode=="Analysis.Variance_1":
-                    Local_to_use=self.Local_Amplitude   
+                    Local_to_use=Local_Amplitude   
                     
                 for i,j in enumerate(Local_to_use): 
                     
@@ -1893,7 +1796,7 @@ class Mapping(object):
                     if (self.Types_of_Events_to_Measure == 'Negative' and j < self.mean_threshold) or (self.Types_of_Events_to_Measure == 'Positive' and j > self.mean_threshold):
                         print "At position ", str(i)," threshold mean is reached, ", j, " over ", self.mean_threshold
                         
-                        self.Local_Surface[i]=j #if ok, the value is kept, otherwise it is set to zero
+                        Local_Surface[i]=j #if ok, the value is kept, otherwise it is set to zero
                         
                         #Third, if the success rate is over thr we set the value to 0.65 (green)
                         #otherwise, the value is put in dark red
@@ -1916,26 +1819,26 @@ class Mapping(object):
                 """      
                 Infos.Error(msg)
                 
-        elif self.Thresholding_Mode.currentIndex() == 6:
+        elif Mode == 6:
             print "variance of Amplitude Thresholded view"   
             
             try:
                 thr=float(self.Thresholding_Mode_Input_Field.text())
-                for i,j in enumerate(self.Local_Amplitude):
+                for i,j in enumerate(Local_Amplitude):
                     if self.Types_of_Events_to_Measure == 'Negative':
                         if j<thr:
-                            self.Local_Amplitude[i]=-0.75
-                            self.Local_Surface[i]=-1
+                            Local_Amplitude[i]=-0.75
+                            Local_Surface[i]=-1
                         else:
-                            self.Local_Amplitude[i]=0.0
-                            self.Local_Surface[i]=0.0
+                            Local_Amplitude[i]=0.0
+                            Local_Surface[i]=0.0
                     elif self.Types_of_Events_to_Measure == 'Positive':
                         if j>thr:
-                            self.Local_Amplitude[i]=0.75
-                            self.Local_Surface[i]=1
+                            Local_Amplitude[i]=0.75
+                            Local_Surface[i]=1
                         else:
-                            self.Local_Amplitude[i]=0.0
-                            self.Local_Surface[i]=0.0                            
+                            Local_Amplitude[i]=0.0
+                            Local_Surface[i]=0.0                            
                        
             except ValueError:
                 msg="""
@@ -1944,27 +1847,108 @@ class Mapping(object):
                 """   
                 Infos.Error(msg)
                 
-        elif self.Thresholding_Mode.currentIndex() == 7:
+        elif Mode == 7:
             print "Spike Counting Mode"   
 
             thr=0.0
-            for i,j in enumerate(self.Local_Amplitude):
+            for i,j in enumerate(Local_Amplitude):
                 if self.Types_of_Events_to_Measure == 'Negative':
                     if j<thr:
-                        self.Local_Amplitude[i]=-0.75
-                        self.Local_Surface[i]=-1
+                        Local_Amplitude[i]=-0.75
+                        Local_Surface[i]=-1
                     else:
-                        self.Local_Amplitude[i]=0.0
-                        self.Local_Surface[i]=0.0
+                        Local_Amplitude[i]=0.0
+                        Local_Surface[i]=0.0
                 elif self.Types_of_Events_to_Measure == 'Positive':
                     if j>thr:
-                        self.Local_Amplitude[i]=0.75
-                        self.Local_Surface[i]=1
+                        Local_Amplitude[i]=0.75
+                        Local_Surface[i]=1
                     else:
-                        self.Local_Amplitude[i]=0.0
-                        self.Local_Surface[i]=0.0                            
-      
+                        Local_Amplitude[i]=0.0
+                        Local_Surface[i]=0.0 
+                        
+        return Local_Amplitude,Local_Surface,Local_Success
+                            
+    def Display_Mapping_Results(self,Objective=None,Display=None,Picture=None,BypassReMapping=False,Title='Mapping',Marker='s',Bypass_Measuring=False): 
+        
+        """
+        This function compute all the values to do the mapping. It reads SynaptiQs Comboboxes to apply some thresholding
+        You can use it manually in a simplified mode, by setting some paramters
+        Picture is the full path of the wanted picture
+        """
+        
+        
+        if Objective == 'PM' : self.Objective.setCurrentIndex(0)
+        elif Objective == 'CCD' : self.Objective.setCurrentIndex(1)
+        elif Objective == 'UCL' : self.Objective.setCurrentIndex(2)
+         
+        self.DisplayMode(Display)
+
+        if Picture != None:
+            self.Current_Picture_for_the_Map=Picture
+
+        self.Correction_of_Abnormal_Parameters_for_Mapping()
+        self.ObjectiveParameters(self.Objective.currentIndex())
+
+        self.Wid = MyMplWidget()
+        self.Wid.canvas.axes.set_axis_bgcolor('black')
+        self.Wid.canvas.axes.grid(41,color='r')
+        
+        if BypassReMapping == False:
+            if self.Scanning_Direction_Mode != 'UserDefined':
+                self.Create_Mapping_Pathway()
+        
+        if Bypass_Measuring == False:    
+            #To avoid to alter the recorded values, a copy of individual and average measures is done
+            try:
+                Local_Amplitude=numpy.array([None]*len(self.Sorted_X_and_Y_Coordinates))
+                Local_Amplitude_sd=numpy.array([None]*len(self.Sorted_X_and_Y_Coordinates))
+                Local_Surface=numpy.array([None]*len(self.Sorted_X_and_Y_Coordinates))
+                Local_Surface_sd=numpy.array([None]*len(self.Sorted_X_and_Y_Coordinates))
+                Local_Success=numpy.array([None]*len(self.Sorted_X_and_Y_Coordinates)) 
+            except AttributeError:    
+                msg="""
+                <b>Mapping Error</b>
+                <p>Please define correct coordinates first
+                """
+                Infos.Error(msg)    
+                return
+            
+            for i,j in enumerate(self.Sorted_X_and_Y_Coordinates):
+                try:
+                    Local_Amplitude[i]=self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary[j]
+                    try:
+                        Local_Amplitude_sd[i]=numpy.std(self.Coordinates_and_Corresponding_Amplitudes1_Dictionnary[j])
+                        Local_Surface_sd[i]=numpy.std(self.Coordinates_and_Corresponding_Charges1_Dictionnary[j])
+                    except TypeError: 
+                        Local_Amplitude_sd[i]=0
+                        Local_Surface_sd[i]=0
+                    Local_Surface[i]=self.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary[j]
+                    Local_Success[i]=self.Coordinates_and_Corresponding_Success_Rate_Dictionnary[j]
+                except KeyError:
+                    #TODO : Put NaN instead of 0
+                    print 'No Data (or untagged data) at ', j #if some coordinates dissapeared, because completely Untagged     
+                    Local_Amplitude[i]=0#numpy.NaN
+                    Local_Amplitude_sd[i]=0
+                    Local_Surface[i]=0#numpy.NaN 
+                    Local_Surface_sd[i]=0
+                    Local_Success[i]=0#numpy.NaN  
+                except AttributeError: #if 'Mapping' object has no attribute 'Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary'
+                    self.Define_Coordinates()
+                    return
+                    
+        #####################        
+        ##################### 
+        
+        #Because NaN are bad...
+        for i,j in enumerate(Local_Amplitude):
+            if numpy.math.isnan(j) == True :
+                Local_Amplitude[i]=float(0.0)
                 
+        self.Local_Amplitude,self.Local_Surface,self.Local_Success=self.ModeSpecificProcessing(self.Thresholding_Mode.currentIndex(),
+                                                                                               Local_Amplitude,
+                                                                                               Local_Surface,
+                                                                                               Local_Success)        
         fig,X_coord,Y_coord,Color_values,Surface_values=self.Make_the_Map(Title=Title,Marker=Marker,Bypass_Measuring=Bypass_Measuring)
         
         return fig,X_coord,Y_coord,Color_values,Surface_values
@@ -2265,17 +2249,14 @@ class Mapping(object):
             self.Display_Red=True
         else:    
             self.Display_Red=False
-
         if self.Green_Channel.checkState()==2:
             self.Display_Green=True
         else:    
             self.Display_Green=False
-         
         if self.Blue_Channel.checkState()==2:
             self.Display_Blue=True
         else:    
             self.Display_Blue=False   
-         
         #BypassReMapping is needed because of a bug when using Main.sender()
         self.Display_Mapping_Results(BypassReMapping=True)
         
