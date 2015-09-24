@@ -39,6 +39,7 @@ class Mapping(object):
         self.Max_Valid_Dist=50
         self.Use_Number_of_Turns=True
         self.Image_ColorMap='Greys'
+        self.NormalizeMappingMode='Charge' #controls the measurement type you can use for map normalization
         
     def _all(self,All=False):
         List=[]
@@ -585,12 +586,10 @@ class Mapping(object):
             self.User_Defined_Measurement_Parameters.setCurrentIndex(index)
             self.Load_User_Defined_Parameters(index,True)
         else:
-            msgBox = QtGui.QMessageBox()
-            msgBox.setText(
-            """
+            msg="""
             <b> %s doesn't exist in self.User_Defined_Measurement_Parameters
-            """ % (name)) 
-            msgBox.exec_() 
+            """ % (name) 
+            Infos.Error(msg)
                      
         
     def Set_User_Defined_Measurement_Parameters_to_Zero(self):
@@ -854,7 +853,6 @@ class Mapping(object):
         elif Ystart > Yend and Ystep >= 0:
             self.Y_Step_Field.setText(str(Ystep*-1)) 
             
-  
         #Corrections for "average by Sweep Number"
         try:
             self.SweepPosition.setText(str(int(self.SweepPosition.text()))) 
@@ -872,7 +870,6 @@ class Mapping(object):
         """
         Popup Window to select the experimental picture
         """
-
         
         path = QtGui.QFileDialog()
         path.setDirectory(self.Current_Picture_Directory)
@@ -885,14 +882,11 @@ class Mapping(object):
             self.Current_Picture_Directory=path.directory()
             self.DB_Picture=False
 
-
-        
+ 
     def Define_Non_Grid_Positions(self):
 
         self.Scanning_Direction_Mode = 'UserDefined'   
         self.Set_Auto_Coordinates_Visible()        
-        
-        
         try:
             #Wid=QtGui.QWidget()
             #self.repeats, ok = QtGui.QInputDialog.getInt(Wid,'Number of pattern repeats', 
@@ -988,6 +982,9 @@ class Mapping(object):
                 
                 
     def GenerateGridCoordinates(self,Scanning_Direction_Mode,List_of_X_Points, List_of_Y_Points):
+        '''
+        This function generate a grid of coordinates using SynaptiQs inputs
+        '''
         self.Scanning_Direction_Mode = Scanning_Direction_Mode
        
         if Scanning_Direction_Mode == 'X':
@@ -1035,22 +1032,17 @@ class Mapping(object):
             List_of_Y_Points = range(int(self.Y_Start_Field.text()),int(self.Y_End_Field.text())+int(self.Y_Step_Field.text()),int(self.Y_Step_Field.text()))         #liste les coordonnées en Y
             self.Number_of_Y_Points=len(List_of_Y_Points) #Number of Y-axis points   
         except ValueError:
-            msgBox = QtGui.QMessageBox()
-            msgBox.setText(
-            """
+            msg="""
             <b>Error</b>
-            <p>Did you set the grid boundaries correctly? is the Step sign correct?
-            If it's a regular mapping, did you defined a direction?
             
-            Was each mapping complete, or was your mapping interrupted?
+            <p>Was each mapping complete, or was your mapping interrupted?
             The total number of sweeps must be EXACTLY #points in a grid X #turns
             If the mapping is irregular you might consider a user defined mapping
             
-            """)  
-            msgBox.exec_()
+            """  
+            Infos.Error(msg)
             return
             
-  
         if QtCore.QObject().sender() ==  self.Vertical_Lines_Button or self.Scanning_Direction_Mode == "X":
             self.GenerateGridCoordinates("X",List_of_X_Points, List_of_Y_Points)
         elif QtCore.QObject().sender() ==  self.Horizontal_Lines_Button or self.Scanning_Direction_Mode == "Y":
@@ -1062,41 +1054,29 @@ class Mapping(object):
             self.Set_Coordinates_in_Tag_Variable()
             self.AutoComplete_Missing_Fields()
             
-            
         except ValueError:
-            msgBox = QtGui.QMessageBox()
-            msgBox.setText(
-            """
+            msg="""
             <b>Error</b>
             <p>Please indicate the number of turns, and re-set coordinates
-            """)  
-            msgBox.exec_()
+            """
+            Infos.Error(msg)
             return()
             
             
         if QtCore.QObject().sender() ==  self.Vertical_Lines_Button or QtCore.QObject().sender() ==  self.Horizontal_Lines_Button:   
             self.Mapping_Pattern = MyMplWidget(title='Mapping Pattern')
             self.Mapping_Pattern.canvas.axes.plot(self.Sorted_X_Coordinates,self.Sorted_Y_Coordinates,'o-',-400,-400,400,400)
-            try:
-                self.Mapping_Pattern.canvas.axes.arrow(self.Sorted_X_Coordinates[-2],self.Sorted_Y_Coordinates[-2],(self.Sorted_X_Coordinates[-1]-self.Sorted_X_Coordinates[-2]),(self.Sorted_Y_Coordinates[-1]-self.Sorted_Y_Coordinates[-2]),length_includes_head=True,width=1, head_width=int(self.X_Step_Field.text()),head_length=int(self.X_Step_Field.text()),fc='r')
-                self.Mapping_Pattern.canvas.axes.annotate("expected Nb of Sweeps : "+str(len(self.Sorted_Y_Coordinates_Full)),(-380,350),backgroundcolor='white',alpha=0.4)
-                self.Map_tools_Widget.close()
-                self.Mapping_Pattern.show()
-            except IndexError:
-                msgBox = QtGui.QMessageBox()
-                msgBox.setText(
-                """
-                <b>Error</b>
-                <p>Coordinate set impossible, please correct your coordinates
-                <p>StartX must be < EndX
-                <p>StartY must be < EndY
-                """)
-                msgBox.exec_()      
 
+            self.Mapping_Pattern.canvas.axes.arrow(self.Sorted_X_Coordinates[-2],self.Sorted_Y_Coordinates[-2],(self.Sorted_X_Coordinates[-1]-self.Sorted_X_Coordinates[-2]),(self.Sorted_Y_Coordinates[-1]-self.Sorted_Y_Coordinates[-2]),length_includes_head=True,width=1, head_width=int(self.X_Step_Field.text()),head_length=int(self.X_Step_Field.text()),fc='r')
+            self.Mapping_Pattern.canvas.axes.annotate("expected Nb of Sweeps : "+str(len(self.Sorted_Y_Coordinates_Full)),(-380,350),backgroundcolor='white',alpha=0.4)
+            self.Map_tools_Widget.close()
+            self.Mapping_Pattern.show()
+    
 
     def AutoFill_Grid(self):
         
-        
+        #TODO : detect modulo, so that when the step doesn't exactly match we can correct if
+        #TODO : also, coordinates should be set with float, only int a working now
         if self.X_Start_Field.text() == '' or self.X_End_Field.text() == '':
             self.X_Start_Field.setText('-100')
             self.X_End_Field.setText('100')
@@ -1165,16 +1145,14 @@ class Mapping(object):
                 Requete.tag["Y_coord"][i]=self.Sorted_Y_Coordinates_Full[i]
             except IndexError: 
                 if warning_displayed == False:
-                    msgBox = QtGui.QMessageBox()
-                    msgBox.setText(
-                    """
+                    msg="""
                     <b>Error</b>
                     <p>Did you set the grid boundaries correctly?
                     Was each mapping complete, or was your mapping interrupted?
                     The total number of sweeps must be EXACTLY #points in a grid X #turns
                     If the mapping is irregular you might consider a user defined mapping
-                    """)  
-                    msgBox.exec_()
+                    """
+                    Infos.Error(msg)
                     warning_displayed = True
 
                 print "Index error for sweep ", i
@@ -1203,8 +1181,7 @@ class Mapping(object):
             self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary : {id:sweep#}
             self.Initially_Excluded_AnalogSignal_Ids : {sweep#:id} #It's a blacklist of initially unchecked sweeps
         """                
-        
-        
+
         self.Initially_Excluded_AnalogSignal_Ids={}
         try:
             for i,j in enumerate(Requete.Analogsignal_ids):
@@ -1215,7 +1192,6 @@ class Mapping(object):
             self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary={} #Keys = ids , Values = Sweep #
             for i,j in enumerate(Requete.Analogsignal_ids):
                 self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[j]=i
-                
                 if Requete.tag["Selection"][i]!=0:
                     self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[j]=(int(Requete.tag["X_coord"][i]),int(Requete.tag["Y_coord"][i]))
                 else:
@@ -1223,33 +1199,23 @@ class Mapping(object):
             
             #On inverse le dictionaire
             self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary={}  #Keys = (X,Y)coordinates , Values = array of corresponding ids
-    
-    
-    
-            
-    
             for i,j in self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary.iteritems():
                 self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[j] = self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary.get(j, [])
                 self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[j].append(i)
-                
                 if self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary.has_key(None) == True: #None coordinates are deleted
                     del self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[None]         
 
         except TypeError:
-            msgBox = QtGui.QMessageBox()
-            msgBox.setText(
-            """
+            msg="""
             <b>Error</b>
             <p>Did you set the grid boundaries correctly?
             Was each mapping complete, or was your mapping interrupted?
             The total number of sweeps must be EXACTLY #points in a grid X #turns
             If the mapping is irregular you might consider a user defined mapping
-            """)  
-            msgBox.exec_()
+            """
+            Infos.Error(msg)
             return True       
 
-#        self.Success_list=[0]*len(self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary)
-#        self.Xaxis=[0]*len(self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary)
         self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary={}
         self.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary={}
         self.Coordinates_and_Corresponding_Amplitudes1_Dictionnary={}
@@ -1272,11 +1238,9 @@ class Mapping(object):
                 self.Define_Coordinates()
                 self.X_Neuron.setText('retry!')
                 self.Y_Neuron.setText('retry!')
-                
         else:
             self.Define_Coordinates()
             
-
     def Average_Traces_By_Position(self):
 
         """
@@ -1312,22 +1276,19 @@ class Mapping(object):
             try:
                 self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary[keys]=MA1 #one point array
                 self.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary[keys]=MC1 #one point array
-                self.Coordinates_and_Corresponding_Mean_Variance1_Dictionnary[keys]=0
+                #self.Coordinates_and_Corresponding_Mean_Variance1_Dictionnary[keys]=0
                 self.Coordinates_and_Corresponding_Amplitudes1_Dictionnary=None
                 self.Coordinates_and_Corresponding_Charges1_Dictionnary=None
-                self.Coordinates_and_Corresponding_Success_Rate_Dictionnary[keys]=None
+                #self.Coordinates_and_Corresponding_Success_Rate_Dictionnary[keys]=None
                 AllC1values.append(MC1)
                 AllA1values.append(MA1)
                 counter+=1
             except TypeError:
-                msgBox = QtGui.QMessageBox()
-                msgBox.setText(
-                """
+                msg="""
                 <b>Tag Error</b>
                 <p>Error at position %s, You must set the Coordinates!
-                """ % str(keys)) 
-                msgBox.exec_() 
-                
+                """ %str(keys)
+                Infos.Error(msg)
                 counter+=1
 
         
@@ -1341,17 +1302,23 @@ class Mapping(object):
 #            self.Manual_Min_Field.setText(str(numpy.nanmin(AllA1values)))
 #            self.Manual_Max_Field.setText(str(numpy.nanmax(AllA1values)))
 #        elif self.Analysis_mode=="Analysis.Charges_1":
-        if len(AllC1values)<1:
-            msgBox = QtGui.QMessageBox()
-            msgBox.setText(
-            """
+        
+
+        if len(AllC1values)<1 or len(AllA1values)<1:
+            msg="""
             <b>No Data</b>
             <p>Did you tag any trace?
-            """) 
-            msgBox.exec_()    
+            """
+            Infos.Error(msg)    
             return
-        Min=numpy.nanmin(AllC1values)
-        Max=numpy.nanmax(AllC1values)
+        
+        if self.NormalizeMappingMode == 'Charge':
+            Min=numpy.nanmin(AllC1values)
+            Max=numpy.nanmax(AllC1values)
+        elif self.NormalizeMappingMode == 'Amplitude':
+            Min=numpy.nanmin(AllC1values)
+            Max=numpy.nanmax(AllC1values)
+            
         if self.Types_of_Events_to_Measure == 'Negative':
             Min*=-1
             Max*=-1
@@ -1411,22 +1378,18 @@ class Mapping(object):
                         self.Analysis_mode="Analysis.Charges_1"
                         thr=Value
                     else:
-                        msgBox = QtGui.QMessageBox()
-                        msgBox.setText(
-                        """
+                        msg="""
                         <b>Error</b>
                         <p>Please re-try
-                        """)  
-                        msgBox.exec_()
+                        """  
+                        Infos.Error(msg)
                         raise "Error, the analysis is aborted"                        
                 except ValueError:
-                    msgBox = QtGui.QMessageBox()
-                    msgBox.setText(
-                    """
+                    msg="""
                     <b>Unit Error</b>
                     <p>You forget the unit!
-                    """)  
-                    msgBox.exec_()
+                    """
+                    Infos.Error(msg)
                     raise "Error in setting the Value"
             else:
                 raise "Measure Cancelled"
@@ -1592,17 +1555,16 @@ class Mapping(object):
         for i,j in enumerate(Requete.Segment_ids):
             self.Segid_to_SweepNb[j]=i  
             
-        msgBox = QtGui.QMessageBox()
-        msgBox.setText(
-        """
+
+        msg="""
         <p><b>Segment.id to Sweep Number</b>
         <p>"""+str(self.Segid_to_SweepNb)+"""
         <p><b>Analogsignal.id to Sweep Number</b>
         <p>"""+str(self.ASid_to_SweepNb)+"""
         <p><b>Spiketrain.id to Sweep Number</b>
         <p>"""+str(self.STid_to_SweepNb)+"""
-        """)   
-        msgBox.exec_()
+        """   
+        Infos.Error(msg)
  
 
     def One_Stim_Average(self,X=None,Y=None,Silent=True): 
@@ -1636,11 +1598,9 @@ class Mapping(object):
                     self.Y_Neuron.setText(str(self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())]][1]))
                     keys=self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())]]
                 except TypeError:
-                    msgBox = QtGui.QMessageBox()
-                    msgBox.setText(
-                    """
-                    This position contains no Data (Perhaps everything is unttaged)""")
-                    msgBox.exec_() 
+                    msg="""
+                    This position contains no Data (Perhaps everything is unttaged)"""
+                    Infos.Error(msg)
                     return    
                 except AttributeError: #if analysi has never beeen done, we create the needed dict
                     abort=self.Create_Dictionnaries()        
@@ -1678,11 +1638,9 @@ class Mapping(object):
 
 
         except KeyError: #si la position est lue depuis la sauvegarde, les coordonnées sont des str, a fixer a l'occasion
-            msgBox = QtGui.QMessageBox()
-            msgBox.setText(
-            """
-            This position contains no Data (Perhaps everything is unttaged)""")
-            msgBox.exec_()  
+            msg="""
+            This position contains no Data (Perhaps everything is unttaged)"""
+            Infos.Error(msg)  
 
         
         finally: #si jamais les coordonnées n'existent pas, on resaure les tags
@@ -1759,13 +1717,11 @@ class Mapping(object):
                 self.Local_Surface_sd=numpy.array([None]*len(self.Sorted_X_and_Y_Coordinates))
                 self.Local_Success=numpy.array([None]*len(self.Sorted_X_and_Y_Coordinates)) 
             except AttributeError:    
-                msgBox = QtGui.QMessageBox()
-                msgBox.setText(
-                """
+                msg="""
                 <b>Mapping Error</b>
                 <p>Please define correct coordinates first
-                """) 
-                msgBox.exec_()     
+                """
+                Infos.Error(msg)    
                 return
             
 
@@ -1825,13 +1781,11 @@ class Mapping(object):
                             self.Local_Surface[i]=0.0                            
                        
             except ValueError:
-                msgBox = QtGui.QMessageBox()
-                msgBox.setText(
-                """
+                msg="""
                 <b>Error</b>
                 <p>Please set a value in pA
-                """)   
-                msgBox.exec_()  
+                """  
+                Infos.Error(msg) 
         #In this condition, the value in self.Thresholding_Mode_Input_Field is used as threshold. Every value smaller is set to zero
         elif self.Thresholding_Mode.currentIndex() == 2:
             print "Charge Thresholded view"            
@@ -1855,13 +1809,11 @@ class Mapping(object):
                             self.Local_Surface[i]=0.0  
                        
             except ValueError:
-                msgBox = QtGui.QMessageBox()
-                msgBox.setText(
-                """
+                msg="""
                 <b>Error</b>
                 <p>Please set a value in pC
-                """)  
-                msgBox.exec_()             
+                """ 
+                Infos.Error(msg)            
         #In this condition, the value in self.Thresholding_Mode_Input_Field is used as threshold. 
         #self.Local_Amplitude is first Normalized, then, every value smaller than threshold is set to zero  
         #if needed, same protocol could be implemented for charges...              
@@ -1886,13 +1838,11 @@ class Mapping(object):
                         self.Local_Surface[i]=0.0
 
             except ValueError:
-                msgBox = QtGui.QMessageBox()
-                msgBox.setText(
-                """
+                msg="""
                 <b>Error</b>
                 <p>Please set a value in % (between 0 and 100)
-                """)       
-                msgBox.exec_()
+                """       
+                Infos.Error(msg)
         #In this condition, the value in self.Thresholding_Mode_Input_Field is used as threshold. 
         #self.Local_Success corresponds to the % of events over the defined threshold (which must be between 0 and 100).
         #It can only be used if a measure was done before with self.Thresholding_Mode.currentIndex() == 1, 2 or 3 (then self.SuccessRate_Ready = True)
@@ -1913,21 +1863,17 @@ class Mapping(object):
                             self.Local_Success[i]=0.0
                            
                 except ValueError:
-                    msgBox = QtGui.QMessageBox()
-                    msgBox.setText(
-                    """
+                    msg="""
                     <b>Error</b>
                     <p>Please set a value between 0 and 100 %
-                    """)      
-                    msgBox.exec_()
+                    """      
+                    Infos.Error(msg)
             else:
-                msgBox = QtGui.QMessageBox()
-                msgBox.setText(
-                """
+                msg="""
                 <b>Error</b>
                 <p>You Can't use success rate filter if you didn't do "Mapping Measure" 
-                """)  
-                msgBox.exec_()                     
+                """ 
+                Infos.Error(msg)                    
 
         elif self.Thresholding_Mode.currentIndex() == 5:# to check, and implement self.Local_Success
             if self.SuccessRate_Ready==True:
@@ -1964,13 +1910,11 @@ class Mapping(object):
                         print "At position ", str(i),"threshold mean is not reached,", abs(j), "<", abs(self.mean_threshold)
                         Local_to_use[i]=0.0
             else:
-                msgBox = QtGui.QMessageBox()
-                msgBox.setText(
-                """
+                msg="""
                 <b>Error</b>
                 <p>You Can't use success rate filter if you didn't do "Mapping Measure" 
-                """)      
-                msgBox.exec_()
+                """      
+                Infos.Error(msg)
                 
         elif self.Thresholding_Mode.currentIndex() == 6:
             print "variance of Amplitude Thresholded view"   
@@ -1994,13 +1938,11 @@ class Mapping(object):
                             self.Local_Surface[i]=0.0                            
                        
             except ValueError:
-                msgBox = QtGui.QMessageBox()
-                msgBox.setText(
-                """
+                msg="""
                 <b>Error</b>
                 <p>Please set a value in pA
-                """)   
-                msgBox.exec_()  
+                """   
+                Infos.Error(msg)
                 
         elif self.Thresholding_Mode.currentIndex() == 7:
             print "Spike Counting Mode"   
@@ -2279,23 +2221,19 @@ class Mapping(object):
                 self.pic = image.imread(str(self.Current_Picture_for_the_Map))
         except IOError:
             self.pic = image.imread(Main.Script_Path+"/Black.png")
-            msgBox = QtGui.QMessageBox()
-            msgBox.setText(
-            """
+            msg="""
             <b>Picture Error</b>
             <p>Defined Picture doesn't exist (anymore?)
             <p>Black Background used instead
-            """)   
-            msgBox.exec_()              
+            """   
+            Infos.Error(msg)              
         except AttributeError:
             self.pic = image.imread(Main.Script_Path+"/Black.png")
-            msgBox = QtGui.QMessageBox()
-            msgBox.setText(
-            """
+            msg="""
             <b>Picture Error</b>
             <p>No Picture set, black Background used
-            """)   
-            msgBox.exec_()   
+            """  
+            Infos.Error(msg) 
             #pyplot.contour(self.pic,[120, 255],linestyles='dashed',colors='w',linewidths=4)
         
             

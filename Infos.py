@@ -71,6 +71,16 @@ class Infos(object):
         
         self.HelpWidget.show()
 
+    def Error(self,message):
+        '''
+        display an error message as a popup
+        '''
+        msgBox = QtGui.QMessageBox()
+        msgBox.setText(message)  
+        msgBox.exec_()        
+        
+        
+        
     def LineEdited(self):
         obj=QtCore.QObject().sender().objectName()
         obj=obj.split('.')
