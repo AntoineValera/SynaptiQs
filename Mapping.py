@@ -531,76 +531,43 @@ class Mapping(object):
         
                 
         self.OptionWid.show()
-        
-    def Update_Display_Parameters(self):
-        
-       
+    
+    def EnableDisableOptions(self,Amplitude,Charge,Average,Measure,ThresholdInput,ChangeDisplay=False):
         self.Amplitude=str(self.Amplitudes_Display_Mode.currentText())
         self.Charge=str(self.Charges_Display_Mode.currentText())
+        
+        self.Amplitudes_Display_Mode.setEnabled(Amplitude)
+        self.Charges_Display_Mode.setEnabled(Charge)  
+        self.averagebyposition.setEnabled(Average)
+        self.measurebyposition.setEnabled(Measure)
+        self.Thresholding_Mode_Input_Field.setEnabled(ThresholdInput)
+        
+        if ChangeDisplay == True:
+            self.Amplitudes_Display_Mode.setCurrentIndex(0)  
+            self.Charges_Display_Mode.setCurrentIndex(2)          
+        
+ 
+    def Update_Display_Parameters(self):
 
         if self.Thresholding_Mode.currentIndex()==0:
-            self.Amplitudes_Display_Mode.setEnabled(True)
-            self.Charges_Display_Mode.setEnabled(True)  
-            self.averagebyposition.setEnabled(True)
-            self.measurebyposition.setEnabled(False)
-            self.Thresholding_Mode_Input_Field.setEnabled(False)      
-
-
-        if self.Thresholding_Mode.currentIndex()==1:
-            self.Amplitudes_Display_Mode.setEnabled(True)
-            self.Charges_Display_Mode.setEnabled(True)  
-            self.averagebyposition.setEnabled(True)
-            self.measurebyposition.setEnabled(True)
-            self.Thresholding_Mode_Input_Field.setEnabled(True)  
-
-        if self.Thresholding_Mode.currentIndex()==2:
-            self.Amplitudes_Display_Mode.setEnabled(True)
-            self.Charges_Display_Mode.setEnabled(True)  
-            self.averagebyposition.setEnabled(True)
-            self.measurebyposition.setEnabled(True)
-            self.Thresholding_Mode_Input_Field.setEnabled(True)   
-
-        if self.Thresholding_Mode.currentIndex()==3:
-            self.Amplitudes_Display_Mode.setEnabled(True)
-            self.Charges_Display_Mode.setEnabled(True)  
-            self.averagebyposition.setEnabled(True)
-            self.measurebyposition.setEnabled(False) # A tester avant d'activer
-            self.Thresholding_Mode_Input_Field.setEnabled(True)  
-
-        if self.Thresholding_Mode.currentIndex()==4:
-            self.Amplitudes_Display_Mode.setEnabled(False)
-            self.Charges_Display_Mode.setEnabled(True)
-            self.Amplitudes_Display_Mode.setCurrentIndex(2)  
-            self.Charges_Display_Mode.setCurrentIndex(0)  
-            self.averagebyposition.setEnabled(False)
-            self.measurebyposition.setEnabled(False)
-            self.Thresholding_Mode_Input_Field.setEnabled(True)   
-
-        if self.Thresholding_Mode.currentIndex()==5:
-            self.Amplitudes_Display_Mode.setEnabled(False)
-            self.Charges_Display_Mode.setEnabled(True) 
-            self.Amplitudes_Display_Mode.setCurrentIndex(2)  
-            self.Charges_Display_Mode.setCurrentIndex(0)              
-            self.averagebyposition.setEnabled(False)
-            self.measurebyposition.setEnabled(True)
-            self.Thresholding_Mode_Input_Field.setEnabled(True)  
-
-        if self.Thresholding_Mode.currentIndex()==6:
-            self.Amplitudes_Display_Mode.setEnabled(True)
-            self.Charges_Display_Mode.setEnabled(True)  
-            self.averagebyposition.setEnabled(True)
-            self.measurebyposition.setEnabled(True)
-            self.Thresholding_Mode_Input_Field.setEnabled(True)
-
-        if self.Thresholding_Mode.currentIndex()==7: #for spikes
-            self.Amplitudes_Display_Mode.setEnabled(True)
-            self.Charges_Display_Mode.setEnabled(True)  
-            self.averagebyposition.setEnabled(False)
-            self.measurebyposition.setEnabled(True)
-            self.Thresholding_Mode_Input_Field.setEnabled(False)
-            self.Amplitudes_Display_Mode.setCurrentIndex(0)  
-            self.Charges_Display_Mode.setCurrentIndex(2)             
+            self.EnableDisableOptions(True,True,True,False,False)
+        elif self.Thresholding_Mode.currentIndex()==1:
+            self.EnableDisableOptions(True,True,True,True,True)
+        elif self.Thresholding_Mode.currentIndex()==2:
+            self.EnableDisableOptions(True,True,True,True,True)
+        elif self.Thresholding_Mode.currentIndex()==3:
+            self.EnableDisableOptions(True,True,True,False,True)
+            #self.EnableDisableOptions(True,True,True,True,True)
+        elif self.Thresholding_Mode.currentIndex()==4:
+            self.EnableDisableOptions(False,True,False,False,True,ChangeDisplay=True)
+        elif self.Thresholding_Mode.currentIndex()==5:
+            self.EnableDisableOptions(False,True,False,True,True,ChangeDisplay=True)
+        elif self.Thresholding_Mode.currentIndex()==6:
+            self.EnableDisableOptions(True,True,True,True,True)
+        elif self.Thresholding_Mode.currentIndex()==7: #for spikes
+            self.EnableDisableOptions(True,True,False,True,False,ChangeDisplay=True)
         
+        #TODO : explain what that is
         if self.Charge==self.Amplitude:
             if self.Charge!='None':
                 self.Charges_Display_Mode.setCurrentIndex(2)
@@ -608,9 +575,6 @@ class Mapping(object):
             else:
                 self.Charges_Display_Mode.setCurrentIndex(1)
                 self.Charge='Surface'
-       
-            
-        #print self.Amplitude,self.Charge               
 
     def Set_User_Parameters(self,name):
         #TODO : The 4 followinf function are like their source in Analysis. Those function should be pooled together
@@ -633,7 +597,6 @@ class Mapping(object):
 
         for a in ["X_Start_Field","X_End_Field","X_Step_Field","Y_Start_Field","Y_End_Field","Y_Step_Field","Number_of_Turns"]:
             exec('self.'+a+'.setText("1.0")')
-
         self.Load_User_Defined_Parameters(0)
 
     def Add_User_Defined_Measurement_Parameters(self):
@@ -654,9 +617,7 @@ class Mapping(object):
                 exec('temp = self.'+str(a)+'.text()')                
                 templist.append(str(temp))
 
-
         self.Mapping_Preferences.append(templist)
-                
         self.Load_User_Defined_Parameters(len(self.User_Defined_Measurement_Parameters)-1)
         
         
@@ -665,9 +626,7 @@ class Mapping(object):
         a=int(self.User_Defined_Measurement_Parameters.count())
         self.Mapping_Preferences.pop(int(self.User_Defined_Measurement_Parameters.currentIndex()))
         self.User_Defined_Measurement_Parameters.removeItem(self.User_Defined_Measurement_Parameters.currentIndex())
-        
         self.User_Defined_Measurement_Parameters.setCurrentIndex(a-2)
-        
         self.Load_User_Defined_Parameters(0)
 
     def Load_User_Defined_Parameters(self,index,External=False):
@@ -879,17 +838,23 @@ class Mapping(object):
         if float(self.Stim_Resolution.text()) <= 0:
             self.Stim_Resolution.setText("1")   
 
-#        #Corrections for PM Positions possibilities
-#        if float(self.X_Start_Field.text()) < -400:
-#            self.X_Start_Field.setText("-400")   
-#        if float(self.Y_Start_Field.text()) < -400:
-#            self.Y_Start_Field.setText("-400")               
-#
-#        if float(self.X_End_Field.text()) > 400:
-#            self.X_End_Field.setText("400")   
-#        if float(self.Y_End_Field.text()) > 400:
-#            self.X_End_Field.setText("400")  
-        
+        #Corrections for step direction
+        Xstart=int(self.X_Start_Field.text())
+        Xend=int(self.X_End_Field.text())
+        Xstep=int(self.X_Step_Field.text())
+        Ystart=int(self.Y_Start_Field.text())
+        Yend=int(self.Y_End_Field.text())
+        Ystep=int(self.Y_Step_Field.text())
+        if Xstart < Xend and Xstep <= 0:
+            self.X_Step_Field.setText(str(Xstep*-1)) 
+        elif Xstart > Xend and Xstep >= 0:
+            self.X_Step_Field.setText(str(Xstep*-1))            
+        if Ystart < Yend and Ystep <= 0:
+            self.Y_Step_Field.setText(str(Ystep*-1)) 
+        elif Ystart > Yend and Ystep >= 0:
+            self.Y_Step_Field.setText(str(Ystep*-1)) 
+            
+  
         #Corrections for "average by Sweep Number"
         try:
             self.SweepPosition.setText(str(int(self.SweepPosition.text()))) 
@@ -1022,6 +987,21 @@ class Mapping(object):
                 i.setEnabled(True)
                 
                 
+    def GenerateGridCoordinates(self,Scanning_Direction_Mode,List_of_X_Points, List_of_Y_Points):
+        self.Scanning_Direction_Mode = Scanning_Direction_Mode
+       
+        if Scanning_Direction_Mode == 'X':
+            Y, X = numpy.meshgrid(List_of_Y_Points, List_of_X_Points)
+        elif Scanning_Direction_Mode == 'Y':
+            X, Y = numpy.meshgrid(List_of_X_Points, List_of_Y_Points)
+            
+        self.Sorted_X_Coordinates=list(X.flatten())
+        self.Sorted_Y_Coordinates=list(Y.flatten())
+        self.Sorted_X_Coordinates_Full=self.Sorted_X_Coordinates*int(self.Number_of_Turns.text())
+        self.Sorted_Y_Coordinates_Full=self.Sorted_Y_Coordinates*int(self.Number_of_Turns.text())    
+        self.Sorted_X_and_Y_Coordinates=zip(self.Sorted_X_Coordinates,self.Sorted_Y_Coordinates)
+        self.Sorted_X_and_Y_Coordinates_Full=self.Sorted_X_and_Y_Coordinates*int(self.Number_of_Turns.text())
+
                 
     def Create_Mapping_Pathway(self):
         
@@ -1051,73 +1031,37 @@ class Mapping(object):
 
         try:
             List_of_X_Points = range(int(self.X_Start_Field.text()),int(self.X_End_Field.text())+int(self.X_Step_Field.text()),int(self.X_Step_Field.text()))        #liste les coordonnées en X
-            self.Number_of_X_Points=len(List_of_X_Points)                            #calcule le nombre de points en X
+            self.Number_of_X_Points=len(List_of_X_Points) #Number of X-axis points
             List_of_Y_Points = range(int(self.Y_Start_Field.text()),int(self.Y_End_Field.text())+int(self.Y_Step_Field.text()),int(self.Y_Step_Field.text()))         #liste les coordonnées en Y
-            self.Number_of_Y_Points=len(List_of_Y_Points)                            #calcule le nombre de points en Y        
+            self.Number_of_Y_Points=len(List_of_Y_Points) #Number of Y-axis points   
         except ValueError:
             msgBox = QtGui.QMessageBox()
             msgBox.setText(
             """
             <b>Error</b>
-            <p>Did you set the grid boundaries correctly?
+            <p>Did you set the grid boundaries correctly? is the Step sign correct?
+            If it's a regular mapping, did you defined a direction?
+            
             Was each mapping complete, or was your mapping interrupted?
             The total number of sweeps must be EXACTLY #points in a grid X #turns
             If the mapping is irregular you might consider a user defined mapping
             
-            If it's a regular mapping, did you defined a direction
             """)  
             msgBox.exec_()
             return
-        self.Sorted_Y_Coordinates=[]
-        self.Sorted_X_Coordinates=[]       
-           
-
+            
+  
         if QtCore.QObject().sender() ==  self.Vertical_Lines_Button or self.Scanning_Direction_Mode == "X":
-            print "X SCANNING"
-            self.Scanning_Direction_Mode = "X"
-            for i in List_of_X_Points: #pour chaque colonne avec un même X
-                one_column=[i]*self.Number_of_Y_Points #on creé un array en Y avec autant de point qu'il y a de stim dans cette colonne
-                self.Sorted_X_Coordinates=self.Sorted_X_Coordinates+one_column #on concatene la colonne avec la précédente
-                
-            self.Sorted_Y_Coordinates = List_of_Y_Points*self.Number_of_X_Points #on repete la liste des coordonnées en X autant de fois qu'il y a de ligne
-            
-            self.Sorted_X_and_Y_Coordinates=[None]*len(self.Sorted_X_Coordinates) #ca sera la liste totale des coordonnées
-
-            print "%s Vertical lines from %s to %s. " % (self.Number_of_X_Points,self.Y_Start_Field.text(),self.Y_End_Field.text())            
-
-            
-            for i,j in enumerate(self.Sorted_Y_Coordinates):
-                self.Sorted_X_and_Y_Coordinates[i]=(self.Sorted_X_Coordinates[i],j)
-              
-              
-              
-            self.Sorted_X_and_Y_Coordinates_Full=self.Sorted_X_and_Y_Coordinates*int(self.Number_of_Turns.text())
-
-   
-       
+            self.GenerateGridCoordinates("X",List_of_X_Points, List_of_Y_Points)
         elif QtCore.QObject().sender() ==  self.Horizontal_Lines_Button or self.Scanning_Direction_Mode == "Y":
-            print "Y SCANNING"
-            self.Scanning_Direction_Mode = "Y" 
-            for i in List_of_Y_Points: #pour chaque ligne avec un même y
-                one_line=List_of_X_Points #on creé un array en X avec autant de point qu'il y a de stim dans cette ligne
-                self.Sorted_X_Coordinates=self.Sorted_X_Coordinates+one_line #on concatene la ligne avec la précédente
-                self.Sorted_Y_Coordinates = self.Sorted_Y_Coordinates+[i]*self.Number_of_X_Points #on repete la liste des coordonnées en X autant de fois qu'il y a de ligne       
-
-            self.Sorted_X_and_Y_Coordinates=[None]*len(self.Sorted_X_Coordinates) #ca sera la liste totale des coordonnées
- 
-            print "%s Horizontal lines from %s to %s. " % (self.Number_of_Y_Points,self.X_Start_Field.text(),self.X_End_Field.text())             
-            
-            for i,j in enumerate(self.Sorted_Y_Coordinates):
-                self.Sorted_X_and_Y_Coordinates[i]=(self.Sorted_X_Coordinates[i],j)
-                
-            self.Sorted_X_and_Y_Coordinates_Full=self.Sorted_X_and_Y_Coordinates*int(self.Number_of_Turns.text())
+            self.GenerateGridCoordinates("Y",List_of_X_Points, List_of_Y_Points)
 
         try:
+            self.Correction_of_Abnormal_Parameters_for_Mapping()
             self.Set_Auto_Coordinates_Visible() 
-            self.Sorted_X_Coordinates_Full=self.Sorted_X_Coordinates*int(self.Number_of_Turns.text()) #et on refait la trajectoire autant de fois qu'il y a de tours
-            self.Sorted_Y_Coordinates_Full=self.Sorted_Y_Coordinates*int(self.Number_of_Turns.text())
             self.Set_Coordinates_in_Tag_Variable()
             self.AutoComplete_Missing_Fields()
+            
             
         except ValueError:
             msgBox = QtGui.QMessageBox()
@@ -1127,6 +1071,7 @@ class Mapping(object):
             <p>Please indicate the number of turns, and re-set coordinates
             """)  
             msgBox.exec_()
+            return()
             
             
         if QtCore.QObject().sender() ==  self.Vertical_Lines_Button or QtCore.QObject().sender() ==  self.Horizontal_Lines_Button:   
@@ -1143,8 +1088,8 @@ class Mapping(object):
                 """
                 <b>Error</b>
                 <p>Coordinate set impossible, please correct your coordinates
-                StartX must be < EndX
-                StartY must be < EndY
+                <p>StartX must be < EndX
+                <p>StartY must be < EndY
                 """)
                 msgBox.exec_()      
 
