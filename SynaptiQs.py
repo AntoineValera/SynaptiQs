@@ -9,17 +9,24 @@ Version 2.0.3
 
 
 import sys,sip
+
+
+
+#try:
+
+sip.setapi('QString', 2)
+sip.setapi('QVariant', 2)
+Ipython=True
+#except ValueError:
+
 from PyQt4 import QtCore, QtGui
 from matplotlib import pyplot
 from OpenElectrophy import *
-from scipy import *
+from scipy import *   
+ 
+app = QtGui.QApplication(sys.argv)
 
-
-try:
-    sip.setapi('QString', 2)
-    Ipython=True
-except ValueError:
-    app = QtGui.QApplication(sys.argv)
+if sip.getapi('QString') == 1:
     msgBox = QtGui.QMessageBox()
     msgBox.setText(
     """
@@ -30,8 +37,7 @@ except ValueError:
     <p>SynaptiQs will now start without Ipython
     """)
     msgBox.exec_()   
-    Ipython=False
-    
+    Ipython=False    
     
 
 import sys,os,atexit,glob,warnings

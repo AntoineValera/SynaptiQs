@@ -48,6 +48,15 @@ class Main(QtGui.QWidget,object):#
         
         
         self.userpath=os.getenv("HOME")
+        print '###########################################################'
+        print '###########################################################'
+        print '###########################################################'
+        
+        if self.userpath == None:
+            self.userpath = 'C:\Users\Antoine\WinPython-64bit-2.7.10.1\settings'
+        print '###########################################################'
+        print '###########################################################'
+        print '###########################################################'
         
         self.Script_Path=os.path.dirname(os.path.realpath(__file__))
         if self.userpath == None:
