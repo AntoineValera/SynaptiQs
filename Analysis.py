@@ -39,10 +39,14 @@ class Analysis(object):
         for i in List:
             print i 
     def Remove_a_Leak(self,Signal):#,Leak_Removing_Interval_Start=0,Leak_Removing_Interval_End=-1):
+        #TODO ugly manual value to check here
         #SealTestStart=2500
         #SealTestStop=3600
         SealTestStart=2500
         SealTestStop=2501    
+        if 'Measurement_Interval' in locals() == False:
+            self.Display_Measures_Button.setCheckState(2)
+            self.Measure_On_Off_Activated()
         StimStart=self.Measurement_Interval[2]
     
     

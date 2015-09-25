@@ -192,7 +192,7 @@ class TableDesign(QDialog) :
                     t = 'unknown'
                 item = QTableWidgetItem(t)
                 self.listFields.setItem(r, 1 , item)
-                item.setBackground(QBrush('red'))
+                #item.setBackground(QBrush('red'))
                 r+=1
 
         self.listParents.clear()

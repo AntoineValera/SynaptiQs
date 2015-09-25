@@ -615,6 +615,17 @@ class Requete(object):
             try :
                 exec(self.Arraylist+"self.Block_ids,self.Block_date,channels,ids,self.Analogsignal_name,self.tag,self.Analogsignal_channel,samprate,self.Block_fileOrigin,self.Block_Info,self.Analogsignal_signal_shape = sql(self.query)")
             except sqlalchemy.exc.OperationalError:
+                
+                metadata.bind = self.Global_Meta
+                metadata.reflect()                
+                for tablename, table in metadata.tables.iteritems() :
+                    print tablename
+                    print table, type(table)
+                
+                
+                
+                
+                
                 msgBox = QtGui.QMessageBox()
                 msgBox.setText(
                 """
@@ -1021,6 +1032,7 @@ class Requete(object):
                 print 'AttributeError'
                 pass
             except:
+              
                 msgBox = QtGui.QMessageBox()
                 msgBox.setText(
                 """
@@ -1037,38 +1049,45 @@ class Requete(object):
             Main.FilteringWidget.show()
             
             Main.SQLTabWidget.setGeometry(0,0,330,50)
-
             
             try:
                 self.Resetfields()
                 
             
             except:
-                msgBox = QtGui.QMessageBox()
-                msgBox.setText(
-                """
-                <b>SynaptiQs was unable to open SQLite db.</b>
-                <p>Please check the path and Restart the Request.
-                <p>You may also have to create analogsignal.Tag columns
-                """)    
-                msgBox.exec_()
-#                if Main.SQLTabWidget.currentIndex()==1:
-                   
-#            print "/////////////// Following SQLite path exists and can be used : ",Main.param_inf[0]
-#            
-#            try:
-#                self.Resetfields()                
-#            except:
-#                msgBox = QtGui.QMessageBox()
-#                msgBox.setText(
-#                """
-#                <b>SynaptiQs was unable to open SQLite db.</b>
-#                <p>Please check the path and Restart the Request.
-#                <p>You may also have to create analogsignal.Tag columns
-#                """)    
-#                msgBox.exec_()
-             
-                
+                #identifying the error
+                for i in self.Global_Meta.sorted_tables:
+                    if 'analogsignal' in str(i):
+                        Analogsignalcolumns=[]
+                        for j in i.columns:
+                            Analogsignalcolumns.append(str(j))
+                            
+                if 'analogsignal.Tag' in Analogsignalcolumns:
+                    msgBox = QtGui.QMessageBox()
+                    msgBox.setText(
+                    """
+                    <b>SynaptiQs was unable to open SQLite db.</b>
+                    <p>Please check the path and Restart the Query.
+                    """)    
+                    msgBox.exec_()
+                else:
+                    
+                    msgBox = QtGui.QMessageBox()
+                    msgBox.setText(
+                    """
+                    <b>First Query on this DB. Some fields are automatically added
+                    <p> SynaptiQs will now exit. please restart
+                    """)    
+                    msgBox.exec_()
+                    for i in self.Global_Meta.sorted_tables:
+                        if 'analogsignal' in str(i):
+                           try: 
+                               sql("ALTER TABLE analogsignal ADD COLUMN tag varchar(512)")
+                               #this command add a column but raise an error
+                           except sqlalchemy.exc.ResourceClosedError:
+                               print 'done'
+                               exit()
+               
         elif Main.SQLTabWidget.currentIndex()==2:
             
             print "Imported files will be used, Please use import tools"
