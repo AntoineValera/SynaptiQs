@@ -20,14 +20,14 @@ from baseio import BaseIO
 from ..core import *
 
 
-import struct
 from numpy import *
 from igor import binarywave,igorpy
-import re
+import re,string,datetime,struct
+ 
+
 class NeuromaticIO(BaseIO):
     """
     Class for reading/writing from a WinWCP file.
-    
     **Example**
         #read a file
         io = WinWcpIO(filename = 'myfile.wcp')
@@ -80,74 +80,90 @@ class NeuromaticIO(BaseIO):
           
         """
         Return a Block.
-        
         **Arguments**
             no arguments
         """
-
-        blck=Block()
+        #Valid up to 26 channels
+        alph=list(string.ascii_uppercase)
+                
+        
         
         Array={} #each key corresponds to a wave
         Var={} #each key corresponds to a variable
 
         b=igorpy.load(self.filename)
+        
+        #Igor name channels RecordA, RecordB etc...
+        #the first 7 characters are thus specific a a given channel
+        ChannelNames=[]
+
+        
         for i in b:
             if isinstance(i, igorpy.Wave):
-                Array[str(i.name)]=i.data
+                if 'Record' in str(i.name):
+                    ChannelNames.append(str(i.name)[0:7])
+                    Array[str(i.name)]=i.data
             elif isinstance(i, igorpy.Variables):
                 Var=i.uservar    
-
+        
+        ChannelNames=list(set(ChannelNames))
+        
+       
         if Array == None and Var == None:
             return
+            
         Filter=Filter
         templist1=[]
         templist2=[]
-        tempkeys=[]
+        AllWaveNames=[]
         for i in Array:
-            tempkeys.append(i)
-            
-        tempkeys=sorted(tempkeys, key=self.splitgroups)
-
+            AllWaveNames.append(i)
+        
+        
+        AllWaveNames=sorted(AllWaveNames, key=self.splitgroups)
+        
         #for i in Var:
         #    exec("Analysis."+i+"= Var[i]")
 
         Waves=[]
         # loop for record number
         counter=0
-        for i in tempkeys:
+        for i in AllWaveNames:
             if Filter in i: 
                 counter+=1
         
-        for i in tempkeys:
-            if Filter in i:
-                print i
+        #Identify date of creation from filename
+        #TODO, use variable instead
+        filename=self.filename.split('/')[-1]
+        blck=Block()
+        convertiontable=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+        Day=int(filename[2:4])
+        Month=int(convertiontable.index(filename[4:7]))
+        Year=int(filename[7:11])
+        date = datetime.date(Year,Month,Day)
 
-                data = Array[i]
-                
-                alph=["A","B","C","D","E","F","G","H","I","J"]
-                seg = Segment()
-                blck._segments.append(seg)            
-                
-                #for c in range(counter):
-                anaSig = AnalogSignal()
-                seg._analogsignals.append(anaSig)
-                #ADCMAX = header['ADCMAX']
-                #VMax = analysisHeader['VMax'][c]                  
-                #YG = float(header['YG%d'%c].replace(',','.'))
+        blck.datetime=date
 
-                anaSig.signal = data #[alph[c],data[:,header['YO%d'%c]].astype('f4')*Var['VMax']/Var['ADCMAX']/YG]
-                #Waves.append(signal)
-                anaSig.sampling_rate = 1000./Var["SampleInterval"]
-                anaSig.t_start = 0.
-                anaSig.name = Filter
-                #anaSig.unit = header['YU%d'%c]
-    
-                # TODO : Hack because letter are easier to read. Valid up to 10 channel
-                #Var['channel'] = alph[c]
-                #anaSig.channel = c
+        for i in AllWaveNames:
+            seg = Segment()
+            for k,j in enumerate(ChannelNames):
+                seg.name=j
+                if j in i:
+                    anaSig = AnalogSignal()
+                    #ADCMAX = header['ADCMAX']
+                    #VMax = analysisHeader['VMax'][c]                  
+                    #YG = float(header['YG%d'%c].replace(',','.'))
+                    anaSig.signal = Array[i] #[alph[c],data[:,header['YO%d'%c]].astype('f4')*Var['VMax']/Var['ADCMAX']/YG]
+                    #Waves.append(signal)
+                    anaSig.sampling_rate = 1000./Var["SampleInterval"]
+                    anaSig.t_start = 0.
+                    anaSig.name = j
+                    anaSig.channel = k
+                    #anaSig.unit = header['YU%d'%c]
+                    seg._analogsignals.append(anaSig)
+            blck._segments.append(seg)
                 
 
-        
         return blck                
 
     def read(self , **kargs):
@@ -156,12 +172,9 @@ class NeuromaticIO(BaseIO):
         Return a neo.Block
         See read_block for detail.
         """
+        print 'in'
         return self.read_block( **kargs)
     
-    
-
-
-
 
 AnalysisDescription = [
 ('RecordStatus','8s'),
@@ -172,33 +185,7 @@ AnalysisDescription = [
 ('VMax','8f'),
 ]
 
-class HeaderReader():
-    def __init__(self,fid ,description ):
-        self.fid = fid
-        self.description = description
-    def read_f(self, offset =0):
-        self.fid.seek(offset)
-        d = { }
-        for key, format in self.description :
-            val = struct.unpack(format , self.fid.read(struct.calcsize(format)))
-            if len(val) == 1:
-                val = val[0]
-            else :
-                val = list(val)
-            d[key] = val
-        return d
 
-
-
-    
-    def splitgroups(self,s):
-        groupre = re.compile(r'(\D*[^\d-])|(-?\d+)')
-        return tuple(
-            m.group(1) or int(m.group(2))
-            for m in groupre.finditer(s)
-        )    
-            
-            
   
 
 
