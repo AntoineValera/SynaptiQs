@@ -12,8 +12,10 @@ from matplotlib import pyplot,numpy,image
 from scipy import stats
 from math import pow
 from math import sqrt
-import weakref
 import scipy
+from OpenElectrophy import Block
+#import Requete,Infos,Main,MyMplWidget,SpreadSheet,Navigate,Analysis
+
 #TODO : Add a tool to pool some coordinates together when they are close
 #       Add a way to gray the mapping areas where no stim was made (!= No response)
 #       Add a way to see both inhibition and excitation
@@ -1112,7 +1114,6 @@ class Mapping(object):
         Xe=int(self.X_End_Field.text())
         Xs=int(self.X_Start_Field.text())
         Xst=int(self.X_Step_Field.text())
-        N=int(self.Number_of_Turns.text())
         Ye=int(self.Y_End_Field.text())
         Ys=int(self.Y_Start_Field.text())
         Yst=int(self.Y_Step_Field.text())    
@@ -1417,8 +1418,7 @@ class Mapping(object):
             self.Thresholding_Mode_Input_Field.setText("-2")       
             thr=float(self.Thresholding_Mode_Input_Field.text())
             self.mean_threshold=-1
-            
-        counter=0
+
 
         if self.Thresholding_Mode.currentIndex() == 7:
             self.Types_of_Events_to_Measure = 'Positive'
@@ -1684,8 +1684,8 @@ class Mapping(object):
             self.CCDlimit=[-320,320,260,-212] 
         
         #Could be used
-        Mapping_Field_Length=abs(self.CCDlimit[0]-self.CCDlimit[2])
-        Mapping_Field_Height=abs(self.CCDlimit[1]-self.CCDlimit[3])        
+        #Mapping_Field_Length=abs(self.CCDlimit[0]-self.CCDlimit[2])
+        #Mapping_Field_Height=abs(self.CCDlimit[1]-self.CCDlimit[3])        
         
     def ModeSpecificProcessing(self,Mode,Local_Amplitude,Local_Surface,Local_Success):
         #In this condition, no threshold is applied, and all view are possible, because Amplitudes and charges were measured correctly
@@ -1953,18 +1953,121 @@ class Mapping(object):
         
         return fig,X_coord,Y_coord,Color_values,Surface_values
         
-
-    def Make_the_Map(self,
-                     Title='Mapping',
-                     ColorBar=True,
-                     Labels=True,
-                     Marker='s',
-                     Bypass_Measuring=False):
-        """
-        This part of the script Normalize Data for display purpose
-        Depending on if you want to display positive or negative or both currents, you can change
+    def pointValue(self,x,y,power,smoothing,xv,yv,values):
+        nominator=0
+        denominator=0
+        for i in range(0,len(values)):
+            dist = sqrt((x-xv[i])*(x-xv[i])+(y-yv[i])*(y-yv[i])+smoothing*smoothing);
+            #If the point is really close to one of the data points, return the data point value to avoid singularities
+            if(dist<1E-30):
+                return values[i]
+            nominator=nominator+(values[i]/pow(dist,power))
+            denominator=denominator+(1/pow(dist,power))
+        #Return NODATA if the denominator is zero
+        if denominator > 0.:
+            value = nominator/denominator
+        else:
+            value = -9999.
+        return value
+    
+    def invDist(self,xv,yv,values,xsize=100,ysize=100,power=2,smoothing=0,subsampling=1,minRange=0):
+        #TODO : Scientifically not clear, but visually nice
+        valuesGrid = numpy.zeros((ysize,xsize))
+        for x in range(0,int(xsize)):
+            for y in range(0,int(ysize)):
+                valuesGrid[y][x] = self.pointValue(x*subsampling+minRange,y*subsampling+minRange,power,smoothing,xv,yv,values)
+        return valuesGrid
+    
+    
+    def SmoothMap(self,
+                  X,
+                  Y,
+                  Val,
+                  power=3.,
+                  smoothing=10.,
+                  subsampling=10.,
+                  cmap='gnuplot',
+                  Manual_Min_Field=None,
+                  Manual_Max_Field=None,
+                  Max_Valid_Dist=None):
         
-        """
+        #TODO : Normalize map if necessary
+        
+        power=power
+        smoothing=smoothing
+        subsampling=subsampling
+        
+        xv = X
+        yv = Y
+        values = Val
+    
+        minRange=min(min(xv),min(yv)) #it's the negative value of x-axis AND y-axis
+        maxRange=max(max(xv),max(yv))
+        TotRange=maxRange-minRange
+        print 'maximal extent is', TotRange
+        print 'point resolution is', subsampling 
+        print float(TotRange)/subsampling, "should be an integer. If it's not, check code"
+        
+        #Creating the output grid (100x100, in the example)
+        ti = numpy.linspace(minRange,maxRange,TotRange/subsampling)
+        XI, YI = numpy.meshgrid(ti, ti)
+        #Creating the interpolation function and populating the output matrix value
+        ZI = self.invDist(xv,yv,values,TotRange/subsampling,TotRange/subsampling,power,smoothing,subsampling,minRange)
+        
+        points=zip(X.ravel(), Y.ravel())
+        refpoints=zip(XI.ravel(), YI.ravel())
+        tree = scipy.spatial.cKDTree(points)
+        z=ZI.ravel()
+        
+        for j,i in enumerate(refpoints):
+            if len(tree.query_ball_point((i[0],i[1]), float(Max_Valid_Dist))) == 0:
+                z[j]=0.0
+
+   
+        #n = pyplot.normalize(0.0, 100.0)
+        if self.Manual_Min_Field.text() != "":
+            Min=float(self.Manual_Min_Field.text())
+        elif Manual_Min_Field!= None:
+            Min=float(Manual_Min_Field)
+        else:
+            Min=float(numpy.min(ZI))
+            
+        if self.Manual_Max_Field.text() != "":
+            Max=float(self.Manual_Max_Field.text())
+        elif Manual_Max_Field!= None:
+            Max=float(Manual_Max_Field)                
+        else:
+            Max=float(numpy.max(ZI))  
+            
+        pyplot.figure()   
+        pyplot.subplot(1, 1, 1)
+        pyplot.pcolor(XI, YI, ZI,cmap=cmap,vmin=Min,vmax=Max)
+        pyplot.title('Inv dist interpolation - power: ' + str(power) + ' smoothing: ' + str(smoothing))
+        pyplot.xlim(minRange, maxRange)
+        pyplot.ylim(minRange, maxRange)
+        pyplot.colorbar()
+
+        pyplot.figure()
+        
+        pyplot.contour(XI, YI, ZI,10)
+        pyplot.xlim(minRange, maxRange)
+        pyplot.ylim(minRange, maxRange) 
+        
+        try:
+            self.pic = image.imread(str(self.Current_Picture_for_the_Map))
+            pyplot.imshow(self.pic,extent=(-320,320,-260,252),cmap=self.Image_ColorMap)
+        except:
+            pass
+        pyplot.show()
+            
+    def ScaleAxis(self,scalingfactor):
+        self.Sorted_X_Coordinates_Scaled=numpy.array(self.Sorted_X_Coordinates)*scalingfactor
+        self.Sorted_Y_Coordinates_Scaled=numpy.array(self.Sorted_Y_Coordinates)*scalingfactor 
+
+    def NormalizeSurfaceAndColors(self):
+        '''
+        For the Final Map, the surface must be >0
+        '''
         #TODO : IMPORTANT, This should be improved
         #For display purpose, all value are set to positive, so negative currents are inverted    
         if self.Types_of_Events_to_Measure == 'Negative':
@@ -1981,23 +2084,22 @@ class Mapping(object):
         for i,j in enumerate(self.Local_Surface):
             if j<=float(0.0):
                 self.Local_Surface[i]=0.0 
-
-        self.Sorted_X_Coordinates_Scaled=numpy.array(self.Sorted_X_Coordinates)*float(self.Stim_Resolution.text())
-        self.Sorted_Y_Coordinates_Scaled=numpy.array(self.Sorted_Y_Coordinates)*float(self.Stim_Resolution.text())
+                
+    def CreateColorScaleAndSurfaceScale(self,defaultsurface=100,defaultcolor=0.75,Bypass_Measuring=False):
+        '''
+        Depending on the options selected Charge, Surface Amplitude etc can 
+        all be represented either as a color or as a Surface, or as a constant (defaultsurface, defaultcolor)
+        self.Charge,self.Normalized_Surface,self.Local_Surface can all be set using these parameters
+        eg:
+        if Charge has to be represented as a color, self.Charge = 'Color'
+        if Charge has to be represented as a surface, self.Charge = 'Surface'
+        if Charge has to be represented as a constant, 
         
         
-        #default values, if one is set to None
-        surface=self.Normalized_Surface=[100]*len(self.Local_Surface)
-        color=self.Normalized_Amplitude=[0.75]*len(self.Local_Amplitude) 
-        
-        #If "success rate" is set, sucess rate is in color (instead of amplitude), charge in surface
-        if self.Thresholding_Mode.currentIndex() == 4:
-            self.Local_Amplitude=self.Local_Success
-            self.Amplitude='Color'
-            self.Charge='Surface'
-        else:
-            pass
-        
+        '''
+        #Creating some default values, for color and surface, which can be optionally used
+        surface=self.Normalized_Surface=[defaultsurface]*len(self.Local_Surface)
+        color=self.Normalized_Amplitude=[defaultcolor]*len(self.Local_Surface) 
         
         for param in [[self.Charge,self.Normalized_Surface,self.Local_Surface],[self.Amplitude,self.Normalized_Amplitude,self.Local_Amplitude]]:
             if param[0] == 'Color':
@@ -2021,145 +2123,23 @@ class Mapping(object):
                 surface=list(param[1])
                 
                 
-#        for i,j in enumerate(surface):
-#            if j == 0.0:
-#                surface[i]=numpy.nan
-#        for i,j in enumerate(color):
-#            if j == 0.0:
-#                surface[i]=numpy.nan
-        cmap=str(self.ColorMap.currentText())  
-        
-        n=self.Wid.canvas.axes.scatter(self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:], c=color,s=surface, vmin=0, vmax=1, alpha=float(self.Transparency.text()),picker=1 , cmap=cmap, marker = Marker)
-        XYTuple=[]
-        for i in range(len(self.Sorted_X_Coordinates_Scaled)):
-            XYTuple.append((self.Sorted_X_Coordinates_Scaled[i],self.Sorted_Y_Coordinates_Scaled[i]))
-        
-        self.Table = SpreadSheet(Source=[XYTuple,self.Normalized_Surface,self.Local_Surface,self.Normalized_Amplitude,self.Local_Amplitude],Labels=["XY","Normalized C1","C1","Normalized A1","A1"])
-        self.Table.show()
-
-
-##############################################
-
-        def pointValue(x,y,power,smoothing,xv,yv,values):
-            nominator=0
-            denominator=0
-            for i in range(0,len(values)):
-                dist = sqrt((x-xv[i])*(x-xv[i])+(y-yv[i])*(y-yv[i])+smoothing*smoothing);
-                #If the point is really close to one of the data points, return the data point value to avoid singularities
-                if(dist<1E-30):
-                    return values[i]
-                nominator=nominator+(values[i]/pow(dist,power))
-                denominator=denominator+(1/pow(dist,power))
-            #Return NODATA if the denominator is zero
-            if denominator > 0.:
-                value = nominator/denominator
-            else:
-                value = -9999.
-            return value
-        
-        def invDist(xv,yv,values,xsize=100,ysize=100,power=2,smoothing=0,subsampling=1,minRange=0):
-            #TODO : Scientifically not clear, but visually nice
-            valuesGrid = numpy.zeros((ysize,xsize))
-            for x in range(0,int(xsize)):
-                for y in range(0,int(ysize)):
-                    valuesGrid[y][x] = pointValue(x*subsampling+minRange,y*subsampling+minRange,power,smoothing,xv,yv,values)
-            return valuesGrid
+    #        for i,j in enumerate(surface):
+    #            if j == 0.0:
+    #                surface[i]=numpy.nan
+    #        for i,j in enumerate(color):
+    #            if j == 0.0:
+    #                surface[i]=numpy.nan 
+        return color,surface
         
         
-        def SmoothMap(X,
-                      Y,
-                      Val,
-                      power=3.,
-                      smoothing=10.,
-                      subsampling=10.,
-                      cmap='gnuplot',
-                      Manual_Min_Field=None,
-                      Manual_Max_Field=None,
-                      Max_Valid_Dist=None):
-            
-            #TODO : Normalize map if necessary
-            
-            power=power
-            smoothing=smoothing
-            subsampling=subsampling
-            
-            xv = X
-            yv = Y
-            values = Val
-        
-            minRange=min(min(xv),min(yv)) #it's the negative value of x-axis AND y-axis
-            maxRange=max(max(xv),max(yv))
-            TotRange=maxRange-minRange
-            print 'maximal extent is', TotRange
-            print 'point resolution is', subsampling 
-            print float(TotRange)/subsampling, "should be an integer. If it's not, check code"
-            
-            #Creating the output grid (100x100, in the example)
-            ti = numpy.linspace(minRange,maxRange,TotRange/subsampling)
-            XI, YI = numpy.meshgrid(ti, ti)
-            #Creating the interpolation function and populating the output matrix value
-            ZI = invDist(xv,yv,values,TotRange/subsampling,TotRange/subsampling,power,smoothing,subsampling,minRange)
-            
-            points=zip(X.ravel(), Y.ravel())
-            refpoints=zip(XI.ravel(), YI.ravel())
-            tree = scipy.spatial.cKDTree(points)
-            z=ZI.ravel()
-            
-            for j,i in enumerate(refpoints):
-                if len(tree.query_ball_point((i[0],i[1]), float(Max_Valid_Dist))) == 0:
-                    z[j]=0.0
-
-   
-            #n = pyplot.normalize(0.0, 100.0)
-            if self.Manual_Min_Field.text() != "":
-                Min=float(self.Manual_Min_Field.text())
-            elif Manual_Min_Field!= None:
-                Min=float(Manual_Min_Field)
-            else:
-                Min=float(numpy.min(ZI))
-                
-            if self.Manual_Max_Field.text() != "":
-                Max=float(self.Manual_Max_Field.text())
-            elif Manual_Max_Field!= None:
-                Max=float(Manual_Max_Field)                
-            else:
-                Max=float(numpy.max(ZI))  
-                
-            pyplot.figure()   
-            pyplot.subplot(1, 1, 1)
-            pyplot.pcolor(XI, YI, ZI,cmap=cmap,vmin=Min,vmax=Max)
-            pyplot.title('Inv dist interpolation - power: ' + str(power) + ' smoothing: ' + str(smoothing))
-            pyplot.xlim(minRange, maxRange)
-            pyplot.ylim(minRange, maxRange)
-            pyplot.colorbar()
-
-            pyplot.figure()
-            
-            pyplot.contour(XI, YI, ZI,10)
-            pyplot.xlim(minRange, maxRange)
-            pyplot.ylim(minRange, maxRange) 
-            
-            try:
-                self.pic = image.imread(str(self.Current_Picture_for_the_Map))
-                pyplot.imshow(self.pic,extent=(-320,320,-260,252),cmap=self.Image_ColorMap)
-            except:
-                pass
-            pyplot.show()
-    
-
-        if self.Charge=='Surface':
-            SmoothMap(self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:],self.Local_Surface,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
-        else:
-            SmoothMap(self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:],self.Local_Amplitude,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
-            
-
+    def CreateInteractiveGrid(self,colorbar,xlim=(-320, 320),ylim=(-260, 252),ColorBar=True):
         if ColorBar==True:
             self.Wid.canvas.fig.colorbar(n)
             
         #self.Wid.canvas.axes.set_xlim(-400*float(self.Stim_Resolution.text()), 400*float(self.Stim_Resolution.text()))
         #self.Wid.canvas.axes.set_ylim(-400*float(self.Stim_Resolution.text()), 400*float(self.Stim_Resolution.text()))
-        self.Wid.canvas.axes.set_xlim(-320, 320)
-        self.Wid.canvas.axes.set_ylim(-260, 252)
+        self.Wid.canvas.axes.set_xlim(*xlim)
+        self.Wid.canvas.axes.set_ylim(*ylim)
                 
         if Labels==True:
             self.Wid.canvas.axes.set_xlabel("X Distance (in um)")
@@ -2168,38 +2148,23 @@ class Mapping(object):
         else:
             self.Wid.canvas.axes.set_axis_off()
         
-        self.Red_Channel=QtGui.QCheckBox()
-        self.Red_Channel.setText('Red')
         
-        if self.Display_Red==True:
-            self.Red_Channel.setCheckState(2)
-        else:
-            self.Red_Channel.setCheckState(0)
-        self.Green_Channel=QtGui.QCheckBox()
-        self.Green_Channel.setText('Green')
-        if self.Display_Green==True:
-            self.Green_Channel.setCheckState(2)
-        else:
-            self.Green_Channel.setCheckState(0)
-        self.Blue_Channel=QtGui.QCheckBox()
-        self.Blue_Channel.setText('Blue')
-        if self.Display_Blue==True:
-            self.Blue_Channel.setCheckState(2)
-        else:
-            self.Blue_Channel.setCheckState(0)
-        
+        check=[self.Red_Channel,self.Green_Channel,self.Green_Channel]
+        c=['Red','Green','Blue']
+        disp=self.Display_Red,self.Display_Green,self.Display_Blue
+        List=zip(check,c,disp)
         hbox=QtGui.QHBoxLayout()
-        hbox.addWidget(self.Red_Channel)
-        hbox.addWidget(self.Green_Channel)
-        hbox.addWidget(self.Blue_Channel)
-        
+        for i in List:
+            i[0]=QtGui.QCheckBox()
+            i[0].setText(i[1])
+            if i[2]==True:
+                i[0].setCheckState(2)
+            else:
+                i[0].setCheckState(0)                    
+            hbox.addWidget(i[0])
+            QtCore.QObject.connect(i[0], QtCore.SIGNAL("stateChanged(int)"),self.Update_Channel_Status)
         self.Wid.vbox.addLayout(hbox)
 
-        QtCore.QObject.connect(self.Red_Channel, QtCore.SIGNAL("stateChanged(int)"),self.Update_Channel_Status)
-        QtCore.QObject.connect(self.Green_Channel, QtCore.SIGNAL("stateChanged(int)"),self.Update_Channel_Status)
-        QtCore.QObject.connect(self.Blue_Channel, QtCore.SIGNAL("stateChanged(int)"),self.Update_Channel_Status)            
-        
-        
         try:
             if self.DB_Picture==False:
                 self.pic = image.imread(str(self.Current_Picture_for_the_Map))
@@ -2232,7 +2197,55 @@ class Mapping(object):
         #[-320,320,260,-212]
         self.Wid.canvas.Object_Selection_Mode = 'Coordinates'
    
-        self.Wid.show()        
+        self.Wid.show() 
+               
+    def Make_the_Map(self,
+                     Title='Mapping',
+                     ColorBar=True,
+                     Labels=True,
+                     Marker='s',
+                     Bypass_Measuring=False):
+        """
+        This part of the script Normalize Data for display purpose
+        Depending on if you want to display positive or negative or both currents, you can change
+        
+        """
+        self.NormalizeSurfaceAndColors()
+        
+        self.ScaleAxis(float(self.Stim_Resolution.text()))
+
+        #If "success rate" is set, sucess rate is in color (instead of amplitude), charge in surface
+        if self.Thresholding_Mode.currentIndex() == 4:
+            self.Local_Amplitude=self.Local_Success
+            self.Amplitude='Color'
+            self.Charge='Surface'
+        else:
+            pass
+        
+        color,surface=self.CreateColorScaleAndSurfaceScale(Bypass_Measuring=Bypass_Measuring)    
+
+                
+                
+        cmap=str(self.ColorMap.currentText())  
+        
+        n=self.Wid.canvas.axes.scatter(self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:], c=color,s=surface, vmin=0, vmax=1, alpha=float(self.Transparency.text()),picker=1 , cmap=cmap, marker = Marker)
+        XYTuple=[]
+        for i in range(len(self.Sorted_X_Coordinates_Scaled)):
+            XYTuple.append((self.Sorted_X_Coordinates_Scaled[i],self.Sorted_Y_Coordinates_Scaled[i]))
+        
+        self.Table = SpreadSheet(Source=[XYTuple,self.Normalized_Surface,self.Local_Surface,self.Normalized_Amplitude,self.Local_Amplitude],Labels=["XY","Normalized C1","C1","Normalized A1","A1"])
+        self.Table.show()
+
+
+        ##############################################
+
+
+        if self.Charge=='Surface':
+            self.SmoothMap(self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:],self.Local_Surface,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
+        else:
+            self.SmoothMap(self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:],self.Local_Amplitude,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
+            
+        self.CreateInteractiveGrid(n,ColorBar=ColorBar)
        
         return self.Wid.canvas.fig,self.Sorted_X_Coordinates_Scaled,self.Sorted_Y_Coordinates_Scaled,color,surface
         

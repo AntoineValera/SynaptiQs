@@ -4,9 +4,10 @@ Created on Tue May 21 23:32:43 2013
 
 @author: Antoine Valera
 """
-import sys,os,atexit
+import sys,os
 from PyQt4 import QtCore, QtGui
 from matplotlib import pyplot,numpy
+#import Analysis,Navigate,MyMplWidget,Mapping,Requete.Requete,Histogram,Fitting,Import
 
 
 class Main(QtGui.QWidget,object):#
@@ -151,7 +152,8 @@ class Main(QtGui.QWidget,object):#
                 <p>SynaptiQs should be in 
                 $HOME/.SynaptiQs/Core/""")
                 msgBox.exec_()
-                sys.exit(app.exec_())  
+                sys.exit()
+                #sys.exit(app.exec_())  
                 
 
 
@@ -963,7 +965,8 @@ class Main(QtGui.QWidget,object):#
                             ("Peak3_meth",str(self.param_inf[33]))]
                              
         except ValueError:
-            sys.exit(app.exec_()) 
+            sys.exit()
+            #sys.exit(app.exec_()) 
         self.measurecoord={}
         for i in range(len(liste)):
             self.measurecoord[liste[i][0]]=liste[i][1]
@@ -1127,7 +1130,7 @@ class Main(QtGui.QWidget,object):#
         if self.IPythonOpened==False:
             from IPython.frontend.qt.console.rich_ipython_widget import RichIPythonWidget
             from IPython.frontend.qt.inprocess import QtInProcessKernelManager
-            from IPython.lib import guisupport
+            #from IPython.lib import guisupport
             
             self.Shell_Widget = QtGui.QDockWidget()
             self.MainWindow.addDockWidget(4,self.Shell_Widget) #On attache le Widget au WIdget parent, et on definit sa position
