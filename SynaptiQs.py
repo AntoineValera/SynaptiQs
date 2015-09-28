@@ -74,13 +74,13 @@ if __name__ == "__main__": #Executé si l'application est en StandAlone
         
         
         
-        Infos.Class_List=[Navigate,Requete,Analysis,Main,MyMplCanvas,MyMplWidget,Infos,Mapping,Fitting,Histogram,SpreadSheet,Import] #Add all classes needed in the Script function
+        Infos.Class_List=[Navigate,Requete,Analysis,Main,MyMplCanvas,MyMplWidget,Infos,Mapping,Fitting,Histogram,SpreadSheet,Import,Map] #Add all classes needed in the Script function
     
         #setattr(Infos,'Class_List',Class_List)
     
         for Class in Infos.Class_List:
             setattr(__builtin__,Class.__name__,Class)
-        
+        Map = Map
         rcParams['figure.facecolor'] = 'white'
         rcParams['pdf.fonttype'] = 42
         rcParams['font.serif'] = 'Times New Roman'
@@ -98,6 +98,8 @@ if __name__ == "__main__": #Executé si l'application est en StandAlone
         Main.Create_Window() #Execute l'initialisation de l'appli
         Plugins=Plugins.Plugins()
         Import=Import.MyWindow()
+        
+        
         
         setattr(__builtin__,'Plugins',Plugins)
         setattr(__builtin__,'Import',Plugins)

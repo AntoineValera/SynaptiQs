@@ -55,7 +55,7 @@ class Mapping(object):
             print i
 
     def Reset_Mapping_Variables(self):        
-        for variable_to_delete in ['self.Sorted_X_and_Y_Coordinates',
+        for variable_to_delete in ['self.Current_Map.Sorted_X_and_Y_Coordinates',
                                    'self.Sorted_Mean_Amplitudes_1',
                                    'self.Sorted_Mean_Charges_1',
                                    'self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary',
@@ -84,6 +84,7 @@ class Mapping(object):
           
           
         try:
+            self.Current_Map = Map.Map()
             self.X_Neuron.setText("0")
             self.Y_Neuron.setText("0")
             self.X_Start_Field.setText("")   
@@ -111,7 +112,7 @@ class Mapping(object):
             pass
 
 
-        self.Scanning_Direction_Mode=None
+        self.Current_Map.Scanning_Direction_Mode=None
         self.SuccessRate_Ready=False
         self.DB_Picture=False
             
@@ -686,23 +687,23 @@ class Mapping(object):
         MapWidget.addWidget(QtGui.QLabel('Y Coordinates'),1,0)
         self.XArrayInputField=QtGui.QLineEdit('')
         self.YArrayInputField=QtGui.QLineEdit('')
-        self.XArrayInputField.setObjectName("self.Sorted_X_Coordinates")
-        self.YArrayInputField.setObjectName("self.Sorted_Y_Coordinates")
+        self.XArrayInputField.setObjectName("self.Current_Map.Sorted_X_Coordinates")
+        self.YArrayInputField.setObjectName("self.Current_Map.Sorted_Y_Coordinates")
         MapWidget.addWidget(self.XArrayInputField,0,1)        
         MapWidget.addWidget(self.YArrayInputField,1,1)
         x=QtGui.QPushButton('...')
         y=QtGui.QPushButton('...')
-        x.setObjectName("self.Sorted_X_Coordinates")
-        y.setObjectName("self.Sorted_Y_Coordinates")
+        x.setObjectName("self.Current_Map.Sorted_X_Coordinates")
+        y.setObjectName("self.Current_Map.Sorted_Y_Coordinates")
         
         FilteredList=self.UpdateUsableArrayList()
          
         self.ListOfXArrays=QtGui.QComboBox()
-        self.ListOfXArrays.setObjectName("self.Sorted_X_Coordinates")
+        self.ListOfXArrays.setObjectName("self.Current_Map.Sorted_X_Coordinates")
         self.ListOfXArrays.addItems(FilteredList)
         self.ListOfYArrays=QtGui.QComboBox()
         self.ListOfYArrays.addItems(FilteredList)
-        self.ListOfYArrays.setObjectName("self.Sorted_Y_Coordinates")
+        self.ListOfYArrays.setObjectName("self.Current_Map.Sorted_Y_Coordinates")
         MapWidget.addWidget(self.ListOfXArrays,0,2)        
         MapWidget.addWidget(self.ListOfYArrays,1,2)         
         MapWidget.addWidget(x,0,3)        
@@ -733,10 +734,10 @@ class Mapping(object):
             self.UpdateCurrent()
             #print str(QtCore.QObject().sender().objectName())
             
-            #if str(QtCore.QObject().sender().objectName()) == 'self.Sorted_X_Coordinates':
+            #if str(QtCore.QObject().sender().objectName()) == 'self.Current_Map.Sorted_X_Coordinates':
             #    idx=self.ListOfXArrays.findText('Mapping.'+name)
             #    self.ListOfXArrays.setCurrentIndex(idx)
-            #elif str(QtCore.QObject().sender().objectName()) == 'self.Sorted_Y_Coordinates':
+            #elif str(QtCore.QObject().sender().objectName()) == 'self.Current_Map.Sorted_Y_Coordinates':
             #    idx=self.ListOfXArrays.findText('Mapping.'+name)
             #    self.ListOfYArrays.setCurrentIndex(idx)
                     
@@ -816,7 +817,7 @@ class Mapping(object):
             #Reading of the Number of Turns Value
             self.Number_of_Turns.setText(str(Requete.tag['NumberofTurns'][0]))
             #Reading of the Scanning direction Value
-            self.Scanning_Direction_Mode=str(Requete.tag["ScanWay"][0])
+            self.Current_Map.Scanning_Direction_Mode=str(Requete.tag["ScanWay"][0])
             
             #self.Bypass=True 
 
@@ -887,7 +888,7 @@ class Mapping(object):
  
     def Define_Non_Grid_Positions(self):
 
-        self.Scanning_Direction_Mode = 'UserDefined'   
+        self.Current_Map.Scanning_Direction_Mode = 'UserDefined'   
         self.Set_Auto_Coordinates_Visible()        
         try:
             #Wid=QtGui.QWidget()
@@ -896,7 +897,7 @@ class Mapping(object):
             #self.repeats=int(self.repeats)
             
             #if ok:
-            self.Window=SpreadSheet(Source=[self.Sorted_X_Coordinates,self.Sorted_Y_Coordinates],Rendering=True,MustBeClosed=True)
+            self.Window=SpreadSheet(Source=[self.Current_Map.Sorted_X_Coordinates,self.Current_Map.Sorted_Y_Coordinates],Rendering=True,MustBeClosed=True)
             QtCore.QObject.connect(self.Window, QtCore.SIGNAL('destroyed()'),self.UpdateDictafterWidgetClosure)        
         except AttributeError:
             self.Load_Coordinates()
@@ -911,13 +912,13 @@ class Mapping(object):
         else:
             Number_of_Turns=int(self.Number_of_Turns.text())
             
-        self.Sorted_Y_Coordinates_Full=self.Sorted_Y_Coordinates*Number_of_Turns
-        self.Sorted_X_Coordinates_Full=self.Sorted_X_Coordinates*Number_of_Turns
-        self.Sorted_X_and_Y_Coordinates=[None]*len(self.Sorted_X_Coordinates)
-        for i,j in enumerate(self.Sorted_Y_Coordinates):
-            self.Sorted_X_and_Y_Coordinates[i]=(self.Sorted_X_Coordinates[i],j)    
+        self.Current_Map.Sorted_Y_Coordinates_Full=self.Current_Map.Sorted_Y_Coordinates*Number_of_Turns
+        self.Current_Map.Sorted_X_Coordinates_Full=self.Current_Map.Sorted_X_Coordinates*Number_of_Turns
+        self.Current_Map.Sorted_X_and_Y_Coordinates=[None]*len(self.Current_Map.Sorted_X_Coordinates)
+        for i,j in enumerate(self.Current_Map.Sorted_Y_Coordinates):
+            self.Current_Map.Sorted_X_and_Y_Coordinates[i]=(self.Current_Map.Sorted_X_Coordinates[i],j)    
             
-        self.Sorted_X_and_Y_Coordinates_Full=self.Sorted_X_and_Y_Coordinates*Number_of_Turns
+        self.Current_Map.Sorted_X_and_Y_Coordinates_Full=self.Current_Map.Sorted_X_and_Y_Coordinates*Number_of_Turns
         self.Set_Coordinates_in_Tag_Variable()
         
        
@@ -965,7 +966,7 @@ class Mapping(object):
             self.GridGenerator_Button.setText("AutoFill Grid")
             QtCore.QObject.connect(self.GridGenerator_Button, QtCore.SIGNAL("clicked()"),self.AutoFill_Grid)
   
-            
+        self.Current_Map = Map.Map() 
         self.Map_tools_Widget.show()  
         
      
@@ -977,29 +978,13 @@ class Mapping(object):
                   self.Y_Start_Field,
                   self.Y_End_Field,
                   self.Y_Step_Field]:
-            if self.Scanning_Direction_Mode == 'UserDefined':
+            if self.Current_Map.Scanning_Direction_Mode == 'UserDefined':
                 i.setEnabled(False)
             else:
                 i.setEnabled(True)
                 
                 
-    def GenerateGridCoordinates(self,Scanning_Direction_Mode,List_of_X_Points, List_of_Y_Points):
-        '''
-        This function generate a grid of coordinates using SynaptiQs inputs
-        '''
-        self.Scanning_Direction_Mode = Scanning_Direction_Mode
-       
-        if Scanning_Direction_Mode == 'X':
-            Y, X = numpy.meshgrid(List_of_Y_Points, List_of_X_Points)
-        elif Scanning_Direction_Mode == 'Y':
-            X, Y = numpy.meshgrid(List_of_X_Points, List_of_Y_Points)
-            
-        self.Sorted_X_Coordinates=list(X.flatten())
-        self.Sorted_Y_Coordinates=list(Y.flatten())
-        self.Sorted_X_Coordinates_Full=self.Sorted_X_Coordinates*int(self.Number_of_Turns.text())
-        self.Sorted_Y_Coordinates_Full=self.Sorted_Y_Coordinates*int(self.Number_of_Turns.text())    
-        self.Sorted_X_and_Y_Coordinates=zip(self.Sorted_X_Coordinates,self.Sorted_Y_Coordinates)
-        self.Sorted_X_and_Y_Coordinates_Full=self.Sorted_X_and_Y_Coordinates*int(self.Number_of_Turns.text())
+
 
                 
     def Create_Mapping_Pathway(self):
@@ -1011,13 +996,13 @@ class Mapping(object):
         Elle peut aussi etre appelée séparement, dans le but de sauver les coordonnées.
         Dans les 2 cas, une fois passée, self.Bypass devient True
         
-        self.Sorted_Y_Coordinates : An array of the Y coordinates of the experiment, in one turn
-        self.Sorted_X_Coordinates : An array of the X coordinates of the experiment, in one turn
-        self.Sorted_X_and_Y_Coordinates : An array of the (X,Y) coordinates of the experiment, in one turn
+        self.Current_Map.Sorted_Y_Coordinates : An array of the Y coordinates of the experiment, in one turn
+        self.Current_Map.Sorted_X_Coordinates : An array of the X coordinates of the experiment, in one turn
+        self.Current_Map.Sorted_X_and_Y_Coordinates : An array of the (X,Y) coordinates of the experiment, in one turn
         
-        self.Sorted_X_and_Y_Coordinates_Full : An array of the (X,Y) coordinates of the experiment, in all the experiment
-        self.Sorted_Y_Coordinates : An array of the Y coordinates of the experiment, in all the experiment
-        self.Sorted_X_Coordinates : An array of the X coordinates of the experiment, in all the experiment     
+        self.Current_Map.Sorted_X_and_Y_Coordinates_Full : An array of the (X,Y) coordinates of the experiment, in all the experiment
+        self.Current_Map.Sorted_Y_Coordinates : An array of the Y coordinates of the experiment, in all the experiment
+        self.Current_Map.Sorted_X_Coordinates : An array of the X coordinates of the experiment, in all the experiment     
         
         int(self.Number_of_Turns.text()) is the number of turns
         """
@@ -1026,7 +1011,7 @@ class Mapping(object):
         self.Correction_of_Abnormal_Parameters_for_Mapping()
         
         if QtCore.QObject().sender() ==  self.Vertical_Lines_Button or QtCore.QObject().sender() ==  self.Horizontal_Lines_Button:
-            self.Scanning_Direction_Mode = None   
+            self.Current_Map.Scanning_Direction_Mode = None   
 
         try:
             List_of_X_Points = range(int(self.X_Start_Field.text()),int(self.X_End_Field.text())+int(self.X_Step_Field.text()),int(self.X_Step_Field.text()))        #liste les coordonnées en X
@@ -1045,10 +1030,10 @@ class Mapping(object):
             Infos.Error(msg)
             return
             
-        if QtCore.QObject().sender() ==  self.Vertical_Lines_Button or self.Scanning_Direction_Mode == "X":
-            self.GenerateGridCoordinates("X",List_of_X_Points, List_of_Y_Points)
-        elif QtCore.QObject().sender() ==  self.Horizontal_Lines_Button or self.Scanning_Direction_Mode == "Y":
-            self.GenerateGridCoordinates("Y",List_of_X_Points, List_of_Y_Points)
+        if QtCore.QObject().sender() ==  self.Vertical_Lines_Button or self.Current_Map.Scanning_Direction_Mode == "X":
+            self.Current_Map.GenerateGridCoordinates("X",List_of_X_Points, List_of_Y_Points)
+        elif QtCore.QObject().sender() ==  self.Horizontal_Lines_Button or self.Current_Map.Scanning_Direction_Mode == "Y":
+            self.Current_Map.GenerateGridCoordinates("Y",List_of_X_Points, List_of_Y_Points)
 
         try:
             self.Correction_of_Abnormal_Parameters_for_Mapping()
@@ -1067,10 +1052,10 @@ class Mapping(object):
             
         if QtCore.QObject().sender() ==  self.Vertical_Lines_Button or QtCore.QObject().sender() ==  self.Horizontal_Lines_Button:   
             self.Mapping_Pattern = MyMplWidget(title='Mapping Pattern')
-            self.Mapping_Pattern.canvas.axes.plot(self.Sorted_X_Coordinates,self.Sorted_Y_Coordinates,'o-',-400,-400,400,400)
+            self.Mapping_Pattern.canvas.axes.plot(self.Current_Map.Sorted_X_Coordinates,self.Current_Map.Sorted_Y_Coordinates,'o-',-400,-400,400,400)
 
-            self.Mapping_Pattern.canvas.axes.arrow(self.Sorted_X_Coordinates[-2],self.Sorted_Y_Coordinates[-2],(self.Sorted_X_Coordinates[-1]-self.Sorted_X_Coordinates[-2]),(self.Sorted_Y_Coordinates[-1]-self.Sorted_Y_Coordinates[-2]),length_includes_head=True,width=1, head_width=int(self.X_Step_Field.text()),head_length=int(self.X_Step_Field.text()),fc='r')
-            self.Mapping_Pattern.canvas.axes.annotate("expected Nb of Sweeps : "+str(len(self.Sorted_Y_Coordinates_Full)),(-380,350),backgroundcolor='white',alpha=0.4)
+            self.Mapping_Pattern.canvas.axes.arrow(self.Current_Map.Sorted_X_Coordinates[-2],self.Current_Map.Sorted_Y_Coordinates[-2],(self.Current_Map.Sorted_X_Coordinates[-1]-self.Current_Map.Sorted_X_Coordinates[-2]),(self.Current_Map.Sorted_Y_Coordinates[-1]-self.Current_Map.Sorted_Y_Coordinates[-2]),length_includes_head=True,width=1, head_width=int(self.X_Step_Field.text()),head_length=int(self.X_Step_Field.text()),fc='r')
+            self.Mapping_Pattern.canvas.axes.annotate("expected Nb of Sweeps : "+str(len(self.Current_Map.Sorted_Y_Coordinates_Full)),(-380,350),backgroundcolor='white',alpha=0.4)
             self.Map_tools_Widget.close()
             self.Mapping_Pattern.show()
     
@@ -1142,8 +1127,8 @@ class Mapping(object):
         warning_displayed = False
         for i in range(len(Requete.Analogsignal_ids)):
             try:                
-                Requete.tag["X_coord"][i]=self.Sorted_X_Coordinates_Full[i]
-                Requete.tag["Y_coord"][i]=self.Sorted_Y_Coordinates_Full[i]
+                Requete.tag["X_coord"][i]=self.Current_Map.Sorted_X_Coordinates_Full[i]
+                Requete.tag["Y_coord"][i]=self.Current_Map.Sorted_Y_Coordinates_Full[i]
             except IndexError: 
                 if warning_displayed == False:
                     msg="""
@@ -1170,7 +1155,7 @@ class Mapping(object):
             Requete.tag["XSteps"][i]=str(self.X_Step_Field.text())
             Requete.tag["YSteps"][i]=str(self.Y_Step_Field.text())
             Requete.tag["NumberofTurns"][i]=str(self.Number_of_Turns.text())
-            Requete.tag["ScanWay"][i]=self.Scanning_Direction_Mode
+            Requete.tag["ScanWay"][i]=self.Current_Map.Scanning_Direction_Mode
 
         #self.Bypass=True
 
@@ -1231,10 +1216,10 @@ class Mapping(object):
         N'est activé que si des coordonnées existent (find coordinates a été lancé, ou sauvé depuis une analyse précédente)
         """
 
-        if self.Scanning_Direction_Mode == "X" or self.Scanning_Direction_Mode == "Y":
+        if self.Current_Map.Scanning_Direction_Mode == "X" or self.Current_Map.Scanning_Direction_Mode == "Y":
             try: #write the value
-                self.X_Neuron.setText(str(self.Sorted_X_and_Y_Coordinates_Full[int(self.SweepPosition.text())][0]))
-                self.Y_Neuron.setText(str(self.Sorted_X_and_Y_Coordinates_Full[int(self.SweepPosition.text())][1]))
+                self.X_Neuron.setText(str(self.Current_Map.Sorted_X_and_Y_Coordinates_Full[int(self.SweepPosition.text())][0]))
+                self.Y_Neuron.setText(str(self.Current_Map.Sorted_X_and_Y_Coordinates_Full[int(self.SweepPosition.text())][1]))
             except AttributeError:
                 self.Define_Coordinates()
                 self.X_Neuron.setText('retry!')
@@ -1571,7 +1556,7 @@ class Mapping(object):
     def One_Stim_Average(self,X=None,Y=None,Silent=True): 
         
         """
-        This function allows to display all tagged traces at position X - Y. By the way, we check that self.Scanning_Direction_Mode contains some information
+        This function allows to display all tagged traces at position X - Y. By the way, we check that self.Current_Map.Scanning_Direction_Mode contains some information
         """
         
         self.Initially_Excluded_AnalogSignal_Ids={}
@@ -1582,7 +1567,7 @@ class Mapping(object):
                 self.Initially_Excluded_AnalogSignal_Ids[i] = j
         
         print self.Initially_Excluded_AnalogSignal_Ids, 'excluded'
-        if self.Scanning_Direction_Mode == "X" or self.Scanning_Direction_Mode == "Y":
+        if self.Current_Map.Scanning_Direction_Mode == "X" or self.Current_Map.Scanning_Direction_Mode == "Y":
             pass
         else:
             abort=self.Create_Dictionnaries()        
@@ -1895,17 +1880,17 @@ class Mapping(object):
         self.Wid.canvas.axes.grid(41,color='r')
         
         if BypassReMapping == False:
-            if self.Scanning_Direction_Mode != 'UserDefined':
+            if self.Current_Map.Scanning_Direction_Mode != 'UserDefined':
                 self.Create_Mapping_Pathway()
         
         if Bypass_Measuring == False:    
             #To avoid to alter the recorded values, a copy of individual and average measures is done
             try:
-                Local_Amplitude=numpy.array([None]*len(self.Sorted_X_and_Y_Coordinates))
-                Local_Amplitude_sd=numpy.array([None]*len(self.Sorted_X_and_Y_Coordinates))
-                Local_Surface=numpy.array([None]*len(self.Sorted_X_and_Y_Coordinates))
-                Local_Surface_sd=numpy.array([None]*len(self.Sorted_X_and_Y_Coordinates))
-                Local_Success=numpy.array([None]*len(self.Sorted_X_and_Y_Coordinates)) 
+                Local_Amplitude=numpy.array([None]*len(self.Current_Map.Sorted_X_and_Y_Coordinates))
+                Local_Amplitude_sd=numpy.array([None]*len(self.Current_Map.Sorted_X_and_Y_Coordinates))
+                Local_Surface=numpy.array([None]*len(self.Current_Map.Sorted_X_and_Y_Coordinates))
+                Local_Surface_sd=numpy.array([None]*len(self.Current_Map.Sorted_X_and_Y_Coordinates))
+                Local_Success=numpy.array([None]*len(self.Current_Map.Sorted_X_and_Y_Coordinates)) 
             except AttributeError:    
                 msg="""
                 <b>Mapping Error</b>
@@ -1914,7 +1899,7 @@ class Mapping(object):
                 Infos.Error(msg)    
                 return
             
-            for i,j in enumerate(self.Sorted_X_and_Y_Coordinates):
+            for i,j in enumerate(self.Current_Map.Sorted_X_and_Y_Coordinates):
                 try:
                     Local_Amplitude[i]=self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary[j]
                     try:
@@ -2061,8 +2046,8 @@ class Mapping(object):
         pyplot.show()
             
     def ScaleAxis(self,scalingfactor):
-        self.Sorted_X_Coordinates_Scaled=numpy.array(self.Sorted_X_Coordinates)*scalingfactor
-        self.Sorted_Y_Coordinates_Scaled=numpy.array(self.Sorted_Y_Coordinates)*scalingfactor 
+        self.Sorted_X_Coordinates_Scaled=numpy.array(self.Current_Map.Sorted_X_Coordinates)*scalingfactor
+        self.Sorted_Y_Coordinates_Scaled=numpy.array(self.Current_Map.Sorted_Y_Coordinates)*scalingfactor 
 
     def NormalizeSurfaceAndColors(self):
         '''
