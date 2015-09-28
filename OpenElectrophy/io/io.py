@@ -68,6 +68,7 @@ def hierachicalNeoToOe(neoinstance):
                         getattr(oeinstance, '_'+child+'s').append(hierachicalNeoToOe(childinstances[i]))
             
     neoinstance.oeinstance = oeinstance
+    
     return oeinstance
     
 

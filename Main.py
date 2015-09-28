@@ -53,7 +53,16 @@ class Main(QtGui.QWidget,object):#
         print '###########################################################'
         
         if self.userpath == None:
-            self.userpath = 'C:\Users\Antoine\WinPython-64bit-2.7.10.1\settings'
+            value,ok = QtGui.QInputDialog.getText(self,
+                                                  'Winpython Path',
+                                                  """UserPath not Recognized, please indicate Your WinPython installation Folder""",
+                                                  QtGui.QLineEdit.Normal,
+                                                  'C:\Users\Antoine\WinPython-64bit-2.7.10.1')
+            value=str(value)              
+            
+            self.userpath = value+'\settings'
+       
+        print self.userpath
         print '###########################################################'
         print '###########################################################'
         print '###########################################################'

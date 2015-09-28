@@ -14,14 +14,16 @@ Supported : Read
 
 """
 
-
 from baseio import BaseIO
 #from neo.core import *
 from ..core import *
 
 
 from numpy import *
-from igor import binarywave,igorpy
+try:
+    from igor import binarywave,igorpy
+except:
+    print 'Error while loading a librairy. Did you register your Python PATH? '
 import re,string,datetime,struct
  
 
@@ -56,9 +58,9 @@ class NeuromaticIO(BaseIO):
     
     
     mode = 'file'
-    
-    
-    def __init__(self , filename = None) :
+
+        
+    def __init__(self , filename = None, **kargs ) :
         """
         This class read a Neuromatic pxp file.
         
@@ -176,17 +178,17 @@ class NeuromaticIO(BaseIO):
         return self.read_block( **kargs)
     
 
-AnalysisDescription = [
-('RecordStatus','8s'),
-('RecordType','4s'),
-('GroupNumber','f'),
-('TimeRecorded','f'),
-('SamplingInterval','f'),
-('VMax','8f'),
-]
-
-
-  
+#AnalysisDescription = [
+#('RecordStatus','8s'),
+#('RecordType','4s'),
+#('GroupNumber','f'),
+#('TimeRecorded','f'),
+#('SamplingInterval','f'),
+#('VMax','8f'),
+#]
+#
+#
+#  
 
 
 
