@@ -35,7 +35,7 @@ class Mapping(object):
         self.Display_Blue=True
         self.Vertical_Lines_Button = None
         self.Horizontal_Lines_Button = None
-        self.Types_of_Events_to_Measure = 'Negative'
+        self.CM.Types_of_Events_to_Measure = 'Negative'
         self.DB_Picture=False
         self.XPositions=numpy.array([None]*10)
         self.YPositions=numpy.array([None]*10)
@@ -56,25 +56,25 @@ class Mapping(object):
             print i
 
     def Reset_Mapping_Variables(self):        
-        for variable_to_delete in ['self.Current_Map.Sorted_X_and_Y_Coordinates',
-                                   'self.Sorted_Mean_Amplitudes_1',
-                                   'self.Sorted_Mean_Charges_1',
-                                   'self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary',
-                                   'self.Coordinates_and_Corresponding_Amplitudes1_Dictionnary',
-                                   'self.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary',
-                                   'self.Coordinates_and_Corresponding_Charges1_Dictionnary',
-                                   'self.Coordinates_and_Corresponding_Success_Rate_Dictionnary',
-                                   'self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary',
-                                   'self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary',
-                                   'self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary',
-                                   'self.Initially_Excluded_AnalogSignal_Ids',
-                                   'self.Success_list',
-                                   'self.Success_rate',
-                                   'self.Local_Amplitude',
-                                   'self.Local_Amplitude_sd',
-                                   'self.Local_Surface',
-                                   'self.Local_Surface_sd',
-                                   'self.Local_Success',
+        for variable_to_delete in ['self.CM.Sorted_X_and_Y_Coordinates',
+                                   'self.CM.Sorted_Mean_Amplitudes_1',
+                                   'self.CM.Sorted_Mean_Charges_1',
+                                   'self.CM.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary',
+                                   'self.CM.Coordinates_and_Corresponding_Amplitudes1_Dictionnary',
+                                   'self.CM.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary',
+                                   'self.CM.Coordinates_and_Corresponding_Charges1_Dictionnary',
+                                   'self.CM.Coordinates_and_Corresponding_Success_Rate_Dictionnary',
+                                   'self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary',
+                                   'self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary',
+                                   'self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary',
+                                   'self.CM.Initially_Excluded_AnalogSignal_Ids',
+                                   'self.CM.Success_list',
+                                   'self.CM.Success_rate',
+                                   'self.CM.Local_Amplitude',
+                                   'self.CM.Local_Amplitude_sd',
+                                   'self.CM.Local_Surface',
+                                   'self.CM.Local_Surface_sd',
+                                   'self.CM.Local_Success',
                                    ]:
                       
             try:
@@ -83,9 +83,9 @@ class Mapping(object):
             except:
                 print '     ',variable_to_delete, ' not found, not deleted'
           
-          
+
         try:
-            self.Current_Map = Map.Map()
+            self.CM = Map.Map()
             self.X_Neuron.setText("0")
             self.Y_Neuron.setText("0")
             self.X_Start_Field.setText("")   
@@ -113,7 +113,7 @@ class Mapping(object):
             pass
 
         
-        self.Current_Map.Scanning_Direction_Mode=None
+        self.CM.Scanning_Direction_Mode=None
         self.SuccessRate_Ready=False
         self.DB_Picture=False
             
@@ -420,8 +420,8 @@ class Mapping(object):
 
 
 
-        self.Charge='None'
-        self.Amplitude='Color'
+        self.CM.Charge='None'
+        self.CM.Amplitude='Color'
        
 
         self.Amplitudes_Display_Mode_Label = QtGui.QLabel()
@@ -538,8 +538,8 @@ class Mapping(object):
         self.OptionWid.show()
     
     def EnableDisableOptions(self,Amplitude,Charge,Average,Measure,ThresholdInput,ChangeDisplay=False):
-        self.Amplitude=str(self.Amplitudes_Display_Mode.currentText())
-        self.Charge=str(self.Charges_Display_Mode.currentText())
+        self.CM.Amplitude=str(self.Amplitudes_Display_Mode.currentText())
+        self.CM.Charge=str(self.Charges_Display_Mode.currentText())
         
         self.Amplitudes_Display_Mode.setEnabled(Amplitude)
         self.Charges_Display_Mode.setEnabled(Charge)  
@@ -573,13 +573,13 @@ class Mapping(object):
             self.EnableDisableOptions(True,True,False,True,False,ChangeDisplay=True)
         
         #TODO : explain what that is
-        if self.Charge==self.Amplitude:
-            if self.Charge!='None':
+        if self.CM.Charge==self.CM.Amplitude:
+            if self.CM.Charge!='None':
                 self.Charges_Display_Mode.setCurrentIndex(2)
-                self.Charge='None'
+                self.CM.Charge='None'
             else:
                 self.Charges_Display_Mode.setCurrentIndex(1)
-                self.Charge='Surface'
+                self.CM.Charge='Surface'
 
     def Set_User_Parameters(self,name):
         #TODO : The 4 followinf function are like their source in Analysis. Those function should be pooled together
@@ -688,23 +688,23 @@ class Mapping(object):
         MapWidget.addWidget(QtGui.QLabel('Y Coordinates'),1,0)
         self.XArrayInputField=QtGui.QLineEdit('')
         self.YArrayInputField=QtGui.QLineEdit('')
-        self.XArrayInputField.setObjectName("self.Current_Map.Sorted_X_Coordinates")
-        self.YArrayInputField.setObjectName("self.Current_Map.Sorted_Y_Coordinates")
+        self.XArrayInputField.setObjectName("self.CM.Sorted_X_Coordinates")
+        self.YArrayInputField.setObjectName("self.CM.Sorted_Y_Coordinates")
         MapWidget.addWidget(self.XArrayInputField,0,1)        
         MapWidget.addWidget(self.YArrayInputField,1,1)
         x=QtGui.QPushButton('...')
         y=QtGui.QPushButton('...')
-        x.setObjectName("self.Current_Map.Sorted_X_Coordinates")
-        y.setObjectName("self.Current_Map.Sorted_Y_Coordinates")
+        x.setObjectName("self.CM.Sorted_X_Coordinates")
+        y.setObjectName("self.CM.Sorted_Y_Coordinates")
         
         FilteredList=self.UpdateUsableArrayList()
          
         self.ListOfXArrays=QtGui.QComboBox()
-        self.ListOfXArrays.setObjectName("self.Current_Map.Sorted_X_Coordinates")
+        self.ListOfXArrays.setObjectName("self.CM.Sorted_X_Coordinates")
         self.ListOfXArrays.addItems(FilteredList)
         self.ListOfYArrays=QtGui.QComboBox()
         self.ListOfYArrays.addItems(FilteredList)
-        self.ListOfYArrays.setObjectName("self.Current_Map.Sorted_Y_Coordinates")
+        self.ListOfYArrays.setObjectName("self.CM.Sorted_Y_Coordinates")
         MapWidget.addWidget(self.ListOfXArrays,0,2)        
         MapWidget.addWidget(self.ListOfYArrays,1,2)         
         MapWidget.addWidget(x,0,3)        
@@ -735,10 +735,10 @@ class Mapping(object):
             self.UpdateCurrent()
             #print str(QtCore.QObject().sender().objectName())
             
-            #if str(QtCore.QObject().sender().objectName()) == 'self.Current_Map.Sorted_X_Coordinates':
+            #if str(QtCore.QObject().sender().objectName()) == 'self.CM.Sorted_X_Coordinates':
             #    idx=self.ListOfXArrays.findText('Mapping.'+name)
             #    self.ListOfXArrays.setCurrentIndex(idx)
-            #elif str(QtCore.QObject().sender().objectName()) == 'self.Current_Map.Sorted_Y_Coordinates':
+            #elif str(QtCore.QObject().sender().objectName()) == 'self.CM.Sorted_Y_Coordinates':
             #    idx=self.ListOfXArrays.findText('Mapping.'+name)
             #    self.ListOfYArrays.setCurrentIndex(idx)
                     
@@ -818,7 +818,7 @@ class Mapping(object):
             #Reading of the Number of Turns Value
             self.Number_of_Turns.setText(str(Requete.tag['NumberofTurns'][0]))
             #Reading of the Scanning direction Value
-            self.Current_Map.Scanning_Direction_Mode=str(Requete.tag["ScanWay"][0])
+            self.CM.Scanning_Direction_Mode=str(Requete.tag["ScanWay"][0])
             
             #self.Bypass=True 
 
@@ -889,7 +889,7 @@ class Mapping(object):
  
     def Define_Non_Grid_Positions(self):
 
-        self.Current_Map.Scanning_Direction_Mode = 'UserDefined'   
+        self.CM.Scanning_Direction_Mode = 'UserDefined'   
         self.Set_Auto_Coordinates_Visible()        
         try:
             #Wid=QtGui.QWidget()
@@ -898,7 +898,7 @@ class Mapping(object):
             #self.repeats=int(self.repeats)
             
             #if ok:
-            self.Window=SpreadSheet(Source=[self.Current_Map.Sorted_X_Coordinates,self.Current_Map.Sorted_Y_Coordinates],Rendering=True,MustBeClosed=True)
+            self.Window=SpreadSheet(Source=[self.CM.Sorted_X_Coordinates,self.CM.Sorted_Y_Coordinates],Rendering=True,MustBeClosed=True)
             QtCore.QObject.connect(self.Window, QtCore.SIGNAL('destroyed()'),self.UpdateDictafterWidgetClosure)        
         except AttributeError:
             self.Load_Coordinates()
@@ -913,13 +913,13 @@ class Mapping(object):
         else:
             Number_of_Turns=int(self.Number_of_Turns.text())
             
-        self.Current_Map.Sorted_Y_Coordinates_Full=self.Current_Map.Sorted_Y_Coordinates*Number_of_Turns
-        self.Current_Map.Sorted_X_Coordinates_Full=self.Current_Map.Sorted_X_Coordinates*Number_of_Turns
-        self.Current_Map.Sorted_X_and_Y_Coordinates=[None]*len(self.Current_Map.Sorted_X_Coordinates)
-        for i,j in enumerate(self.Current_Map.Sorted_Y_Coordinates):
-            self.Current_Map.Sorted_X_and_Y_Coordinates[i]=(self.Current_Map.Sorted_X_Coordinates[i],j)    
+        self.CM.Sorted_Y_Coordinates_Full=self.CM.Sorted_Y_Coordinates*Number_of_Turns
+        self.CM.Sorted_X_Coordinates_Full=self.CM.Sorted_X_Coordinates*Number_of_Turns
+        self.CM.Sorted_X_and_Y_Coordinates=[None]*len(self.CM.Sorted_X_Coordinates)
+        for i,j in enumerate(self.CM.Sorted_Y_Coordinates):
+            self.CM.Sorted_X_and_Y_Coordinates[i]=(self.CM.Sorted_X_Coordinates[i],j)    
             
-        self.Current_Map.Sorted_X_and_Y_Coordinates_Full=self.Current_Map.Sorted_X_and_Y_Coordinates*Number_of_Turns
+        self.CM.Sorted_X_and_Y_Coordinates_Full=self.CM.Sorted_X_and_Y_Coordinates*Number_of_Turns
         self.Set_Coordinates_in_Tag_Variable()
         
        
@@ -967,7 +967,7 @@ class Mapping(object):
             self.GridGenerator_Button.setText("AutoFill Grid")
             QtCore.QObject.connect(self.GridGenerator_Button, QtCore.SIGNAL("clicked()"),self.AutoFill_Grid)
   
-        self.Current_Map = Map.Map() 
+        self.CM = Map.Map() 
         self.Map_tools_Widget.show()  
         
      
@@ -979,7 +979,7 @@ class Mapping(object):
                   self.Y_Start_Field,
                   self.Y_End_Field,
                   self.Y_Step_Field]:
-            if self.Current_Map.Scanning_Direction_Mode == 'UserDefined':
+            if self.CM.Scanning_Direction_Mode == 'UserDefined':
                 i.setEnabled(False)
             else:
                 i.setEnabled(True)
@@ -997,13 +997,13 @@ class Mapping(object):
         Elle peut aussi etre appelée séparement, dans le but de sauver les coordonnées.
         Dans les 2 cas, une fois passée, self.Bypass devient True
         
-        self.Current_Map.Sorted_Y_Coordinates : An array of the Y coordinates of the experiment, in one turn
-        self.Current_Map.Sorted_X_Coordinates : An array of the X coordinates of the experiment, in one turn
-        self.Current_Map.Sorted_X_and_Y_Coordinates : An array of the (X,Y) coordinates of the experiment, in one turn
+        self.CM.Sorted_Y_Coordinates : An array of the Y coordinates of the experiment, in one turn
+        self.CM.Sorted_X_Coordinates : An array of the X coordinates of the experiment, in one turn
+        self.CM.Sorted_X_and_Y_Coordinates : An array of the (X,Y) coordinates of the experiment, in one turn
         
-        self.Current_Map.Sorted_X_and_Y_Coordinates_Full : An array of the (X,Y) coordinates of the experiment, in all the experiment
-        self.Current_Map.Sorted_Y_Coordinates : An array of the Y coordinates of the experiment, in all the experiment
-        self.Current_Map.Sorted_X_Coordinates : An array of the X coordinates of the experiment, in all the experiment     
+        self.CM.Sorted_X_and_Y_Coordinates_Full : An array of the (X,Y) coordinates of the experiment, in all the experiment
+        self.CM.Sorted_Y_Coordinates : An array of the Y coordinates of the experiment, in all the experiment
+        self.CM.Sorted_X_Coordinates : An array of the X coordinates of the experiment, in all the experiment     
         
         int(self.Number_of_Turns.text()) is the number of turns
         """
@@ -1012,7 +1012,7 @@ class Mapping(object):
         self.Correction_of_Abnormal_Parameters_for_Mapping()
         
         if QtCore.QObject().sender() ==  self.Vertical_Lines_Button or QtCore.QObject().sender() ==  self.Horizontal_Lines_Button:
-            self.Current_Map.Scanning_Direction_Mode = None   
+            self.CM.Scanning_Direction_Mode = None   
 
         try:
             List_of_X_Points = range(int(self.X_Start_Field.text()),int(self.X_End_Field.text())+int(self.X_Step_Field.text()),int(self.X_Step_Field.text()))        #liste les coordonnées en X
@@ -1031,10 +1031,10 @@ class Mapping(object):
             Infos.Error(msg)
             return
             
-        if QtCore.QObject().sender() ==  self.Vertical_Lines_Button or self.Current_Map.Scanning_Direction_Mode == "X":
-            self.Current_Map.GenerateGridCoordinates("X",List_of_X_Points, List_of_Y_Points)
-        elif QtCore.QObject().sender() ==  self.Horizontal_Lines_Button or self.Current_Map.Scanning_Direction_Mode == "Y":
-            self.Current_Map.GenerateGridCoordinates("Y",List_of_X_Points, List_of_Y_Points)
+        if QtCore.QObject().sender() ==  self.Vertical_Lines_Button or self.CM.Scanning_Direction_Mode == "X":
+            self.CM.GenerateGridCoordinates("X",List_of_X_Points, List_of_Y_Points)
+        elif QtCore.QObject().sender() ==  self.Horizontal_Lines_Button or self.CM.Scanning_Direction_Mode == "Y":
+            self.CM.GenerateGridCoordinates("Y",List_of_X_Points, List_of_Y_Points)
 
         try:
             self.Correction_of_Abnormal_Parameters_for_Mapping()
@@ -1053,10 +1053,10 @@ class Mapping(object):
             
         if QtCore.QObject().sender() ==  self.Vertical_Lines_Button or QtCore.QObject().sender() ==  self.Horizontal_Lines_Button:   
             self.Mapping_Pattern = MyMplWidget(title='Mapping Pattern')
-            self.Mapping_Pattern.canvas.axes.plot(self.Current_Map.Sorted_X_Coordinates,self.Current_Map.Sorted_Y_Coordinates,'o-',-400,-400,400,400)
+            self.Mapping_Pattern.canvas.axes.plot(self.CM.Sorted_X_Coordinates,self.CM.Sorted_Y_Coordinates,'o-',-400,-400,400,400)
 
-            self.Mapping_Pattern.canvas.axes.arrow(self.Current_Map.Sorted_X_Coordinates[-2],self.Current_Map.Sorted_Y_Coordinates[-2],(self.Current_Map.Sorted_X_Coordinates[-1]-self.Current_Map.Sorted_X_Coordinates[-2]),(self.Current_Map.Sorted_Y_Coordinates[-1]-self.Current_Map.Sorted_Y_Coordinates[-2]),length_includes_head=True,width=1, head_width=int(self.X_Step_Field.text()),head_length=int(self.X_Step_Field.text()),fc='r')
-            self.Mapping_Pattern.canvas.axes.annotate("expected Nb of Sweeps : "+str(len(self.Current_Map.Sorted_Y_Coordinates_Full)),(-380,350),backgroundcolor='white',alpha=0.4)
+            self.Mapping_Pattern.canvas.axes.arrow(self.CM.Sorted_X_Coordinates[-2],self.CM.Sorted_Y_Coordinates[-2],(self.CM.Sorted_X_Coordinates[-1]-self.CM.Sorted_X_Coordinates[-2]),(self.CM.Sorted_Y_Coordinates[-1]-self.CM.Sorted_Y_Coordinates[-2]),length_includes_head=True,width=1, head_width=int(self.X_Step_Field.text()),head_length=int(self.X_Step_Field.text()),fc='r')
+            self.Mapping_Pattern.canvas.axes.annotate("expected Nb of Sweeps : "+str(len(self.CM.Sorted_Y_Coordinates_Full)),(-380,350),backgroundcolor='white',alpha=0.4)
             self.Map_tools_Widget.close()
             self.Mapping_Pattern.show()
     
@@ -1128,8 +1128,8 @@ class Mapping(object):
         warning_displayed = False
         for i in range(len(Requete.Analogsignal_ids)):
             try:                
-                Requete.tag["X_coord"][i]=self.Current_Map.Sorted_X_Coordinates_Full[i]
-                Requete.tag["Y_coord"][i]=self.Current_Map.Sorted_Y_Coordinates_Full[i]
+                Requete.tag["X_coord"][i]=self.CM.Sorted_X_Coordinates_Full[i]
+                Requete.tag["Y_coord"][i]=self.CM.Sorted_Y_Coordinates_Full[i]
             except IndexError: 
                 if warning_displayed == False:
                     msg="""
@@ -1156,41 +1156,41 @@ class Mapping(object):
             Requete.tag["XSteps"][i]=str(self.X_Step_Field.text())
             Requete.tag["YSteps"][i]=str(self.Y_Step_Field.text())
             Requete.tag["NumberofTurns"][i]=str(self.Number_of_Turns.text())
-            Requete.tag["ScanWay"][i]=self.Current_Map.Scanning_Direction_Mode
+            Requete.tag["ScanWay"][i]=self.CM.Scanning_Direction_Mode
 
         #self.Bypass=True
 
     def Create_Dictionnaries(self):
         """
         Base Mapping dictionnaries are created here
-            self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary : {id:(X,Y)}
-            self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary : {(X,Y):[id1,id2,id3...]}
-            self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary : {id:sweep#}
-            self.Initially_Excluded_AnalogSignal_Ids : {sweep#:id} #It's a blacklist of initially unchecked sweeps
+            self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary : {id:(X,Y)}
+            self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary : {(X,Y):[id1,id2,id3...]}
+            self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary : {id:sweep#}
+            self.CM.Initially_Excluded_AnalogSignal_Ids : {sweep#:id} #It's a blacklist of initially unchecked sweeps
         """                
 
-        self.Initially_Excluded_AnalogSignal_Ids={}
+        self.CM.Initially_Excluded_AnalogSignal_Ids={}
         try:
             for i,j in enumerate(Requete.Analogsignal_ids):
                 if Requete.tag["Selection"][i]==0:
-                    self.Initially_Excluded_AnalogSignal_Ids[i] = j
+                    self.CM.Initially_Excluded_AnalogSignal_Ids[i] = j
             #Creation des liste de coordonnées
-            self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary={} #Keys = ids , Values = (X,Y)
-            self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary={} #Keys = ids , Values = Sweep #
+            self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary={} #Keys = ids , Values = (X,Y)
+            self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary={} #Keys = ids , Values = Sweep #
             for i,j in enumerate(Requete.Analogsignal_ids):
-                self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[j]=i
+                self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[j]=i
                 if Requete.tag["Selection"][i]!=0:
-                    self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[j]=(int(Requete.tag["X_coord"][i]),int(Requete.tag["Y_coord"][i]))
+                    self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[j]=(int(Requete.tag["X_coord"][i]),int(Requete.tag["Y_coord"][i]))
                 else:
-                    self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[j]=None
+                    self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[j]=None
             
             #On inverse le dictionaire
-            self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary={}  #Keys = (X,Y)coordinates , Values = array of corresponding ids
-            for i,j in self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary.iteritems():
-                self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[j] = self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary.get(j, [])
-                self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[j].append(i)
-                if self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary.has_key(None) == True: #None coordinates are deleted
-                    del self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[None]         
+            self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary={}  #Keys = (X,Y)coordinates , Values = array of corresponding ids
+            for i,j in self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary.iteritems():
+                self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[j] = self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary.get(j, [])
+                self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[j].append(i)
+                if self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary.has_key(None) == True: #None coordinates are deleted
+                    del self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[None]         
             
         except TypeError:
             msg="""
@@ -1203,11 +1203,11 @@ class Mapping(object):
             Infos.Error(msg)
             return True       
 
-        self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary={}
-        self.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary={}
-        self.Coordinates_and_Corresponding_Amplitudes1_Dictionnary={}
-        self.Coordinates_and_Corresponding_Charges1_Dictionnary={}        
-        self.Coordinates_and_Corresponding_Success_Rate_Dictionnary={}
+        self.CM.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary={}
+        self.CM.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary={}
+        self.CM.Coordinates_and_Corresponding_Amplitudes1_Dictionnary={}
+        self.CM.Coordinates_and_Corresponding_Charges1_Dictionnary={}        
+        self.CM.Coordinates_and_Corresponding_Success_Rate_Dictionnary={}
         self.Coordinates_and_Corresponding_Mean_Variance1_Dictionnary={}
 
     def Find_Corresponding_Coordinates(self):
@@ -1217,10 +1217,10 @@ class Mapping(object):
         N'est activé que si des coordonnées existent (find coordinates a été lancé, ou sauvé depuis une analyse précédente)
         """
 
-        if self.Current_Map.Scanning_Direction_Mode == "X" or self.Current_Map.Scanning_Direction_Mode == "Y":
+        if self.CM.Scanning_Direction_Mode == "X" or self.CM.Scanning_Direction_Mode == "Y":
             try: #write the value
-                self.X_Neuron.setText(str(self.Current_Map.Sorted_X_and_Y_Coordinates_Full[int(self.SweepPosition.text())][0]))
-                self.Y_Neuron.setText(str(self.Current_Map.Sorted_X_and_Y_Coordinates_Full[int(self.SweepPosition.text())][1]))
+                self.X_Neuron.setText(str(self.CM.Sorted_X_and_Y_Coordinates_Full[int(self.SweepPosition.text())][0]))
+                self.Y_Neuron.setText(str(self.CM.Sorted_X_and_Y_Coordinates_Full[int(self.SweepPosition.text())][1]))
             except AttributeError:
                 self.Define_Coordinates()
                 self.X_Neuron.setText('retry!')
@@ -1234,10 +1234,10 @@ class Mapping(object):
         Cette fonction permet de faire la moyenne des traces points par points.
         Les parametres utilisés sont ceux du menu Measure  .
         On y créé des dictionnaires utiles:
-            self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary : {id:(X,Y)}
-            self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary : {(X,Y):[id1,id2,id3...]}
-            self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary : {id:sweep#}
-            self.Initially_Excluded_AnalogSignal_Ids : {sweep#:id} #It's a blacklist
+            self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary : {id:(X,Y)}
+            self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary : {(X,Y):[id1,id2,id3...]}
+            self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary : {id:sweep#}
+            self.CM.Initially_Excluded_AnalogSignal_Ids : {sweep#:id} #It's a blacklist
         """        
 
         abort=self.Create_Dictionnaries()        
@@ -1249,24 +1249,24 @@ class Mapping(object):
         counter=0
         #On fait une moyenne par position
 
-        for keys in self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary:
+        for keys in self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary:
             time.sleep(0.1)
             Navigate.UnTag_All_Traces(ProgressDisplay=False)
-            for i in self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]:
-                Requete.tag["Selection"][self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]]=1 #Keys = ids , Values = Sweepnumber
+            for i in self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]:
+                Requete.tag["Selection"][self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]]=1 #Keys = ids , Values = Sweepnumber
 
             self.mappingprogress.setMinimum(0)
-            self.mappingprogress.setMaximum(len(self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary)-1)
+            self.mappingprogress.setMaximum(len(self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary)-1)
             self.mappingprogress.setValue(counter)
  
             MA1,MA2,MA3,MC1,MC2,MC3,current_averaged_trace,current_List_of_Ids = Analysis.Measure_on_Average(Rendering=False,ProgressDisplay=False)
             try:
-                self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary[keys]=MA1 #one point array
-                self.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary[keys]=MC1 #one point array
+                self.CM.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary[keys]=MA1 #one point array
+                self.CM.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary[keys]=MC1 #one point array
                 #self.Coordinates_and_Corresponding_Mean_Variance1_Dictionnary[keys]=0
-                self.Coordinates_and_Corresponding_Amplitudes1_Dictionnary=None
-                self.Coordinates_and_Corresponding_Charges1_Dictionnary=None
-                self.Coordinates_and_Corresponding_Success_Rate_Dictionnary[keys]=None
+                self.CM.Coordinates_and_Corresponding_Amplitudes1_Dictionnary=None
+                self.CM.Coordinates_and_Corresponding_Charges1_Dictionnary=None
+                self.CM.Coordinates_and_Corresponding_Success_Rate_Dictionnary[keys]=None
                 AllC1values.append(MC1)
                 AllA1values.append(MA1)
                 counter+=1
@@ -1280,7 +1280,7 @@ class Mapping(object):
 
         
         Navigate.Tag_All_Traces(ProgressDisplay=False)
-        for i in self.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
+        for i in self.CM.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
             Requete.tag["Selection"][i]=0
         
         # TODO: if the mapping contains more theoretical points than real point, ther eis a value error here
@@ -1306,7 +1306,7 @@ class Mapping(object):
             Min=numpy.nanmin(AllC1values)
             Max=numpy.nanmax(AllC1values)
             
-        if self.Types_of_Events_to_Measure == 'Negative':
+        if self.CM.Types_of_Events_to_Measure == 'Negative':
             Min*=-1
             Max*=-1
         self.Manual_Min_Field.setText(str(Min))
@@ -1319,16 +1319,16 @@ class Mapping(object):
         Cette fonction permet de faire les mesurese des traces points par points.
         Les parametres utilisés sont de du menu Measure  .
         On y créé des dictionnaires utiles:
-            self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary : {id:(X,Y)}
-            self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary : {(X,Y):[id1,id2,id3...]}
-            self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary : {id:sweep#}
-            self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary : {(X,Y): mean amp1 }
-            self.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary : {(X,Y): mean surface}
-            self.Coordinates_and_Corresponding_Success_Rate_Dictionnary : {(X,Y) : Success rate}
-            self.Initially_Excluded_AnalogSignal_Ids : {excluded ids}
+            self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary : {id:(X,Y)}
+            self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary : {(X,Y):[id1,id2,id3...]}
+            self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary : {id:sweep#}
+            self.CM.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary : {(X,Y): mean amp1 }
+            self.CM.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary : {(X,Y): mean surface}
+            self.CM.Coordinates_and_Corresponding_Success_Rate_Dictionnary : {(X,Y) : Success rate}
+            self.CM.Initially_Excluded_AnalogSignal_Ids : {excluded ids}
         Et 2 array importants:
-            self.Success_list
-            self.Success_rate
+            self.CM.Success_list
+            self.CM.Success_rate
         """        
  
 
@@ -1407,7 +1407,7 @@ class Mapping(object):
 
 
         if self.Thresholding_Mode.currentIndex() == 7:
-            self.Types_of_Events_to_Measure = 'Positive'
+            self.CM.Types_of_Events_to_Measure = 'Positive'
             A1,A2,A3,C1,C2,C3=Analysis.Count_Events()
             for i,j in enumerate(A1):
                 if j==0:
@@ -1416,23 +1416,23 @@ class Mapping(object):
         else:
             A1,A2,A3,C1,C2,C3 = Analysis.Measure(Rendering=False,Measure_Filtered=Measure_Filtered,Silent=Silent)
 
-        #For each point, the measure is done. Average of individual measures is stored in self.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary and self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary
-        #array of all measured values is stored in self.Coordinates_and_Corresponding_Amplitudes1_Dictionnary and self.Coordinates_and_Corresponding_Charges1_Dictionnary
-        for keys in self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary:
+        #For each point, the measure is done. Average of individual measures is stored in self.CM.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary and self.CM.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary
+        #array of all measured values is stored in self.CM.Coordinates_and_Corresponding_Amplitudes1_Dictionnary and self.CM.Coordinates_and_Corresponding_Charges1_Dictionnary
+        for keys in self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary:
             
             accepted=0
             number_of_sweep_at_this_position=0
             currentIdsofInterest=[]
 
             #Navigate.UnTag_All_Traces()
-            for i in self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]:
+            for i in self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]:
                 #i are all Analogsigna id at this point
-                currentIdsofInterest.append(self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i])
+                currentIdsofInterest.append(self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i])
                 number_of_sweep_at_this_position+=1
             for i in A1:#eval(self.Analysis_mode):
-                if self.Types_of_Events_to_Measure == 'Negative' and float(i) <= float(thr):
+                if self.CM.Types_of_Events_to_Measure == 'Negative' and float(i) <= float(thr):
                    accepted+=1 
-                elif self.Types_of_Events_to_Measure == 'Positive' and float(i) >= float(thr):
+                elif self.CM.Types_of_Events_to_Measure == 'Positive' and float(i) >= float(thr):
                    accepted+=1  
             
             A1loc=[]
@@ -1452,16 +1452,16 @@ class Mapping(object):
                 print "on a total of "+str(number_of_sweep_at_this_position)+" ,"+str(accepted)+" were accepted"
             success_rate=float(accepted)/float(number_of_sweep_at_this_position)
 
-            self.Coordinates_and_Corresponding_Amplitudes1_Dictionnary[keys]=A1loc
-            self.Coordinates_and_Corresponding_Charges1_Dictionnary[keys]=C1loc
-            self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary[keys]=stats.nanmean(A1loc)
+            self.CM.Coordinates_and_Corresponding_Amplitudes1_Dictionnary[keys]=A1loc
+            self.CM.Coordinates_and_Corresponding_Charges1_Dictionnary[keys]=C1loc
+            self.CM.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary[keys]=stats.nanmean(A1loc)
             self.Coordinates_and_Corresponding_Mean_Variance1_Dictionnary[keys]=stats.nanstd(V1loc)
-            self.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary[keys]=stats.nanmean(C1loc)                
-            self.Coordinates_and_Corresponding_Success_Rate_Dictionnary[keys]=success_rate   
+            self.CM.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary[keys]=stats.nanmean(C1loc)                
+            self.CM.Coordinates_and_Corresponding_Success_Rate_Dictionnary[keys]=success_rate   
             AllC1values.append(stats.nanmean(C1loc))  
             AllA1values.append(stats.nanmean(A1loc)) 
             AllV1values.append(stats.nanstd(V1loc))
-            #The % of values over thr is stored self.Coordinates_and_Corresponding_Success_Rate_Dictionnary
+            #The % of values over thr is stored self.CM.Coordinates_and_Corresponding_Success_Rate_Dictionnary
 
 #                
 #                counter+=1
@@ -1481,7 +1481,7 @@ class Mapping(object):
         Navigate.Tag_All_Traces(ProgressDisplay=False)
         for i in range(len(Requete.Analogsignal_ids)):
             Requete.tag["Selection"][i]=int(1)
-        for i in self.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
+        for i in self.CM.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
             Requete.tag["Selection"][i]=0        
         
         print 'current', self.Thresholding_Mode.currentIndex()
@@ -1497,7 +1497,7 @@ class Mapping(object):
         if self.Analysis_mode=="Analysis.Amplitudes_1":
             Min=numpy.nanmin(AllA1values)
             Max=numpy.nanmax(AllA1values)
-            if self.Types_of_Events_to_Measure == 'Negative':
+            if self.CM.Types_of_Events_to_Measure == 'Negative':
                 Min*=-1
                 Max*=-1            
             self.Manual_Min_Field.setText(str(Min))
@@ -1506,7 +1506,7 @@ class Mapping(object):
         elif self.Analysis_mode=="Analysis.Charges_1":
             Min=numpy.nanmin(AllC1values)
             Max=numpy.nanmax(AllC1values)
-            if self.Types_of_Events_to_Measure == 'Negative':
+            if self.CM.Types_of_Events_to_Measure == 'Negative':
                 Min*=-1
                 Max*=-1
             self.Manual_Min_Field.setText(str(Min))
@@ -1516,7 +1516,7 @@ class Mapping(object):
         elif self.Analysis_mode=="Analysis.Variance_1":
             Min=numpy.nanmin(AllV1values)
             Max=numpy.nanmax(AllV1values)
-            if self.Types_of_Events_to_Measure == 'Negative':
+            if self.CM.Types_of_Events_to_Measure == 'Negative':
                 Min*=-1
                 Max*=-1            
             self.Manual_Min_Field.setText(str(Min))
@@ -1557,18 +1557,18 @@ class Mapping(object):
     def One_Stim_Average(self,X=None,Y=None,Silent=True): 
         
         """
-        This function allows to display all tagged traces at position X - Y. By the way, we check that self.Current_Map.Scanning_Direction_Mode contains some information
+        This function allows to display all tagged traces at position X - Y. By the way, we check that self.CM.Scanning_Direction_Mode contains some information
         """
         
-        self.Initially_Excluded_AnalogSignal_Ids={}
+        self.CM.Initially_Excluded_AnalogSignal_Ids={}
         blacklist=[]
         for i,j in enumerate(Requete.Analogsignal_ids):
             if Requete.tag["Selection"][i]==0:
                 blacklist.append(j)
-                self.Initially_Excluded_AnalogSignal_Ids[i] = j
+                self.CM.Initially_Excluded_AnalogSignal_Ids[i] = j
         
-        print self.Initially_Excluded_AnalogSignal_Ids, 'excluded'
-        if self.Current_Map.Scanning_Direction_Mode == "X" or self.Current_Map.Scanning_Direction_Mode == "Y":
+        print self.CM.Initially_Excluded_AnalogSignal_Ids, 'excluded'
+        if self.CM.Scanning_Direction_Mode == "X" or self.CM.Scanning_Direction_Mode == "Y":
             pass
         else:
             abort=self.Create_Dictionnaries()        
@@ -1581,9 +1581,9 @@ class Mapping(object):
                 keys=(int(self.X_Neuron.text()),int(self.Y_Neuron.text()))
             else:
                 try:
-                    self.X_Neuron.setText(str(self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())]][0]))
-                    self.Y_Neuron.setText(str(self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())]][1]))
-                    keys=self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())]]
+                    self.X_Neuron.setText(str(self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())]][0]))
+                    self.Y_Neuron.setText(str(self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())]][1]))
+                    keys=self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())]]
                 except TypeError:
                     msg="""
                     This position contains no Data (Perhaps everything is unttaged)"""
@@ -1593,9 +1593,9 @@ class Mapping(object):
                     abort=self.Create_Dictionnaries()        
                     if abort == True:
                         return 
-                    self.X_Neuron.setText(str(self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())]][0]))
-                    self.Y_Neuron.setText(str(self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())]][1]))
-                    keys=self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())]]                                     
+                    self.X_Neuron.setText(str(self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())]][0]))
+                    self.Y_Neuron.setText(str(self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())]][1]))
+                    keys=self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())]]                                     
         #Otherwise, X and Y can be directly passed      
         else:
             keys=(X,Y) 
@@ -1610,17 +1610,17 @@ class Mapping(object):
         
         #try: #si la position est calculée directement au cours de l'analyse, les positions sont des int
         try:
-            for i in self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]:
+            for i in self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]:
                 if i not in blacklist:
-                    Requete.tag["Selection"][self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]]=1 #Keys = ids , Values = Sweepnumber
-                    self.Currently_Used_Sweep_nb_for_Local_Average.append(self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i])
+                    Requete.tag["Selection"][self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]]=1 #Keys = ids , Values = Sweepnumber
+                    self.Currently_Used_Sweep_nb_for_Local_Average.append(self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i])
             
             if Silent==False:
                 print "Average Amplitudes on position ",keys
-                print "Average On ",len(self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys])," Sweeps"
+                print "Average On ",len(self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys])," Sweeps"
                 print "Sweep # ",self.Currently_Used_Sweep_nb_for_Local_Average," were used"
     
-            Analysis.Measure_on_Average(Display_Superimposed_Traces=True,Position=keys) #list of ids could be List_of_Ids=self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]
+            Analysis.Measure_on_Average(Display_Superimposed_Traces=True,Position=keys) #list of ids could be List_of_Ids=self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]
 
 
 
@@ -1635,7 +1635,7 @@ class Mapping(object):
             Navigate.Tag_All_Traces()
             if Silent == False:
                 print Requete.tag["Selection"]
-            for i in self.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
+            for i in self.CM.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
                 Requete.tag["Selection"][i]=0              
 
 
@@ -1684,14 +1684,14 @@ class Mapping(object):
             try:
                 thr=float(self.Thresholding_Mode_Input_Field.text())
                 for i,j in enumerate(var):
-                    if self.Types_of_Events_to_Measure == 'Negative':
+                    if self.CM.Types_of_Events_to_Measure == 'Negative':
                         if j<thr:
                             Local_Amplitude[i]=-0.75
                             Local_Surface[i]=-1
                         else:
                             Local_Amplitude[i]=0.0
                             Local_Surface[i]=0.0
-                    elif self.Types_of_Events_to_Measure == 'Positive':
+                    elif self.CM.Types_of_Events_to_Measure == 'Positive':
                         if j>thr:
                             Local_Amplitude[i]=0.75
                             Local_Surface[i]=1
@@ -1709,16 +1709,16 @@ class Mapping(object):
             
             try:
                 thr=float(self.Thresholding_Mode_Input_Field.text())
-                if self.Types_of_Events_to_Measure == 'Negative':
+                if self.CM.Types_of_Events_to_Measure == 'Negative':
                     Max=float(numpy.min(Local_Amplitude))
-                elif self.Types_of_Events_to_Measure == 'Positive':
+                elif self.CM.Types_of_Events_to_Measure == 'Positive':
                     Max=float(numpy.max(Local_Amplitude))  
                     
                 for i,j in enumerate(Local_Amplitude):
                     
                     if (j*100)/Max > thr:
-                        if self.Types_of_Events_to_Measure == 'Negative': Local_Amplitude[i]=-0.75
-                        elif self.Types_of_Events_to_Measure == 'Positive': Local_Amplitude[i]=0.75    
+                        if self.CM.Types_of_Events_to_Measure == 'Negative': Local_Amplitude[i]=-0.75
+                        elif self.CM.Types_of_Events_to_Measure == 'Positive': Local_Amplitude[i]=0.75    
                         Local_Surface[i]=1
                     else:
                         Local_Amplitude[i]=0.0
@@ -1741,7 +1741,7 @@ class Mapping(object):
             if self.SuccessRate_Ready==True:
                 print "Success Rate Thresholded view"
                             
-                #if self.Charge == 'Color' and self.Amplitude == 'None':
+                #if self.CM.Charge == 'Color' and self.CM.Amplitude == 'None':
                 try:
                     thr=float(self.Thresholding_Mode_Input_Field.text())/100
                     for i,j in enumerate(Local_Success):
@@ -1767,7 +1767,7 @@ class Mapping(object):
         elif Mode == 5:# to check, and implement Local_Success
             if self.SuccessRate_Ready==True:
                 print "Amplitude or Charge AND success rate Thresholded view"  
-                #if self.Charge == 'Color' and self.Amplitude == 'None':
+                #if self.CM.Charge == 'Color' and self.CM.Amplitude == 'None':
                 thr=float(self.Thresholding_Mode_Input_Field.text())/100
                 
                 #First, we use the good list, depending if thr was computed on amplitudes or charges
@@ -1779,7 +1779,7 @@ class Mapping(object):
                 for i,j in enumerate(Local_to_use): 
                     
                     #Second,  We check if the mean value is over the defined self.mean_threshold, taking into account the sign of the signal
-                    if (self.Types_of_Events_to_Measure == 'Negative' and j < self.mean_threshold) or (self.Types_of_Events_to_Measure == 'Positive' and j > self.mean_threshold):
+                    if (self.CM.Types_of_Events_to_Measure == 'Negative' and j < self.mean_threshold) or (self.CM.Types_of_Events_to_Measure == 'Positive' and j > self.mean_threshold):
                         print "At position ", str(i)," threshold mean is reached, ", j, " over ", self.mean_threshold
                         
                         Local_Surface[i]=j #if ok, the value is kept, otherwise it is set to zero
@@ -1788,11 +1788,11 @@ class Mapping(object):
                         #otherwise, the value is put in dark red
                         if j > thr:
                             print 'Position validated, success rate over '+self.Thresholding_Mode_Input_Field.text()+" %"
-                            if self.Types_of_Events_to_Measure == 'Negative': Local_to_use[i]=-0.55
-                            elif self.Types_of_Events_to_Measure == 'Positive':Local_to_use[i]=0.55                                 
+                            if self.CM.Types_of_Events_to_Measure == 'Negative': Local_to_use[i]=-0.55
+                            elif self.CM.Types_of_Events_to_Measure == 'Positive':Local_to_use[i]=0.55                                 
                         else:
                             if self.Types_of_Events_to_Measure == 'Negative': Local_to_use[i]=-0.95
-                            elif self.Types_of_Events_to_Measure == 'Positive':Local_to_use[i]=0.95   
+                            elif self.CM.Types_of_Events_to_Measure == 'Positive':Local_to_use[i]=0.95   
                             print 'Position not validated, success rate under '+self.Thresholding_Mode_Input_Field.text()+" %"
                                 
                     else:
@@ -1811,14 +1811,14 @@ class Mapping(object):
             try:
                 thr=float(self.Thresholding_Mode_Input_Field.text())
                 for i,j in enumerate(Local_Amplitude):
-                    if self.Types_of_Events_to_Measure == 'Negative':
+                    if self.CM.Types_of_Events_to_Measure == 'Negative':
                         if j<thr:
                             Local_Amplitude[i]=-0.75
                             Local_Surface[i]=-1
                         else:
                             Local_Amplitude[i]=0.0
                             Local_Surface[i]=0.0
-                    elif self.Types_of_Events_to_Measure == 'Positive':
+                    elif self.CM.Types_of_Events_to_Measure == 'Positive':
                         if j>thr:
                             Local_Amplitude[i]=0.75
                             Local_Surface[i]=1
@@ -1838,14 +1838,14 @@ class Mapping(object):
 
             thr=0.0
             for i,j in enumerate(Local_Amplitude):
-                if self.Types_of_Events_to_Measure == 'Negative':
+                if self.CM.Types_of_Events_to_Measure == 'Negative':
                     if j<thr:
                         Local_Amplitude[i]=-0.75
                         Local_Surface[i]=-1
                     else:
                         Local_Amplitude[i]=0.0
                         Local_Surface[i]=0.0
-                elif self.Types_of_Events_to_Measure == 'Positive':
+                elif self.CM.Types_of_Events_to_Measure == 'Positive':
                     if j>thr:
                         Local_Amplitude[i]=0.75
                         Local_Surface[i]=1
@@ -1881,17 +1881,17 @@ class Mapping(object):
         self.Wid.canvas.axes.grid(41,color='r')
         
         if BypassReMapping == False:
-            if self.Current_Map.Scanning_Direction_Mode != 'UserDefined':
+            if self.CM.Scanning_Direction_Mode != 'UserDefined':
                 self.Create_Mapping_Pathway()
         
         if Bypass_Measuring == False:    
             #To avoid to alter the recorded values, a copy of individual and average measures is done
             try:
-                Local_Amplitude=numpy.array([None]*len(self.Current_Map.Sorted_X_and_Y_Coordinates))
-                Local_Amplitude_sd=numpy.array([None]*len(self.Current_Map.Sorted_X_and_Y_Coordinates))
-                Local_Surface=numpy.array([None]*len(self.Current_Map.Sorted_X_and_Y_Coordinates))
-                Local_Surface_sd=numpy.array([None]*len(self.Current_Map.Sorted_X_and_Y_Coordinates))
-                Local_Success=numpy.array([None]*len(self.Current_Map.Sorted_X_and_Y_Coordinates)) 
+                Local_Amplitude=numpy.array([None]*len(self.CM.Sorted_X_and_Y_Coordinates))
+                Local_Amplitude_sd=numpy.array([None]*len(self.CM.Sorted_X_and_Y_Coordinates))
+                Local_Surface=numpy.array([None]*len(self.CM.Sorted_X_and_Y_Coordinates))
+                Local_Surface_sd=numpy.array([None]*len(self.CM.Sorted_X_and_Y_Coordinates))
+                Local_Success=numpy.array([None]*len(self.CM.Sorted_X_and_Y_Coordinates)) 
             except AttributeError:    
                 msg="""
                 <b>Mapping Error</b>
@@ -1900,17 +1900,17 @@ class Mapping(object):
                 Infos.Error(msg)    
                 return
             
-            for i,j in enumerate(self.Current_Map.Sorted_X_and_Y_Coordinates):
+            for i,j in enumerate(self.CM.Sorted_X_and_Y_Coordinates):
                 try:
-                    Local_Amplitude[i]=self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary[j]
+                    Local_Amplitude[i]=self.CM.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary[j]
                     try:
-                        Local_Amplitude_sd[i]=numpy.std(self.Coordinates_and_Corresponding_Amplitudes1_Dictionnary[j])
-                        Local_Surface_sd[i]=numpy.std(self.Coordinates_and_Corresponding_Charges1_Dictionnary[j])
+                        Local_Amplitude_sd[i]=numpy.std(self.CM.Coordinates_and_Corresponding_Amplitudes1_Dictionnary[j])
+                        Local_Surface_sd[i]=numpy.std(self.CM.Coordinates_and_Corresponding_Charges1_Dictionnary[j])
                     except TypeError: 
                         Local_Amplitude_sd[i]=0
                         Local_Surface_sd[i]=0
-                    Local_Surface[i]=self.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary[j]
-                    Local_Success[i]=self.Coordinates_and_Corresponding_Success_Rate_Dictionnary[j]
+                    Local_Surface[i]=self.CM.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary[j]
+                    Local_Success[i]=self.CM.Coordinates_and_Corresponding_Success_Rate_Dictionnary[j]
                 except KeyError:
                     #TODO : Put NaN instead of 0
                     print 'No Data (or untagged data) at ', j #if some coordinates dissapeared, because completely Untagged     
@@ -1931,7 +1931,7 @@ class Mapping(object):
             if numpy.math.isnan(j) == True :
                 Local_Amplitude[i]=float(0.0)
                 
-        self.Local_Amplitude,self.Local_Surface,self.Local_Success=self.ModeSpecificProcessing(self.Thresholding_Mode.currentIndex(),
+        self.CM.Local_Amplitude,self.CM.Local_Surface,self.CM.Local_Success=self.ModeSpecificProcessing(self.Thresholding_Mode.currentIndex(),
                                                                                                Local_Amplitude,
                                                                                                Local_Surface,
                                                                                                Local_Success)        
@@ -1992,6 +1992,7 @@ class Mapping(object):
         TotRange=maxRange-minRange
         print 'maximal extent is', TotRange
         print 'point resolution is', subsampling 
+        
         print float(TotRange)/subsampling, "should be an integer. If it's not, check code"
         
         #Creating the output grid (100x100, in the example)
@@ -2053,38 +2054,38 @@ class Mapping(object):
         '''
         #TODO : IMPORTANT, This should be improved
         #For display purpose, all value are set to positive, so negative currents are inverted    
-        if self.Types_of_Events_to_Measure == 'Negative':
-            self.Local_Amplitude*=-1
-            self.Local_Surface*=-1   
+        if self.CM.Types_of_Events_to_Measure == 'Negative':
+            self.CM.Local_Amplitude*=-1
+            self.CM.Local_Surface*=-1   
             print 'Your displaying Negative currents only'
-        elif self.Types_of_Events_to_Measure == 'Positive':
+        elif self.CM.Types_of_Events_to_Measure == 'Positive':
             print 'Your displaying Positive currents only'
  
         #TODO : IMPORTANT,0 should be replaced by Nan
-        for i,j in enumerate(self.Local_Amplitude):
+        for i,j in enumerate(self.CM.Local_Amplitude):
             if j<=float(0.0):
-                self.Local_Amplitude[i]=0.0 
-        for i,j in enumerate(self.Local_Surface):
+                self.CM.Local_Amplitude[i]=0.0 
+        for i,j in enumerate(self.CM.Local_Surface):
             if j<=float(0.0):
-                self.Local_Surface[i]=0.0 
+                self.CM.Local_Surface[i]=0.0 
                 
     def CreateColorScaleAndSurfaceScale(self,defaultsurface=100,defaultcolor=0.75,Bypass_Measuring=False):
         '''
         Depending on the options selected Charge, Surface Amplitude etc can 
         all be represented either as a color or as a Surface, or as a constant (defaultsurface, defaultcolor)
-        self.Charge,self.Normalized_Surface,self.Local_Surface can all be set using these parameters
+        self.CM.Charge,self.CM.Normalized_Surface,self.CM.Local_Surface can all be set using these parameters
         eg:
-        if Charge has to be represented as a color, self.Charge = 'Color'
-        if Charge has to be represented as a surface, self.Charge = 'Surface'
+        if Charge has to be represented as a color, self.CM.Charge = 'Color'
+        if Charge has to be represented as a surface, self.CM.Charge = 'Surface'
         if Charge has to be represented as a constant, 
         
         
         '''
         #Creating some default values, for color and surface, which can be optionally used
-        surface=self.Normalized_Surface=[defaultsurface]*len(self.Local_Surface)
-        color=self.Normalized_Amplitude=[defaultcolor]*len(self.Local_Surface) 
+        surface=self.CM.Normalized_Surface=[defaultsurface]*len(self.CM.Local_Surface)
+        color=self.CM.Normalized_Amplitude=[defaultcolor]*len(self.CM.Local_Surface) 
         
-        for param in [[self.Charge,self.Normalized_Surface,self.Local_Surface],[self.Amplitude,self.Normalized_Amplitude,self.Local_Amplitude]]:
+        for param in [[self.CM.Charge,self.CM.Normalized_Surface,self.CM.Local_Surface],[self.CM.Amplitude,self.CM.Normalized_Amplitude,self.CM.Local_Amplitude]]:
             if param[0] == 'Color':
                 try:
                     if Bypass_Measuring == False:
@@ -2199,13 +2200,13 @@ class Mapping(object):
         """
         self.NormalizeSurfaceAndColors()
         
-        self.Current_Map.ScaleAxis()#float(self.Stim_Resolution.text()))
-
+        self.CM.ScaleAxis()#float(self.Stim_Resolution.text()))
+        self.CM.Scaling_Factor=float(self.Stim_Resolution.text())
         #If "success rate" is set, sucess rate is in color (instead of amplitude), charge in surface
         if self.Thresholding_Mode.currentIndex() == 4:
-            self.Local_Amplitude=self.Local_Success
-            self.Amplitude='Color'
-            self.Charge='Surface'
+            self.CM.Local_Amplitude=self.CM.Local_Success
+            self.CM.Amplitude='Color'
+            self.CM.Charge='Surface'
         else:
             pass
         
@@ -2215,26 +2216,26 @@ class Mapping(object):
                 
         cmap=str(self.ColorMap.currentText())  
         
-        n=self.Wid.canvas.axes.scatter(self.Current_Map.Sorted_X_Coordinates_Scaled[:], self.Current_Map.Sorted_Y_Coordinates_Scaled[:], c=color,s=surface, vmin=0, vmax=1, alpha=float(self.Transparency.text()),picker=1 , cmap=cmap, marker = Marker)
+        n=self.Wid.canvas.axes.scatter(self.CM.Sorted_X_Coordinates_Scaled[:], self.CM.Sorted_Y_Coordinates_Scaled[:], c=color,s=surface, vmin=0, vmax=1, alpha=float(self.Transparency.text()),picker=1 , cmap=cmap, marker = Marker)
         XYTuple=[]
-        for i in range(len(self.Current_Map.Sorted_X_Coordinates_Scaled)):
-            XYTuple.append((self.Current_Map.Sorted_X_Coordinates_Scaled[i],self.Current_Map.Sorted_Y_Coordinates_Scaled[i]))
+        for i in range(len(self.CM.Sorted_X_Coordinates_Scaled)):
+            XYTuple.append((self.CM.Sorted_X_Coordinates_Scaled[i],self.CM.Sorted_Y_Coordinates_Scaled[i]))
         
-        self.Table = SpreadSheet(Source=[XYTuple,self.Normalized_Surface,self.Local_Surface,self.Normalized_Amplitude,self.Local_Amplitude],Labels=["XY","Normalized C1","C1","Normalized A1","A1"])
+        self.Table = SpreadSheet(Source=[XYTuple,self.CM.Normalized_Surface,self.CM.Local_Surface,self.CM.Normalized_Amplitude,self.CM.Local_Amplitude],Labels=["XY","Normalized C1","C1","Normalized A1","A1"])
         self.Table.show()
 
 
         ##############################################
 
 
-        if self.Charge=='Surface':
-            self.SmoothMap(self.Current_Map.Sorted_X_Coordinates_Scaled[:], self.Current_Map.Sorted_Y_Coordinates_Scaled[:],self.Local_Surface,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
+        if self.CM.Charge=='Surface':
+            self.SmoothMap(self.CM.Sorted_X_Coordinates_Scaled[:], self.CM.Sorted_Y_Coordinates_Scaled[:],self.CM.Local_Surface,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
         else:
-            self.SmoothMap(self.Current_Map.Sorted_X_Coordinates_Scaled[:], self.Current_Map.Sorted_Y_Coordinates_Scaled[:],self.Local_Amplitude,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
+            self.SmoothMap(self.CM.Sorted_X_Coordinates_Scaled[:], self.CM.Sorted_Y_Coordinates_Scaled[:],self.CM.Local_Amplitude,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
             
         self.CreateInteractiveGrid(n,ColorBar=ColorBar,Labels=Labels,Title=Title)
        
-        return self.Wid.canvas.fig,self.Current_Map.Sorted_X_Coordinates_Scaled,self.Current_Map.Sorted_Y_Coordinates_Scaled,color,surface
+        return self.Wid.canvas.fig,self.CM.Sorted_X_Coordinates_Scaled,self.CM.Sorted_Y_Coordinates_Scaled,color,surface
         
 #        except ValueError:
 #            Main.error = QtGui.QMessageBox.about(Main, "Error",

@@ -50,7 +50,36 @@ class Map(object):
         self.Sorted_Y_Coordinates = []
         self.Sorted_X_Coordinates  = []    
             
-        
+        self.Types_of_Events_to_Measure = 'Negative'
+        self.Charge = 'Surface'
+        self.Amplitude = 'Color'
+
+
+        self.Sorted_X_and_Y_Coordinates = []
+        self.Sorted_Mean_Amplitudes_1 = []
+        self.Sorted_Mean_Charges_1 = []
+        self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary = {}
+        self.Coordinates_and_Corresponding_Amplitudes1_Dictionnary = {}
+        self.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary = {}
+        self.Coordinates_and_Corresponding_Charges1_Dictionnary = {}
+        self.Coordinates_and_Corresponding_Success_Rate_Dictionnary = {}
+        self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary = {}
+        self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary = {}
+        self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary = {}
+        self.Initially_Excluded_AnalogSignal_Ids = []
+        self.Success_list = []
+        self.Success_rate = []
+        self.Local_Amplitude = []
+        self.Local_Amplitude_sd = []
+        self.Local_Surface = []
+        self.Local_Surface_sd = []
+        self.Local_Success = []
+
+
+
+
+
+
         
     def Save_Map(self):
         '''
@@ -71,13 +100,14 @@ class Map(object):
         elif Scanning_Direction_Mode == 'Y':
             X, Y = numpy.meshgrid(List_of_X_Points, List_of_Y_Points)
             
+        self.Number_of_Turns= int(Mapping.Number_of_Turns.text())   
         self.Sorted_X_Coordinates=list(X.flatten())
         self.Sorted_Y_Coordinates=list(Y.flatten())
-        self.Sorted_X_Coordinates_Full=self.Sorted_X_Coordinates*int(Mapping.Number_of_Turns.text())
-        self.Sorted_Y_Coordinates_Full=self.Sorted_Y_Coordinates*int(Mapping.Number_of_Turns.text())    
+        self.Sorted_X_Coordinates_Full=self.Sorted_X_Coordinates*self.Number_of_Turns
+        self.Sorted_Y_Coordinates_Full=self.Sorted_Y_Coordinates*self.Number_of_Turns    
         self.Sorted_X_and_Y_Coordinates=zip(self.Sorted_X_Coordinates,self.Sorted_Y_Coordinates)
-        self.Sorted_X_and_Y_Coordinates_Full=self.Sorted_X_and_Y_Coordinates*int(Mapping.Number_of_Turns.text())
-
+        self.Sorted_X_and_Y_Coordinates_Full=self.Sorted_X_and_Y_Coordinates*self.Number_of_Turns
+        
     def ScaleAxis(self):
         self.Sorted_X_Coordinates_Scaled=numpy.array(self.Sorted_X_Coordinates)*self.Scaling_Factor
         self.Sorted_Y_Coordinates_Scaled=numpy.array(self.Sorted_Y_Coordinates)*self.Scaling_Factor 
