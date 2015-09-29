@@ -15,6 +15,7 @@ from math import sqrt
 import scipy
 from OpenElectrophy import Block
 import Map
+from copy import deepcopy
 #import Requete,Infos,Main,MyMplWidget,SpreadSheet,Navigate,Analysis
 
 #TODO : Add a tool to pool some coordinates together when they are close
@@ -43,7 +44,8 @@ class Mapping(object):
         self.Use_Number_of_Turns=True
         self.Image_ColorMap='Greys'
         self.NormalizeMappingMode='Charge' #controls the measurement type you can use for map normalization
-        
+        self.Mapping_ID = 0
+        self.AllowToAddaMapping=False
     def _all(self,All=False):
         List=[]
         i=self.__name__
@@ -101,6 +103,7 @@ class Mapping(object):
             self.X_Offset.setText("0") 
             self.Y_Offset.setText("0")                 
             self.Activate_Map.setEnabled(False)
+            self.AllowToAddaMapping=False
             self.Use_Number_of_Turns=True
             if len(Requete.Spiketrain_ids) > 0 or Main.SQLTabWidget.currentIndex() == 2:
                 if numpy.isnan(Requete.Spiketrain_ids[0]) == True:
@@ -217,6 +220,10 @@ class Mapping(object):
         self.Number_of_Turns.setGeometry(250,50,40,20)
         self.Number_of_Turns.setText("")
 
+        self.MappingID = QtGui.QComboBox()
+        self.MappingID.setGeometry(150, 50, 120, 20)
+        #self.MappingID.setText( "Number of Turns")   
+        QtCore.QObject.connect(self.MappingID, QtCore.SIGNAL("activated(int)"),self.ImportMapping)
 
         
         
@@ -262,7 +269,8 @@ class Mapping(object):
         Grid.addWidget(self.Y_Number_Label,2,6)
         Grid.addWidget(self.Y_Number_Field,2,7)
         Grid.addWidget(self.Number_of_Turns_Label,3,0)
-        Grid.addWidget(self.Number_of_Turns,3,1)        
+        Grid.addWidget(self.Number_of_Turns,3,1)   
+        Grid.addWidget(self.MappingID,3,2)
         Grid.addWidget(self.Define_Coordinates_Button,1,8,1,3)
         Grid.addWidget(self.User_Defined_Measurement_Parameters,2,8,1,3)
         Grid.addWidget(self.Add_User_Defined_Measurement_Parameters_Button,3,8)
@@ -1313,6 +1321,7 @@ class Mapping(object):
         self.Manual_Max_Field.setText(str(Max))
         self.Activate_Map.setEnabled(True)
         self.SuccessRate_Ready=False
+        self.AllowToAddaMapping=True
 
     def Measure_Traces_By_Position(self,Measure_Filtered=False,Silent=False):
         """
@@ -1524,7 +1533,8 @@ class Mapping(object):
             
         self.Activate_Map.setEnabled(True)            
         self.SuccessRate_Ready=True 
-           
+        self.AllowToAddaMapping=True
+        
     def Correspondance(self):
         
         self.ASid_to_SweepNb={}
@@ -1863,7 +1873,7 @@ class Mapping(object):
         Picture is the full path of the wanted picture
         """
         
-        
+
         if Objective == 'PM' : self.Objective.setCurrentIndex(0)
         elif Objective == 'CCD' : self.Objective.setCurrentIndex(1)
         elif Objective == 'UCL' : self.Objective.setCurrentIndex(2)
@@ -1936,6 +1946,13 @@ class Mapping(object):
                                                                                                Local_Surface,
                                                                                                Local_Success)        
         fig,X_coord,Y_coord,Color_values,Surface_values=self.Make_the_Map(Title=Title,Marker=Marker,Bypass_Measuring=Bypass_Measuring)
+        
+        if self.AllowToAddaMapping == True:
+            self.Mapping_ID = self.Mapping_ID + 1
+            print "Mapping ID is " , self.Mapping_ID            
+            setattr(Analysis,'Map'+str(self.Mapping_ID),deepcopy(self.CM))
+            self.MappingID.addItem(str(self.Mapping_ID))
+            self.AllowToAddaMapping=False
         
         return fig,X_coord,Y_coord,Color_values,Surface_values
         
@@ -2243,7 +2260,15 @@ class Mapping(object):
 #                <b>Threshold Error</b>
 #                <p>No Value over"""+str(self.Thresholding_Mode_Input_Field.text())+"""
 #                <p>Check your threshold values and try again""")
-                        
+ 
+    def ImportMapping(self):
+        index=int(self.MappingID.currentIndex())
+        temp='Analysis.Map'+str(index+1)
+        print temp, 'loaded as current Mapping'
+        self.CM=deepcopy(eval(temp))
+        
+        
+                       
     def Update_Channel_Status(self):
         
         if self.Red_Channel.checkState()==2:
