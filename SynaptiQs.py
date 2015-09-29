@@ -58,7 +58,8 @@ if __name__ == "__main__": #Executé si l'application est en StandAlone
         __all__ = [ os.path.basename(f)[:-3] for f in glob.glob(os.path.dirname(__file__)+"/*.py")]
         for i in __all__:
             setattr(sys.modules[__name__],i,__import__(i))
-    
+        
+        Map = Map
         Navigate = Navigate.Navigate() #Appel de la classe Navigate qui contient les fonctions de navigation et d'affichage
         Requete = Requete.Requete()
         Analysis = Analysis.Analysis() #Appel de la classe Analysis qui permet les mesures d'amplitude
@@ -74,7 +75,7 @@ if __name__ == "__main__": #Executé si l'application est en StandAlone
         
         
         
-        Infos.Class_List=[Navigate,Requete,Analysis,Main,MyMplCanvas,MyMplWidget,Infos,Mapping,Fitting,Histogram,SpreadSheet,Import] #Add all classes needed in the Script function
+        Infos.Class_List=[Navigate,Requete,Analysis,Main,MyMplCanvas,MyMplWidget,Infos,Mapping,Fitting,Histogram,SpreadSheet,Import,Map] #Add all classes needed in the Script function
     
         #setattr(Infos,'Class_List',Class_List)
     
@@ -98,6 +99,8 @@ if __name__ == "__main__": #Executé si l'application est en StandAlone
         Main.Create_Window() #Execute l'initialisation de l'appli
         Plugins=Plugins.Plugins()
         Import=Import.MyWindow()
+        
+        
         
         setattr(__builtin__,'Plugins',Plugins)
         setattr(__builtin__,'Import',Plugins)

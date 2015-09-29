@@ -120,12 +120,12 @@ class MyMplCanvas(FigureCanvasQTAgg):
         
         if self.already_displayed == False:
         
-            correction=1./float(Mapping.Stim_Resolution.text())  #so the clicked coordinate, in microns, select the coordinate in pixels
-            
+            #correction=1./float(Mapping.Current_Map.Stim_Resolution.text())  #so the clicked coordinate, in microns, select the coordinate in pixels
+            correction = 1./float(Mapping.Current_Map.Scaling_Factor)
             x = (event.xdata*correction, event.ydata*correction)
             sys.stdout.flush()
             try:
-                q = Mapping.Sorted_X_and_Y_Coordinates #The list of avaible coordinates
+                q = Mapping.Current_Map.Sorted_X_and_Y_Coordinates #The list of avaible coordinates
             except IOError:
                 msgBox = QtGui.QMessageBox()
                 msgBox.setText(

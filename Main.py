@@ -48,24 +48,16 @@ class Main(QtGui.QWidget,object):#
         
         
         self.userpath=os.getenv("HOME")
-        print '###########################################################'
-        print '###########################################################'
-        print '###########################################################'
-        
-        if self.userpath == None:
+
+        if self.userpath == None: #Happens when started as executable, out of Winpython
             value,ok = QtGui.QInputDialog.getText(self,
                                                   'Winpython Path',
-                                                  """UserPath not Recognized, please indicate Your WinPython installation Folder""",
+                                                  """UserPath Not Found, please indicate Your WinPython installation Folder""",
                                                   QtGui.QLineEdit.Normal,
                                                   'C:\Users\Antoine\WinPython-64bit-2.7.10.1')
             value=str(value)              
-            
             self.userpath = value+'\settings'
-       
-        print self.userpath
-        print '###########################################################'
-        print '###########################################################'
-        print '###########################################################'
+
         
         self.Script_Path=os.path.dirname(os.path.realpath(__file__))
         if self.userpath == None:
