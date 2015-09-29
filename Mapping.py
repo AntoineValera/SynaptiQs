@@ -14,6 +14,7 @@ from math import pow
 from math import sqrt
 import scipy
 from OpenElectrophy import Block
+import Map
 #import Requete,Infos,Main,MyMplWidget,SpreadSheet,Navigate,Analysis
 
 #TODO : Add a tool to pool some coordinates together when they are close
@@ -111,7 +112,7 @@ class Mapping(object):
         except AttributeError: #First launch error
             pass
 
-
+        
         self.Current_Map.Scanning_Direction_Mode=None
         self.SuccessRate_Ready=False
         self.DB_Picture=False
@@ -598,7 +599,7 @@ class Mapping(object):
     def Set_User_Defined_Measurement_Parameters_to_Zero(self):
 
         for a in ["X_Start_Field","X_End_Field","X_Step_Field","Y_Start_Field","Y_End_Field","Y_Step_Field","Number_of_Turns"]:
-            exec('self.'+a+'.setText("1.0")')
+            exec('self.'+a+'.setText("1")')
         self.Load_User_Defined_Parameters(0)
 
     def Add_User_Defined_Measurement_Parameters(self):
@@ -637,7 +638,7 @@ class Mapping(object):
         if External == True:
             compteur=0    
             for a in ["X_Start_Field","X_End_Field","X_Step_Field","Y_Start_Field","Y_End_Field","Y_Step_Field","Number_of_Turns"]:
-                setnew = 'self.'+str(a)+'.setText("1.0")'
+                setnew = 'self.'+str(a)+'.setText("1")'
                 exec(setnew)
                 compteur+=1
                 
@@ -2045,9 +2046,6 @@ class Mapping(object):
             pass
         pyplot.show()
             
-    def ScaleAxis(self,scalingfactor):
-        self.Sorted_X_Coordinates_Scaled=numpy.array(self.Current_Map.Sorted_X_Coordinates)*scalingfactor
-        self.Sorted_Y_Coordinates_Scaled=numpy.array(self.Current_Map.Sorted_Y_Coordinates)*scalingfactor 
 
     def NormalizeSurfaceAndColors(self):
         '''
@@ -2117,9 +2115,9 @@ class Mapping(object):
         return color,surface
         
         
-    def CreateInteractiveGrid(self,colorbar,xlim=(-320, 320),ylim=(-260, 252),ColorBar=True):
+    def CreateInteractiveGrid(self,colorbar,xlim=(-320, 320),ylim=(-260, 252),ColorBar=True,Labels=False,Title=''):
         if ColorBar==True:
-            self.Wid.canvas.fig.colorbar(n)
+            self.Wid.canvas.fig.colorbar(colorbar)
             
         #self.Wid.canvas.axes.set_xlim(-400*float(self.Stim_Resolution.text()), 400*float(self.Stim_Resolution.text()))
         #self.Wid.canvas.axes.set_ylim(-400*float(self.Stim_Resolution.text()), 400*float(self.Stim_Resolution.text()))
@@ -2133,14 +2131,18 @@ class Mapping(object):
         else:
             self.Wid.canvas.axes.set_axis_off()
         
+        #TODO : these 3 parameteres do not belong here 
+        self.Red_Channel = QtGui.QCheckBox()
+        self.Green_Channel = QtGui.QCheckBox()
+        self.Blue_Channel = QtGui.QCheckBox()
         
-        check=[self.Red_Channel,self.Green_Channel,self.Green_Channel]
+        check=[self.Red_Channel,self.Green_Channel,self.Blue_Channel]
         c=['Red','Green','Blue']
         disp=self.Display_Red,self.Display_Green,self.Display_Blue
-        List=zip(check,c,disp)
+        List = [list(a) for a in zip(check,c,disp)]
         hbox=QtGui.QHBoxLayout()
         for i in List:
-            i[0]=QtGui.QCheckBox()
+            #i[0]=QtGui.QCheckBox()
             i[0].setText(i[1])
             if i[2]==True:
                 i[0].setCheckState(2)
@@ -2197,7 +2199,7 @@ class Mapping(object):
         """
         self.NormalizeSurfaceAndColors()
         
-        self.ScaleAxis(float(self.Stim_Resolution.text()))
+        self.Current_Map.ScaleAxis()#float(self.Stim_Resolution.text()))
 
         #If "success rate" is set, sucess rate is in color (instead of amplitude), charge in surface
         if self.Thresholding_Mode.currentIndex() == 4:
@@ -2213,10 +2215,10 @@ class Mapping(object):
                 
         cmap=str(self.ColorMap.currentText())  
         
-        n=self.Wid.canvas.axes.scatter(self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:], c=color,s=surface, vmin=0, vmax=1, alpha=float(self.Transparency.text()),picker=1 , cmap=cmap, marker = Marker)
+        n=self.Wid.canvas.axes.scatter(self.Current_Map.Sorted_X_Coordinates_Scaled[:], self.Current_Map.Sorted_Y_Coordinates_Scaled[:], c=color,s=surface, vmin=0, vmax=1, alpha=float(self.Transparency.text()),picker=1 , cmap=cmap, marker = Marker)
         XYTuple=[]
-        for i in range(len(self.Sorted_X_Coordinates_Scaled)):
-            XYTuple.append((self.Sorted_X_Coordinates_Scaled[i],self.Sorted_Y_Coordinates_Scaled[i]))
+        for i in range(len(self.Current_Map.Sorted_X_Coordinates_Scaled)):
+            XYTuple.append((self.Current_Map.Sorted_X_Coordinates_Scaled[i],self.Current_Map.Sorted_Y_Coordinates_Scaled[i]))
         
         self.Table = SpreadSheet(Source=[XYTuple,self.Normalized_Surface,self.Local_Surface,self.Normalized_Amplitude,self.Local_Amplitude],Labels=["XY","Normalized C1","C1","Normalized A1","A1"])
         self.Table.show()
@@ -2226,13 +2228,13 @@ class Mapping(object):
 
 
         if self.Charge=='Surface':
-            self.SmoothMap(self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:],self.Local_Surface,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
+            self.SmoothMap(self.Current_Map.Sorted_X_Coordinates_Scaled[:], self.Current_Map.Sorted_Y_Coordinates_Scaled[:],self.Local_Surface,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
         else:
-            self.SmoothMap(self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:],self.Local_Amplitude,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
+            self.SmoothMap(self.Current_Map.Sorted_X_Coordinates_Scaled[:], self.Current_Map.Sorted_Y_Coordinates_Scaled[:],self.Local_Amplitude,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
             
-        self.CreateInteractiveGrid(n,ColorBar=ColorBar)
+        self.CreateInteractiveGrid(n,ColorBar=ColorBar,Labels=Labels,Title=Title)
        
-        return self.Wid.canvas.fig,self.Sorted_X_Coordinates_Scaled,self.Sorted_Y_Coordinates_Scaled,color,surface
+        return self.Wid.canvas.fig,self.Current_Map.Sorted_X_Coordinates_Scaled,self.Current_Map.Sorted_Y_Coordinates_Scaled,color,surface
         
 #        except ValueError:
 #            Main.error = QtGui.QMessageBox.about(Main, "Error",

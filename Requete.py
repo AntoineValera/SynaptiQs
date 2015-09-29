@@ -171,7 +171,7 @@ class Requete(object):
         if firstload == True:
             Main.User_Defined_Measurement_Parameters.setCurrentIndex(0)
             Analysis.Load_User_Defined_Parameters(0,True)
-            Mapping.Load_User_Defined_Parameters(0,True)
+            #Mapping.Load_User_Defined_Parameters(0,True)
                  
     def Datacall(self): #Fait la requete SQL et affiche la premiere trace
         """

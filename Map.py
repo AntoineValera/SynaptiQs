@@ -36,7 +36,7 @@ class Map(object):
         self.Y_End = None
         self.Y_Start = None
         self.Y_Step = None
-        self.Scanning_Direction_Mode
+        self.Scanning_Direction_Mode = None
         
         self.Scaling_Factor =1.        
         
@@ -77,14 +77,31 @@ class Map(object):
         self.Sorted_Y_Coordinates_Full=self.Sorted_Y_Coordinates*int(Mapping.Number_of_Turns.text())    
         self.Sorted_X_and_Y_Coordinates=zip(self.Sorted_X_Coordinates,self.Sorted_Y_Coordinates)
         self.Sorted_X_and_Y_Coordinates_Full=self.Sorted_X_and_Y_Coordinates*int(Mapping.Number_of_Turns.text())
+
+    def ScaleAxis(self):
+        self.Sorted_X_Coordinates_Scaled=numpy.array(self.Sorted_X_Coordinates)*self.Scaling_Factor
+        self.Sorted_Y_Coordinates_Scaled=numpy.array(self.Sorted_Y_Coordinates)*self.Scaling_Factor 
+
         
-#    def _all(self,All=False):
-#        List=[]
-#        i=self.__name__
-#        for j in dir(eval(i)):
-#            if All==False and j[:2] == '__':
-#                pass
-#            else:
-#                List.append(i+'.'+j)
-#        for i in List:
-#            print i    
+    def _all(self,All=False):
+        List=[]
+        i=self.__name__
+        for j in dir(eval(i)):
+            if All==False and j[:2] == '__':
+                pass
+            else:
+                List.append(i+'.'+j)
+        for i in List:
+            print i    
+
+    def describe(self,All=False):
+        #import __builtin__
+        for j in dir(Map):
+            print j
+            try:
+                acceptable = [list,numpy.ndarray,int,float,str]
+                if type(eval('Map.'+j)) in acceptable :
+                    print j, '=', eval('Map.'+j)
+            except:
+                pass
+

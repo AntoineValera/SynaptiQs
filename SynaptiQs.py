@@ -58,7 +58,8 @@ if __name__ == "__main__": #Executé si l'application est en StandAlone
         __all__ = [ os.path.basename(f)[:-3] for f in glob.glob(os.path.dirname(__file__)+"/*.py")]
         for i in __all__:
             setattr(sys.modules[__name__],i,__import__(i))
-    
+        
+        Map = Map
         Navigate = Navigate.Navigate() #Appel de la classe Navigate qui contient les fonctions de navigation et d'affichage
         Requete = Requete.Requete()
         Analysis = Analysis.Analysis() #Appel de la classe Analysis qui permet les mesures d'amplitude
@@ -80,7 +81,7 @@ if __name__ == "__main__": #Executé si l'application est en StandAlone
     
         for Class in Infos.Class_List:
             setattr(__builtin__,Class.__name__,Class)
-        Map = Map
+        
         rcParams['figure.facecolor'] = 'white'
         rcParams['pdf.fonttype'] = 42
         rcParams['font.serif'] = 'Times New Roman'
