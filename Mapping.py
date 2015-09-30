@@ -44,8 +44,11 @@ class Mapping(object):
         self.Use_Number_of_Turns=True
         self.Image_ColorMap='Greys'
         self.NormalizeMappingMode='Charge' #controls the measurement type you can use for map normalization
+        
         self.Mapping_ID = 0
+        self.StoredMaps=[]
         self.AllowToAddaMapping=False
+        
     def _all(self,All=False):
         List=[]
         i=self.__name__
@@ -57,7 +60,8 @@ class Mapping(object):
         for i in List:
             print i
 
-    def Reset_Mapping_Variables(self):        
+    def Reset_Mapping_Variables(self):
+        #TODO : verify that all variables are here        
         for variable_to_delete in ['self.CM.Sorted_X_and_Y_Coordinates',
                                    'self.CM.Sorted_Mean_Amplitudes_1',
                                    'self.CM.Sorted_Mean_Charges_1',
@@ -221,11 +225,14 @@ class Mapping(object):
         self.Number_of_Turns.setText("")
 
         self.MappingID = QtGui.QComboBox()
-        self.MappingID.setGeometry(150, 50, 120, 20)
-        #self.MappingID.setText( "Number of Turns")   
+        self.MappingID.setGeometry(150, 80, 120, 20)
         QtCore.QObject.connect(self.MappingID, QtCore.SIGNAL("activated(int)"),self.ImportMapping)
 
-        
+        self.ClearMappings = QtGui.QPushButton()
+        self.ClearMappings.setGeometry(150, 80, 120, 20) #taille et position (X,Y,Xsize,Ysize)
+        self.ClearMappings.setText( "Clear Maps")  
+        QtCore.QObject.connect(self.ClearMappings, QtCore.SIGNAL("clicked()"),self.Clear_Mappings)
+                
         
         self.Define_Coordinates_Button = QtGui.QPushButton() #creation du bouton
         self.Define_Coordinates_Button.setGeometry(300, 10, 80, 32) #taille et position (X,Y,Xsize,Ysize)
@@ -271,6 +278,7 @@ class Mapping(object):
         Grid.addWidget(self.Number_of_Turns_Label,3,0)
         Grid.addWidget(self.Number_of_Turns,3,1)   
         Grid.addWidget(self.MappingID,3,2)
+        Grid.addWidget(self.ClearMappings,3,3)
         Grid.addWidget(self.Define_Coordinates_Button,1,8,1,3)
         Grid.addWidget(self.User_Defined_Measurement_Parameters,2,8,1,3)
         Grid.addWidget(self.Add_User_Defined_Measurement_Parameters_Button,3,8)
@@ -1258,7 +1266,8 @@ class Mapping(object):
         #On fait une moyenne par position
 
         for keys in self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary:
-            time.sleep(0.1)
+            #TODO : replace sweepnumbers by analogsignal ids?
+            #time.sleep(0.1)
             Navigate.UnTag_All_Traces(ProgressDisplay=False)
             for i in self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]:
                 Requete.tag["Selection"][self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]]=1 #Keys = ids , Values = Sweepnumber
@@ -2023,11 +2032,7 @@ class Mapping(object):
         tree = scipy.spatial.cKDTree(points)
         z=ZI.ravel()
         
-        for j,i in enumerate(refpoints):
-            if len(tree.query_ball_point((i[0],i[1]), float(Max_Valid_Dist))) == 0:
-                z[j]=0.0
 
-   
         #n = pyplot.normalize(0.0, 100.0)
         if self.Manual_Min_Field.text() != "":
             Min=float(self.Manual_Min_Field.text())
@@ -2042,7 +2047,13 @@ class Mapping(object):
             Max=float(Manual_Max_Field)                
         else:
             Max=float(numpy.max(ZI))  
-            
+
+
+        for j,i in enumerate(refpoints):
+            if len(tree.query_ball_point((i[0],i[1]), float(Max_Valid_Dist))) == 0:
+                z[j]=Min
+       
+        
         pyplot.figure()   
         pyplot.subplot(1, 1, 1)
         pyplot.pcolor(XI, YI, ZI,cmap=cmap,vmin=Min,vmax=Max)
@@ -2065,7 +2076,7 @@ class Mapping(object):
         pyplot.show()
             
 
-    def NormalizeSurfaceAndColors(self):
+    def NormalizeSurfaceAndColors(self,):
         '''
         For the Final Map, the surface must be >0
         '''
@@ -2077,14 +2088,17 @@ class Mapping(object):
             print 'Your displaying Negative currents only'
         elif self.CM.Types_of_Events_to_Measure == 'Positive':
             print 'Your displaying Positive currents only'
- 
+        elif self.CM.Types_of_Events_to_Measure == 'Both':
+            print 'Your displaying both Positive and Negative currents'
+            
         #TODO : IMPORTANT,0 should be replaced by Nan
-        for i,j in enumerate(self.CM.Local_Amplitude):
-            if j<=float(0.0):
-                self.CM.Local_Amplitude[i]=0.0 
-        for i,j in enumerate(self.CM.Local_Surface):
-            if j<=float(0.0):
-                self.CM.Local_Surface[i]=0.0 
+        if self.CM.Types_of_Events_to_Measure == 'Negative' or self.CM.Types_of_Events_to_Measure == 'Positive':
+            for i,j in enumerate(self.CM.Local_Amplitude):
+                if j<=float(0.0):
+                    self.CM.Local_Amplitude[i]=0.0 
+            for i,j in enumerate(self.CM.Local_Surface):
+                if j<=float(0.0):
+                    self.CM.Local_Surface[i]=0.0 
                 
     def CreateColorScaleAndSurfaceScale(self,defaultsurface=100,defaultcolor=0.75,Bypass_Measuring=False):
         '''
@@ -2234,6 +2248,7 @@ class Mapping(object):
         cmap=str(self.ColorMap.currentText())  
         
         n=self.Wid.canvas.axes.scatter(self.CM.Sorted_X_Coordinates_Scaled[:], self.CM.Sorted_Y_Coordinates_Scaled[:], c=color,s=surface, vmin=0, vmax=1, alpha=float(self.Transparency.text()),picker=1 , cmap=cmap, marker = Marker)
+        
         XYTuple=[]
         for i in range(len(self.CM.Sorted_X_Coordinates_Scaled)):
             XYTuple.append((self.CM.Sorted_X_Coordinates_Scaled[i],self.CM.Sorted_Y_Coordinates_Scaled[i]))
@@ -2266,9 +2281,17 @@ class Mapping(object):
         temp='Analysis.Map'+str(index+1)
         print temp, 'loaded as current Mapping'
         self.CM=deepcopy(eval(temp))
+        self.StoredMaps.append(temp)
         
-        
-                       
+    def Clear_Mappings(self):       
+        self.Mapping_ID=0
+        for i in self.StoredMaps:
+            exec ('del '+i)
+            print i, ' deleted'
+
+        self.StoredMaps=[]
+        self.MappingID.clear()
+              
     def Update_Channel_Status(self):
         
         if self.Red_Channel.checkState()==2:

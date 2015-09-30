@@ -54,9 +54,9 @@ class Analysis(object):
         mask[SealTestStart:SealTestStop]=1
         mask[StimStart:]=1
         mx = numpy.ma.masked_array(Signal, mask)
-        if Mapping.Types_of_Events_to_Measure == 'Negative':
+        if Mapping.CM.Types_of_Events_to_Measure == 'Negative':
             self.Current_Leak=scipy.stats.scoreatpercentile(mx, 85)
-        elif Mapping.Types_of_Events_to_Measure == 'Positive':
+        elif Mapping.CM.Types_of_Events_to_Measure == 'Positive':
             self.Current_Leak=scipy.stats.scoreatpercentile(mx, 15)            
             
         #self.Current_Leak=numpy.median(Signal[Leak_Removing_Interval_Start:Leak_Removing_Interval_End]) Median Filtering

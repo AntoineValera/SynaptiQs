@@ -75,11 +75,6 @@ class Map(object):
         self.Local_Surface_sd = []
         self.Local_Success = []
 
-
-
-
-
-
         
     def Save_Map(self):
         '''
