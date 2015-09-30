@@ -1324,11 +1324,24 @@ class Mapping(object):
             Min=numpy.nanmin(AllC1values)
             Max=numpy.nanmax(AllC1values)
             
+        print '##############################'
+        print Min,Max
+        print '##############################'
         if self.CM.Types_of_Events_to_Measure == 'Negative':
+            #because when events are negative, they are inverted in the analysis
             Min*=-1
-            Max*=-1
-        self.Manual_Min_Field.setText(str(Min))
-        self.Manual_Max_Field.setText(str(Max))
+            Max*=-1  
+            self.Manual_Min_Field.setText(str(Max))
+            self.Manual_Max_Field.setText(str(Min))            
+        else:            
+            self.Manual_Min_Field.setText(str(Min))
+            self.Manual_Max_Field.setText(str(Max))        
+        print '##############################'
+        print Min,Max
+        print '##############################'
+            
+        #self.Manual_Min_Field.setText(str(Min))
+        #self.Manual_Max_Field.setText(str(Max))
         self.Activate_Map.setEnabled(True)
         self.SuccessRate_Ready=False
         self.AllowToAddaMapping=True
@@ -1516,31 +1529,32 @@ class Mapping(object):
         if self.Analysis_mode=="Analysis.Amplitudes_1":
             Min=numpy.nanmin(AllA1values)
             Max=numpy.nanmax(AllA1values)
-            if self.CM.Types_of_Events_to_Measure == 'Negative':
-                Min*=-1
-                Max*=-1            
-            self.Manual_Min_Field.setText(str(Min))
-            self.Manual_Max_Field.setText(str(Max))
             
         elif self.Analysis_mode=="Analysis.Charges_1":
             Min=numpy.nanmin(AllC1values)
             Max=numpy.nanmax(AllC1values)
-            if self.CM.Types_of_Events_to_Measure == 'Negative':
-                Min*=-1
-                Max*=-1
-            self.Manual_Min_Field.setText(str(Min))
-            self.Manual_Max_Field.setText(str(Max))
-
 
         elif self.Analysis_mode=="Analysis.Variance_1":
             Min=numpy.nanmin(AllV1values)
             Max=numpy.nanmax(AllV1values)
-            if self.CM.Types_of_Events_to_Measure == 'Negative':
-                Min*=-1
-                Max*=-1            
-            self.Manual_Min_Field.setText(str(Min))
-            self.Manual_Max_Field.setText(str(Max))
             
+        print '##############################'
+        print Min,Max
+        print '##############################'
+        if self.CM.Types_of_Events_to_Measure == 'Negative':
+            #because when events are negative, they are inverted in the analysis
+            Min*=-1
+            Max*=-1  
+            self.Manual_Min_Field.setText(str(Max))
+            self.Manual_Max_Field.setText(str(Min))            
+        else:            
+            
+            self.Manual_Min_Field.setText(str(Min))
+            self.Manual_Max_Field.setText(str(Max))        
+        print '##############################'
+        print Min,Max
+        print '##############################'
+
         self.Activate_Map.setEnabled(True)            
         self.SuccessRate_Ready=True 
         self.AllowToAddaMapping=True
@@ -2061,32 +2075,36 @@ class Mapping(object):
                 #hatched pattern : ax.add_patch(mpl.patches.Rectangle((2,2),20,20,hatch='//////////',fill=False,snap=False))
        
         alpha=float(self.Transparency.text())
+        
         pyplot.figure() 
         pyplot.subplot(1, 1, 1)
         try:
             pic = image.imread(str(self.Current_Picture_for_the_Map))
-            pyplot.imshow(pic,extent=(self.CCDlimit[0],self.CCDlimit[1],self.CCDlimit[2],self.CCDlimit[3]),cmap=self.Image_ColorMap)
+            pyplot.imshow(pic,extent=(self.CCDlimit[0],self.CCDlimit[1],self.CCDlimit[2],self.CCDlimit[3]))
         except:
             pass          
-        pyplot.pcolor(XI, YI, ZI,cmap=cmap,vmin=Min,vmax=Max,shading='flat',edgecolors='none',alpha=alpha)
+        n=pyplot.pcolor(XI, YI, ZI,cmap=cmap,vmin=Min,vmax=Max,shading='flat',edgecolors='none',alpha=alpha)
         pyplot.title('Inv dist interpolation - power: ' + str(power) + ' smoothing: ' + str(smoothing))
         pyplot.xlim(minRange, maxRange)
         pyplot.ylim(minRange, maxRange)
-        pyplot.colorbar()
+        print Min,Max
+        pyplot.colorbar(n)
       
 
 
 
         pyplot.figure()
+        pyplot.subplot(1, 1, 1)
         try:
-            pic = image.imread(str(self.Current_Picture_for_the_Map))
-            pyplot.imshow(pic,extent=(self.CCDlimit[0],self.CCDlimit[1],self.CCDlimit[2],self.CCDlimit[3]),cmap=self.Image_ColorMap)
+            pyplot.imshow(pic,extent=(self.CCDlimit[0],self.CCDlimit[1],self.CCDlimit[2],self.CCDlimit[3]))
             #pyplot.imshow(self.pic,extent=(-320,320,-260,252),cmap=self.Image_ColorMap)
         except:
             pass        
-        pyplot.contourf(XI, YI, ZI,10,vmin=Min,vmax=Max,alpha=alpha)
+        n=pyplot.contourf(XI, YI, ZI,10,vmin=Min,vmax=Max,alpha=alpha,cmap=cmap)
         pyplot.xlim(minRange, maxRange)
         pyplot.ylim(minRange, maxRange) 
+        print Min,Max
+        pyplot.colorbar(n)
         
 
         pyplot.show()
@@ -2268,7 +2286,7 @@ class Mapping(object):
                 
         cmap=str(self.ColorMap.currentText())  
         
-        n=self.Wid.canvas.axes.scatter(self.CM.Sorted_X_Coordinates_Scaled[:], self.CM.Sorted_Y_Coordinates_Scaled[:], c=color,s=surface, vmin=0, vmax=1, alpha=float(self.Transparency.text()),picker=1 , cmap=cmap, marker = Marker)
+        n=self.Wid.canvas.axes.scatter(self.CM.Sorted_X_Coordinates_Scaled[:], self.CM.Sorted_Y_Coordinates_Scaled[:], c=color,s=surface, vmin=0, vmax=1, alpha=0.75,picker=1 , cmap=cmap, marker = Marker)
         
         XYTuple=[]
         for i in range(len(self.CM.Sorted_X_Coordinates_Scaled)):
