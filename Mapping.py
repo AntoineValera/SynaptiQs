@@ -81,7 +81,7 @@ class Mapping(object):
                                    'self.CM.Local_Surface',
                                    'self.CM.Local_Surface_sd',
                                    'self.CM.Local_Success',
-                                   ]:
+                                   'self.Current_Picture_for_the_Map']:
                       
             try:
                 exec ('del '+variable_to_delete)
@@ -103,7 +103,7 @@ class Mapping(object):
             self.Number_of_Turns.setText("")         
             self.Thresholding_Mode_Input_Field.setText("0")   
             self.Stim_Resolution.setText("1") 
-            self.Transparency.setText("0.75") 
+            self.Transparency.setText("0.4") 
             self.X_Offset.setText("0") 
             self.Y_Offset.setText("0")                 
             self.Activate_Map.setEnabled(False)
@@ -382,7 +382,7 @@ class Mapping(object):
 
         self.Objective = QtGui.QComboBox()
         self.Objective.setGeometry(5, 145, 50, 25)
-        self.Objective.addItems(["UCL","PM","CCD"])
+        self.Objective.addItems(["PM","CCD","UCL"])
         
         self.Select_Experiment_Picture_Button = QtGui.QPushButton()
         self.Select_Experiment_Picture_Button.setGeometry(55, 145, 25, 25)
@@ -413,6 +413,7 @@ class Mapping(object):
         self.ColorMap = QtGui.QComboBox()
         self.ColorMap.setGeometry(300, 145, 60, 25)
         self.ColorMap.addItems(['hot',
+                                "bwr",
                                 'autumn',
                                 'spectral',
                                 'gist_heat',
@@ -1681,13 +1682,16 @@ class Mapping(object):
     def ObjectiveParameters(self,ObjectiveIndex):
         #TODO : Move to a parameter file
         #Entrer ici les limites du champ CCD [Xupperleft, Yupperleft, Xlowerright,Ylowerright]
-        if ObjectiveIndex == 1:
-            self.CCDlimit=[-205+int(self.X_Offset.text()),-126+int(self.Y_Offset.text()),186+int(self.X_Offset.text()),175+int(self.Y_Offset.text())]#x=391,y=301
-        elif ObjectiveIndex == 0:
-            self.CCDlimit=[-400*float(self.Stim_Resolution.text()),400*float(self.Stim_Resolution.text()),400*float(self.Stim_Resolution.text()),-400*float(self.Stim_Resolution.text())]
+        #Xleft, XRight, Yleft, Yright
+        if ObjectiveIndex == 0:
+            self.CCDlimit=[-400,400,400,-400] #Y is reversed 
+            #self.CCDlimit=[-400*float(self.Stim_Resolution.text()),400*float(self.Stim_Resolution.text()),400*float(self.Stim_Resolution.text()),-400*float(self.Stim_Resolution.text())]
+        elif ObjectiveIndex == 1:
+            self.CCDlimit=[-205+int(self.X_Offset.text()),-126+int(self.Y_Offset.text()),186+int(self.X_Offset.text()),175+int(self.Y_Offset.text())]#x=391,y=301        
         elif ObjectiveIndex == 2:
             self.CCDlimit=[-320,320,260,-212] 
         
+        return self.CCDlimit
         #Could be used
         #Mapping_Field_Length=abs(self.CCDlimit[0]-self.CCDlimit[2])
         #Mapping_Field_Height=abs(self.CCDlimit[1]-self.CCDlimit[3])        
@@ -1893,7 +1897,7 @@ class Mapping(object):
             self.Current_Picture_for_the_Map=Picture
 
         self.Correction_of_Abnormal_Parameters_for_Mapping()
-        self.ObjectiveParameters(self.Objective.currentIndex())
+        PictureLimits = self.ObjectiveParameters(self.Objective.currentIndex())
 
         self.Wid = MyMplWidget()
         self.Wid.canvas.axes.set_axis_bgcolor('black')
@@ -1961,6 +1965,7 @@ class Mapping(object):
             print "Mapping ID is " , self.Mapping_ID            
             setattr(Analysis,'Map'+str(self.Mapping_ID),deepcopy(self.CM))
             self.MappingID.addItem(str(self.Mapping_ID))
+            self.MappingID.setCurrentIndex(self.Mapping_ID)
             self.AllowToAddaMapping=False
         
         return fig,X_coord,Y_coord,Color_values,Surface_values
@@ -2052,27 +2057,38 @@ class Mapping(object):
         for j,i in enumerate(refpoints):
             if len(tree.query_ball_point((i[0],i[1]), float(Max_Valid_Dist))) == 0:
                 z[j]=Min
+                #TODO :
+                #hatched pattern : ax.add_patch(mpl.patches.Rectangle((2,2),20,20,hatch='//////////',fill=False,snap=False))
        
-        
-        pyplot.figure()   
+        alpha=float(self.Transparency.text())
+        pyplot.figure() 
         pyplot.subplot(1, 1, 1)
-        pyplot.pcolor(XI, YI, ZI,cmap=cmap,vmin=Min,vmax=Max)
+        try:
+            pic = image.imread(str(self.Current_Picture_for_the_Map))
+            pyplot.imshow(pic,extent=(self.CCDlimit[0],self.CCDlimit[1],self.CCDlimit[2],self.CCDlimit[3]),cmap=self.Image_ColorMap)
+        except:
+            pass          
+        pyplot.pcolor(XI, YI, ZI,cmap=cmap,vmin=Min,vmax=Max,shading='flat',edgecolors='none',alpha=alpha)
         pyplot.title('Inv dist interpolation - power: ' + str(power) + ' smoothing: ' + str(smoothing))
         pyplot.xlim(minRange, maxRange)
         pyplot.ylim(minRange, maxRange)
         pyplot.colorbar()
+      
+
+
 
         pyplot.figure()
-        
-        pyplot.contour(XI, YI, ZI,10)
+        try:
+            pic = image.imread(str(self.Current_Picture_for_the_Map))
+            pyplot.imshow(pic,extent=(self.CCDlimit[0],self.CCDlimit[1],self.CCDlimit[2],self.CCDlimit[3]),cmap=self.Image_ColorMap)
+            #pyplot.imshow(self.pic,extent=(-320,320,-260,252),cmap=self.Image_ColorMap)
+        except:
+            pass        
+        pyplot.contourf(XI, YI, ZI,10,vmin=Min,vmax=Max,alpha=alpha)
         pyplot.xlim(minRange, maxRange)
         pyplot.ylim(minRange, maxRange) 
         
-        try:
-            self.pic = image.imread(str(self.Current_Picture_for_the_Map))
-            pyplot.imshow(self.pic,extent=(-320,320,-260,252),cmap=self.Image_ColorMap)
-        except:
-            pass
+
         pyplot.show()
             
 
@@ -2153,8 +2169,11 @@ class Mapping(object):
             
         #self.Wid.canvas.axes.set_xlim(-400*float(self.Stim_Resolution.text()), 400*float(self.Stim_Resolution.text()))
         #self.Wid.canvas.axes.set_ylim(-400*float(self.Stim_Resolution.text()), 400*float(self.Stim_Resolution.text()))
-        self.Wid.canvas.axes.set_xlim(*xlim)
-        self.Wid.canvas.axes.set_ylim(*ylim)
+         
+        self.Wid.canvas.axes.set_xlim(self.CCDlimit[0],self.CCDlimit[1])
+        self.Wid.canvas.axes.set_ylim(self.CCDlimit[2],self.CCDlimit[3])
+        #self.Wid.canvas.axes.set_xlim(*xlim)
+        #self.Wid.canvas.axes.set_ylim(*ylim)
                 
         if Labels==True:
             self.Wid.canvas.axes.set_xlabel("X Distance (in um)")
@@ -2212,8 +2231,10 @@ class Mapping(object):
         if self.Display_Blue==False:
             self.pic[:,:,2]=0
 
-        self.Wid.canvas.axes.imshow(self.pic,extent=(-320,320,-260,252),cmap=self.Image_ColorMap)#,extent=[self.CCDlimit[0],self.CCDlimit[2],self.CCDlimit[3],self.CCDlimit[1]])
-        #[-320,320,260,-212]
+        #extent = (-320,320,-260,252)
+        extent = (self.CCDlimit[0],self.CCDlimit[1],self.CCDlimit[2],self.CCDlimit[3])
+        self.Wid.canvas.axes.imshow(self.pic,extent=extent,cmap=self.Image_ColorMap)#,extent=[self.CCDlimit[0],self.CCDlimit[2],self.CCDlimit[3],self.CCDlimit[1]])
+        
         self.Wid.canvas.Object_Selection_Mode = 'Coordinates'
    
         self.Wid.show() 
