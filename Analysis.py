@@ -65,6 +65,63 @@ class Analysis(object):
         Signal=Signal-self.Current_Leak
         return Signal
 
+
+    def Measure_Local_Extremum(self,Signal,loc,meth):
+
+
+            bgn=str("Main."+str(loc[0])+".text()")
+            end=str("Main."+str(loc[1])+".text()")
+            size=str("Main."+str(loc[2])+".text()")
+            meth=str("Main."+str(meth)+".currentText()")
+            
+            #We extract the wanted time for the ROI
+            #There is always a possibility to fall between two points,
+            #   in which case we take the floor value            
+            ROIBgn=int(float(eval(bgn))*Navigate.Points_by_ms)
+            ROIEnd=int(float(eval(end))*Navigate.Points_by_ms)
+            
+            #Small bug correction if ROIBgn=ROIEnd
+            if ROIBgn == ROIEnd:
+                ROIEnd+=1
+                #Small bug correction if ROIBgnis already the last point
+            if ROIBgn >= len(Signal):
+                ROIBgn = len(Signal)-1
+                ROIEnd = len(Signal)
+                return ROIBgn,ROIEnd 
+#                    msgBox = QtGui.QMessageBox()
+#                    msgBox.setText(
+#                    """
+#                    <b>Measure range is wrong</b>
+#                    <p>You can measure beyond the last point
+#                    %s ignored
+#                    """ %(loc)) 
+#                    msgBox.exec_()  
+#                    return 
+            #Location of the extremum position
+            if  eval(meth) == 'Max':
+                    ExtremumLocation = numpy.argmax(Signal[ROIBgn:ROIEnd])
+            elif eval(meth) == 'Min':
+                    ExtremumLocation = numpy.argmin(Signal[ROIBgn:ROIEnd])
+            
+            #Now, we create a range around that point corresponding to 'length'
+            #The average value will be the average of the range
+            LeftPointOfMeasurementWindow = int(ExtremumLocation-float(eval(size))*Navigate.Points_by_ms/2+float(eval(bgn))*Navigate.Points_by_ms)
+            #If the measurment window touch the begining of the signal, we crop it at 0
+            if LeftPointOfMeasurementWindow<0:
+                LeftPointOfMeasurementWindow=0
+            #Not sure when that apply 
+            if LeftPointOfMeasurementWindow<float(eval(bgn))*Navigate.Points_by_ms:
+                LeftPointOfMeasurementWindow=int(float(eval(bgn))*Navigate.Points_by_ms)
+             
+            #If the measurment window touch the end  of the signal, we crop it at len(Signal) 
+            RightPointOfMeasurementWindow = int(ExtremumLocation+float(eval(size))*Navigate.Points_by_ms/2+float(eval(bgn))*Navigate.Points_by_ms)
+            if RightPointOfMeasurementWindow>len(Signal):
+                RightPointOfMeasurementWindow=len(Signal)
+            #Not sure when that apply    
+            if RightPointOfMeasurementWindow>float(eval(end))*Navigate.Points_by_ms:
+                RightPointOfMeasurementWindow=int(float(eval(end))*Navigate.Points_by_ms)
+
+            return LeftPointOfMeasurementWindow,RightPointOfMeasurementWindow
     
     def Measure_on_Average(self,List_of_Ids=None,Measure_All_from_Baseline1=False,Display_Superimposed_Traces=False,Rendering=True,Position=(None,None),Origin=None,All_from_Zero=False,ProgressDisplay=True,Color='k'):
         
@@ -157,38 +214,8 @@ class Analysis(object):
         compteur=0
  
         for loc in Main.listofcoord:
-        
-            bgn=str("Main."+str(loc[0])+".text()")
-            end=str("Main."+str(loc[1])+".text()")
-            size=str("Main."+str(loc[2])+".text()")
-            meth=str("Main."+str(listofmeth[compteur])+".currentText()")
-                                
-
-            if  eval(meth) == 'Max':
-                        #if there is a bug here, it's because the preset parameters you used ware aclculated on a different samplig rate, and not corrected                
-                try:
-                    aloc = numpy.argmax(self.mean[int(float(eval(bgn))*Navigate.Points_by_ms):int(float(eval(end))*Navigate.Points_by_ms)])
-                except ValueError:
-                    aloc = 0            
-            elif eval(meth) == 'Min':
-                        #if there is a bug here, it's because the preset parameters you used ware aclculated on a different samplig rate, and not corrected                
-                try:
-                    aloc = numpy.argmin(self.mean[int(float(eval(bgn))*Navigate.Points_by_ms):int(float(eval(end))*Navigate.Points_by_ms)])
-                except ValueError:
-                    aloc = 0
-                    
-            leftpnt = int(aloc-float(eval(size))*Navigate.Points_by_ms/2+float(eval(bgn))*Navigate.Points_by_ms)
-
-            if leftpnt<0:
-                leftpnt=0
-            if leftpnt<float(eval(bgn))*Navigate.Points_by_ms:
-                leftpnt=int(float(eval(bgn))*Navigate.Points_by_ms)
-            rightpnt = int(aloc+float(eval(size))*Navigate.Points_by_ms/2+float(eval(bgn))*Navigate.Points_by_ms)
             
-            if rightpnt>len(self.mean):
-                rightpnt=len(self.mean)
-            if rightpnt>float(eval(end))*Navigate.Points_by_ms:
-                rightpnt=int(float(eval(end))*Navigate.Points_by_ms)
+            leftpnt,rightpnt = self.Measure_Local_Extremum(self.mean,loc,listofmeth[compteur])        
                 
             avalue = numpy.mean(self.mean[leftpnt:rightpnt])
             self.Ampvalues[compteur]=avalue
@@ -597,45 +624,7 @@ class Analysis(object):
                     #loc[0] est le début du range
                     #loc[1] est la fin du range
                     #loc[2] est la taille du range qui sera utilisé pour le calcul de la moyenne
-                    #aloc est la position du minimum
-                    
-                    bgn=str("Main."+str(loc[0])+".text()")
-                    end=str("Main."+str(loc[1])+".text()")
-                    size=str("Main."+str(loc[2])+".text()")
-                    meth=str("Main."+str(listofmeth[compteur])+".currentText()")
-                    
-                    try:
-                        if  eval(meth) == 'Max':
-                            #if there is a bug here, it's because the preset parameters you used ware aclculated on a different samplig rate, and not corrected                        
-                            aloc = numpy.argmax(si[int(float(eval(bgn))*Navigate.Points_by_ms):int(float(eval(end))*Navigate.Points_by_ms)])
-                        elif eval(meth) == 'Min':
-                            #if there is a bug here, it's because the preset parameters you used ware aclculated on a different samplig rate, and not corrected
-                            aloc = numpy.argmin(si[int(float(eval(bgn))*Navigate.Points_by_ms):int(float(eval(end))*Navigate.Points_by_ms)])
-                    except ValueError:
-                        msgBox = QtGui.QMessageBox()
-                        msgBox.setText(
-                        """
-                        <b>Range Error</b>
-                        <p>You used measure parameters that are out of range, or
-                        <p>You used measure parameters with a smaller timescale than the signal itself
-                        """) 
-                        msgBox.exec_() 
-                        return                        
-                    leftpnt = int(aloc-float(eval(size))*Navigate.Points_by_ms/2+float(eval(bgn))*Navigate.Points_by_ms)
-                    
-                    if leftpnt<0:
-                        leftpnt=0
-                        
-                    if leftpnt<float(eval(bgn))*Navigate.Points_by_ms:
-                        leftpnt=int(float(eval(bgn))*Navigate.Points_by_ms)
-                        
-                    rightpnt = int(aloc+float(eval(size))*Navigate.Points_by_ms/2+float(eval(bgn))*Navigate.Points_by_ms)
-                    
-                    if rightpnt>len(si):
-                        rightpnt=len(si)
-                        
-                    if rightpnt>float(eval(end))*Navigate.Points_by_ms:
-                        rightpnt=int(float(eval(end))*Navigate.Points_by_ms)
+                    leftpnt,rightpnt = self.Measure_Local_Extremum(si,loc,listofmeth[compteur])
    
                     avalue = numpy.mean(si[leftpnt:rightpnt]) #a value est l'amplitude
                     Ampvalues[compteur]=avalue
@@ -990,58 +979,8 @@ class Analysis(object):
             compteur=0
             
             for loc in Main.listofcoord:
-
                 
-                #loc[0] est le début du range
-                #loc[1] est la fin du range
-                #loc[2] est la taille du range qui sera utilisé pour le calcul de la moyenne
-                #aloc est la position du minimum
-                
-                bgn=str("Main."+str(loc[0])+".text()")
-                end=str("Main."+str(loc[1])+".text()")
-                size=str("Main."+str(loc[2])+".text()")
-                meth=str("Main."+str(listofmeth[compteur])+".currentText()")
-                                
-
-                if  eval(meth) == 'Max':
-                    try:
-                        aloc = numpy.argmax(si[int(float(eval(bgn))*Navigate.Points_by_ms):int(float(eval(end))*Navigate.Points_by_ms)])
-                    except ValueError:
-                        msgBox = QtGui.QMessageBox()
-                        msgBox.setText(
-                        """
-                        <b>Measure range is wrong</b>
-                        <p>You can not have null intervall
-                        """) 
-                        msgBox.exec_()  
-                        return
-  
-                        
-                elif eval(meth) == 'Min':
-                    try:
-                        aloc = numpy.argmin(si[int(float(eval(bgn))*Navigate.Points_by_ms):int(float(eval(end))*Navigate.Points_by_ms)])
-                    except ValueError:
-                        msgBox = QtGui.QMessageBox()
-                        msgBox.setText(
-                        """
-                        <b>Measure range is wrong</b>
-                        <p>You can not have null intervall
-                        """)      
-                        msgBox.exec_()  
-                        return
-                            
-                leftpnt = int(aloc-float(eval(size))*Navigate.Points_by_ms/2+float(eval(bgn))*Navigate.Points_by_ms)
-
-                if leftpnt<0:
-                    leftpnt=0
-                if leftpnt<float(eval(bgn))*Navigate.Points_by_ms:
-                    leftpnt=int(float(eval(bgn))*Navigate.Points_by_ms)                  
-
-                rightpnt = int(aloc+float(eval(size))*Navigate.Points_by_ms/2+float(eval(bgn))*Navigate.Points_by_ms)
-                if rightpnt>len(si):
-                    rightpnt=len(si)
-                if rightpnt>float(eval(end))*Navigate.Points_by_ms:
-                    rightpnt=int(float(eval(end))*Navigate.Points_by_ms)
+                leftpnt,rightpnt = self.Measure_Local_Extremum(si,loc,listofmeth[compteur])
 
                 avalue = numpy.mean(si[leftpnt:rightpnt])
                 Ampvalues[compteur]=avalue

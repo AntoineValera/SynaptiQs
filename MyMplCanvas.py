@@ -392,14 +392,14 @@ class MyMplCanvas(FigureCanvasQTAgg):
        
         if Main.Display_Charge_Button.checkState() == 2:
             if Main.Measure_From_Zero_Button.checkState() == 2:
-                if Mapping.Types_of_Events_to_Measure == 'Negative':
+                if Mapping.CM.Types_of_Events_to_Measure == 'Negative':
                     self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,0.,where=0.>Analysis.Charge_trace,alpha=0.3)
-                elif Mapping.Types_of_Events_to_Measure == 'Positive':
+                elif Mapping.CM.Types_of_Events_to_Measure == 'Positive':
                     self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,0.,where=0.<Analysis.Charge_trace,alpha=0.3)                    
             else:
-                if Mapping.Types_of_Events_to_Measure == 'Negative':
+                if Mapping.CM.Types_of_Events_to_Measure == 'Negative':
                     self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,Analysis.Base1[0],where=Analysis.Base1[0]>Analysis.Charge_trace,alpha=0.3)
-                elif Mapping.Types_of_Events_to_Measure == 'Positive':
+                elif Mapping.CM.Types_of_Events_to_Measure == 'Positive':
                     self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,Analysis.Base1[0],where=Analysis.Base1[0]<Analysis.Charge_trace,alpha=0.3)
 
         if Main.Display_Spikes_Button.checkState() == 2:

@@ -868,10 +868,14 @@ class Requete(object):
         self.persoWidget2.show()
 
 
-    def Updated_Request(self):
+    def Updated_Request(self,query=None):
         
-        self.query=str(self.Edit_Request.document().toPlainText())
-        self.persoWidget.close()
+        if query == None:
+            self.query=str(self.Edit_Request.document().toPlainText())
+            self.persoWidget.close()
+        else:
+            self.query = query
+        
         self.Final_Request()
 
 #    def Request_AddOn(self):

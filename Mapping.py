@@ -16,6 +16,7 @@ import scipy
 from OpenElectrophy import Block
 import Map
 from copy import deepcopy
+from OpenElectrophy import sqlalchemy
 #import Requete,Infos,Main,MyMplWidget,SpreadSheet,Navigate,Analysis
 
 #TODO : Add a tool to pool some coordinates together when they are close
@@ -483,40 +484,44 @@ class Mapping(object):
         hbox8.addWidget(self.Manual_Max_Field)  
         GlobalVBox.addLayout(hbox8)
         
-        self.X_Offset_Label = QtGui.QLabel()
-        self.X_Offset_Label.setGeometry(5, 250, 50, 20)
-        self.X_Offset_Label.setText( "X Offset")   
-        self.X_Offset = QtGui.QLineEdit() #Lines, columns, Parent
-        self.X_Offset.setGeometry(50,250,50,20)
-        self.X_Offset.setText("0") 
-        
-        self.Y_Offset_Label = QtGui.QLabel()
-        self.Y_Offset_Label.setGeometry(105, 250, 50, 20)
-        self.Y_Offset_Label.setText( "Y Offset")   
-        self.Y_Offset = QtGui.QLineEdit() #Lines, columns, Parent
-        self.Y_Offset.setGeometry(150,250,50,20)
-        self.Y_Offset.setText("0")         
+#        self.X_Offset_Label = QtGui.QLabel()
+#        self.X_Offset_Label.setGeometry(5, 250, 50, 20)
+#        self.X_Offset_Label.setText( "X Offset")   
+#        self.X_Offset = QtGui.QLineEdit() #Lines, columns, Parent
+#        self.X_Offset.setGeometry(50,250,50,20)
+#        self.X_Offset.setText("0") 
+#        
+#        self.Y_Offset_Label = QtGui.QLabel()
+#        self.Y_Offset_Label.setGeometry(105, 250, 50, 20)
+#        self.Y_Offset_Label.setText( "Y Offset")   
+#        self.Y_Offset = QtGui.QLineEdit() #Lines, columns, Parent
+#        self.Y_Offset.setGeometry(150,250,50,20)
+#        self.Y_Offset.setText("0")         
+#
+#        hbox9=QtGui.QHBoxLayout()
+#        hbox9.addWidget(self.X_Offset_Label)
+#        hbox9.addWidget(self.X_Offset)
+#        hbox9.addWidget(self.Y_Offset_Label)  
+#        hbox9.addWidget(self.Y_Offset)  
+#        GlobalVBox.addLayout(hbox9)
 
-        hbox9=QtGui.QHBoxLayout()
-        hbox9.addWidget(self.X_Offset_Label)
-        hbox9.addWidget(self.X_Offset)
-        hbox9.addWidget(self.Y_Offset_Label)  
-        hbox9.addWidget(self.Y_Offset)  
-        GlobalVBox.addLayout(hbox9)
- 
+        #TODO : Fix Image saving or remove in MySQL before activating
+        #hbox10=QtGui.QHBoxLayout()
 
-
-        #TODO : Fix Image saving or remove
-
-#        self.Save_Image = QtGui.QPushButton(Main.MappingWidget) #creation du bouton
-#        self.Save_Image.setGeometry(300,250,100,20) #taille et position (X,Y,Xsize,Ysize)
-#        self.Save_Image.setText( "Save Picture in db")        
-#        QtCore.QObject.connect(self.Save_Image, QtCore.SIGNAL("clicked()"),self.Save_Associated_Image)
+        #self.Save_Image = QtGui.QPushButton(Main.MappingWidget) #creation du bouton
+        #self.Save_Image.setGeometry(300,250,100,20) #taille et position (X,Y,Xsize,Ysize)
+        #self.Save_Image.setText( "Save Picture in db")        
+        #QtCore.QObject.connect(self.Save_Image, QtCore.SIGNAL("clicked()"),self.Save_Associated_Image)
              
-#        self.Load_Image = QtGui.QPushButton(Main.MappingWidget) #creation du bouton
-#        self.Load_Image.setGeometry(200,250,100,20) #taille et position (X,Y,Xsize,Ysize)
-#        self.Load_Image.setText( "Load db Picture")        
-#        QtCore.QObject.connect(self.Load_Image, QtCore.SIGNAL("clicked()"),self.Load_Associated_Image)
+        #self.Load_Image = QtGui.QPushButton(Main.MappingWidget) #creation du bouton
+        #self.Load_Image.setGeometry(200,250,100,20) #taille et position (X,Y,Xsize,Ysize)
+        #self.Load_Image.setText( "Load db Picture")        
+        #QtCore.QObject.connect(self.Load_Image, QtCore.SIGNAL("clicked()"),self.Load_Associated_Image)
+        
+        #hbox10.addWidget(self.Save_Image)
+        #hbox10.addWidget(self.Load_Image)
+        #GlobalVBox.addLayout(hbox10)
+
         
         QtCore.QObject.connect(self.Amplitudes_Display_Mode, QtCore.SIGNAL('currentIndexChanged(int)'),self.Update_Display_Parameters)        
         QtCore.QObject.connect(self.Charges_Display_Mode, QtCore.SIGNAL('currentIndexChanged(int)'),self.Update_Display_Parameters)        
@@ -886,24 +891,27 @@ class Mapping(object):
         
     
     
-    def Change_Experiment_Picture(self):        
+    def Change_Experiment_Picture(self,Picture=None):        
 
         """
         Popup Window to select the experimental picture
         """
-        
-        path = QtGui.QFileDialog()
-        path.setDirectory(self.Current_Picture_Directory)
-        path.setNameFilter("Image files (*.png *.xpm *.jpg *.bmp *.tif)")
-        path.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
-        path.setFileMode(QtGui.QFileDialog.ExistingFiles)
-        
-        if (path.exec_()) :
-            self.Current_Picture_for_the_Map=str(path.selectedFiles()[0])
-            self.Current_Picture_Directory=path.directory()
-            self.DB_Picture=False
+        if Picture == None:
+            path = QtGui.QFileDialog()
+            path.setDirectory(self.Current_Picture_Directory)
+            path.setNameFilter("Image files (*.png *.xpm *.jpg *.bmp *.tif)")
+            path.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
+            path.setFileMode(QtGui.QFileDialog.ExistingFiles)
+            
+            if (path.exec_()) :
+                self.Current_Picture_for_the_Map=str(path.selectedFiles()[0])
+                self.Current_Picture_Directory=path.directory()
+                self.DB_Picture=False
+        else:
+            self.Current_Picture_for_the_Map = Picture
 
- 
+        return self.Current_Picture_for_the_Map
+        
     def Define_Non_Grid_Positions(self):
 
         self.CM.Scanning_Direction_Mode = 'UserDefined'   
@@ -1323,10 +1331,7 @@ class Mapping(object):
         elif self.NormalizeMappingMode == 'Amplitude':
             Min=numpy.nanmin(AllC1values)
             Max=numpy.nanmax(AllC1values)
-            
-        print '##############################'
-        print Min,Max
-        print '##############################'
+
         if self.CM.Types_of_Events_to_Measure == 'Negative':
             #because when events are negative, they are inverted in the analysis
             Min*=-1
@@ -1336,9 +1341,7 @@ class Mapping(object):
         else:            
             self.Manual_Min_Field.setText(str(Min))
             self.Manual_Max_Field.setText(str(Max))        
-        print '##############################'
-        print Min,Max
-        print '##############################'
+
             
         #self.Manual_Min_Field.setText(str(Min))
         #self.Manual_Max_Field.setText(str(Max))
@@ -1538,9 +1541,7 @@ class Mapping(object):
             Min=numpy.nanmin(AllV1values)
             Max=numpy.nanmax(AllV1values)
             
-        print '##############################'
-        print Min,Max
-        print '##############################'
+
         if self.CM.Types_of_Events_to_Measure == 'Negative':
             #because when events are negative, they are inverted in the analysis
             Min*=-1
@@ -1551,9 +1552,6 @@ class Mapping(object):
             
             self.Manual_Min_Field.setText(str(Min))
             self.Manual_Max_Field.setText(str(Max))        
-        print '##############################'
-        print Min,Max
-        print '##############################'
 
         self.Activate_Map.setEnabled(True)            
         self.SuccessRate_Ready=True 
@@ -1892,7 +1890,7 @@ class Mapping(object):
                         
         return Local_Amplitude,Local_Surface,Local_Success
                             
-    def Display_Mapping_Results(self,Objective=None,Display=None,Picture=None,BypassReMapping=False,Title='Mapping',Marker='s',Bypass_Measuring=False): 
+    def Display_Mapping_Results(self,Objective=None,Display=None,Picture=None,BypassReMapping=False,Title='Mapping',Marker='s',Bypass_Measuring=False,NoWarning=False,MeshMap=True,ContourMap=True): 
         
         """
         This function compute all the values to do the mapping. It reads SynaptiQs Comboboxes to apply some thresholding
@@ -1900,7 +1898,6 @@ class Mapping(object):
         Picture is the full path of the wanted picture
         """
         
-
         if Objective == 'PM' : self.Objective.setCurrentIndex(0)
         elif Objective == 'CCD' : self.Objective.setCurrentIndex(1)
         elif Objective == 'UCL' : self.Objective.setCurrentIndex(2)
@@ -1972,7 +1969,7 @@ class Mapping(object):
                                                                                                Local_Amplitude,
                                                                                                Local_Surface,
                                                                                                Local_Success)        
-        fig,X_coord,Y_coord,Color_values,Surface_values=self.Make_the_Map(Title=Title,Marker=Marker,Bypass_Measuring=Bypass_Measuring)
+        fig,X_coord,Y_coord,Color_values,Surface_values,mesh,contour=self.Make_the_Map(Title=Title,Marker=Marker,Bypass_Measuring=Bypass_Measuring,NoWarning=NoWarning,MeshMap=MeshMap,ContourMap=ContourMap)
         
         if self.AllowToAddaMapping == True:
             self.Mapping_ID = self.Mapping_ID + 1
@@ -1982,7 +1979,7 @@ class Mapping(object):
             self.MappingID.setCurrentIndex(self.Mapping_ID)
             self.AllowToAddaMapping=False
         
-        return fig,X_coord,Y_coord,Color_values,Surface_values
+        return fig,X_coord,Y_coord,Color_values,Surface_values,mesh,contour
         
     def pointValue(self,x,y,power,smoothing,xv,yv,values):
         nominator=0
@@ -2020,13 +2017,17 @@ class Mapping(object):
                   cmap='gnuplot',
                   Manual_Min_Field=None,
                   Manual_Max_Field=None,
-                  Max_Valid_Dist=None):
-        
-        #TODO : Normalize map if necessary
+                  Max_Valid_Dist=None,
+                  MeshMap=True,
+                  ContourMap=True):
         
         power=power
         smoothing=smoothing
         subsampling=subsampling
+        
+        p = None
+        p2 = None
+        
         
         xv = X
         yv = Y
@@ -2076,38 +2077,41 @@ class Mapping(object):
        
         alpha=float(self.Transparency.text())
         
-        pyplot.figure() 
-        pyplot.subplot(1, 1, 1)
-        try:
-            pic = image.imread(str(self.Current_Picture_for_the_Map))
-            pyplot.imshow(pic,extent=(self.CCDlimit[0],self.CCDlimit[1],self.CCDlimit[2],self.CCDlimit[3]))
-        except:
-            pass          
-        n=pyplot.pcolor(XI, YI, ZI,cmap=cmap,vmin=Min,vmax=Max,shading='flat',edgecolors='none',alpha=alpha)
-        pyplot.title('Inv dist interpolation - power: ' + str(power) + ' smoothing: ' + str(smoothing))
-        pyplot.xlim(minRange, maxRange)
-        pyplot.ylim(minRange, maxRange)
-        print Min,Max
-        pyplot.colorbar(n)
+        if MeshMap == True:
+            p = pyplot.figure() 
+            mesh = p.add_subplot(1, 1, 1)
+            try:
+                pic = image.imread(str(self.Current_Picture_for_the_Map))
+                mesh.imshow(pic,extent=(self.CCDlimit[0],self.CCDlimit[1],self.CCDlimit[2],self.CCDlimit[3]))
+            except:
+                pass          
+            n=mesh.pcolor(XI, YI, ZI,cmap=cmap,vmin=Min,vmax=Max,shading='flat',edgecolors='none',alpha=alpha)
+            mesh.set_title('Inv dist interpolation - power: ' + str(power) + ' smoothing: ' + str(smoothing))
+            mesh.set_xlim([minRange, maxRange])
+            mesh.set_ylim([minRange, maxRange])
+            cbar = p.colorbar(n)
+            cbar.set_clim(Min,Max)
+            p.show()
       
 
 
-
-        pyplot.figure()
-        pyplot.subplot(1, 1, 1)
-        try:
-            pyplot.imshow(pic,extent=(self.CCDlimit[0],self.CCDlimit[1],self.CCDlimit[2],self.CCDlimit[3]))
-            #pyplot.imshow(self.pic,extent=(-320,320,-260,252),cmap=self.Image_ColorMap)
-        except:
-            pass        
-        n=pyplot.contourf(XI, YI, ZI,10,vmin=Min,vmax=Max,alpha=alpha,cmap=cmap)
-        pyplot.xlim(minRange, maxRange)
-        pyplot.ylim(minRange, maxRange) 
-        print Min,Max
-        pyplot.colorbar(n)
-        
-
-        pyplot.show()
+        if ContourMap == True:
+            p2 = pyplot.figure()
+            contour = p2.add_subplot(1, 1, 1)
+            try:
+                pic = image.imread(str(self.Current_Picture_for_the_Map))
+                contour.imshow(pic,extent=(self.CCDlimit[0],self.CCDlimit[1],self.CCDlimit[2],self.CCDlimit[3]))
+                #pyplot.imshow(self.pic,extent=(-320,320,-260,252),cmap=self.Image_ColorMap)
+            except:
+                pass        
+            n=contour.contourf(XI, YI, ZI,10,vmin=Min,vmax=Max,alpha=alpha,cmap=cmap)
+            contour.set_xlim([minRange, maxRange])
+            contour.set_ylim([minRange, maxRange]) 
+            cbar2 = p2.colorbar(n)
+            cbar2.set_clim(Min,Max)
+            p2.show()
+            
+        return p,p2 #mesh,contour
             
 
     def NormalizeSurfaceAndColors(self,):
@@ -2134,7 +2138,7 @@ class Mapping(object):
                 if j<=float(0.0):
                     self.CM.Local_Surface[i]=0.0 
                 
-    def CreateColorScaleAndSurfaceScale(self,defaultsurface=100,defaultcolor=0.75,Bypass_Measuring=False):
+    def CreateColorScaleAndSurfaceScale(self,defaultsurface=100,defaultcolor=0.75,Bypass_Measuring=False,NoWarning=False):
         '''
         Depending on the options selected Charge, Surface Amplitude etc can 
         all be represented either as a color or as a Surface, or as a constant (defaultsurface, defaultcolor)
@@ -2149,7 +2153,6 @@ class Mapping(object):
         #Creating some default values, for color and surface, which can be optionally used
         surface=self.CM.Normalized_Surface=[defaultsurface]*len(self.CM.Local_Surface)
         color=self.CM.Normalized_Amplitude=[defaultcolor]*len(self.CM.Local_Surface) 
-        
         for param in [[self.CM.Charge,self.CM.Normalized_Surface,self.CM.Local_Surface],[self.CM.Amplitude,self.CM.Normalized_Amplitude,self.CM.Local_Amplitude]]:
             if param[0] == 'Color':
                 try:
@@ -2181,7 +2184,7 @@ class Mapping(object):
         return color,surface
         
         
-    def CreateInteractiveGrid(self,colorbar,xlim=(-320, 320),ylim=(-260, 252),ColorBar=True,Labels=False,Title=''):
+    def CreateInteractiveGrid(self,colorbar,xlim=(-320, 320),ylim=(-260, 252),ColorBar=True,Labels=False,Title='',NoWarning=False):
         if ColorBar==True:
             self.Wid.canvas.fig.colorbar(colorbar)
             
@@ -2226,19 +2229,21 @@ class Mapping(object):
                 self.pic = image.imread(str(self.Current_Picture_for_the_Map))
         except IOError:
             self.pic = image.imread(Main.Script_Path+"/Black.png")
-            msg="""
-            <b>Picture Error</b>
-            <p>Defined Picture doesn't exist (anymore?)
-            <p>Black Background used instead
-            """   
-            Infos.Error(msg)              
+            if NoWarning == False:
+                msg="""
+                <b>Picture Error</b>
+                <p>Defined Picture doesn't exist (anymore?)
+                <p>Black Background used instead
+                """   
+                Infos.Error(msg)              
         except AttributeError:
             self.pic = image.imread(Main.Script_Path+"/Black.png")
-            msg="""
-            <b>Picture Error</b>
-            <p>No Picture set, black Background used
-            """  
-            Infos.Error(msg) 
+            if NoWarning == False:
+                msg="""
+                <b>Picture Error</b>
+                <p>No Picture set, black Background used
+                """  
+                Infos.Error(msg) 
             #pyplot.contour(self.pic,[120, 255],linestyles='dashed',colors='w',linewidths=4)
         
             
@@ -2262,7 +2267,10 @@ class Mapping(object):
                      ColorBar=True,
                      Labels=True,
                      Marker='s',
-                     Bypass_Measuring=False):
+                     Bypass_Measuring=False,
+                     NoWarning=False,
+                     MeshMap=True,
+                     ContourMap=True):
         """
         This part of the script Normalize Data for display purpose
         Depending on if you want to display positive or negative or both currents, you can change
@@ -2280,7 +2288,7 @@ class Mapping(object):
         else:
             pass
         
-        color,surface=self.CreateColorScaleAndSurfaceScale(Bypass_Measuring=Bypass_Measuring)    
+        color,surface=self.CreateColorScaleAndSurfaceScale(Bypass_Measuring=Bypass_Measuring,NoWarning=NoWarning)    
 
                 
                 
@@ -2300,13 +2308,13 @@ class Mapping(object):
 
 
         if self.CM.Charge=='Surface':
-            self.SmoothMap(self.CM.Sorted_X_Coordinates_Scaled[:], self.CM.Sorted_Y_Coordinates_Scaled[:],self.CM.Local_Surface,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
+            mesh,contour = self.SmoothMap(self.CM.Sorted_X_Coordinates_Scaled[:], self.CM.Sorted_Y_Coordinates_Scaled[:],self.CM.Local_Surface,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist,MeshMap=MeshMap,ContourMap=ContourMap)
         else:
-            self.SmoothMap(self.CM.Sorted_X_Coordinates_Scaled[:], self.CM.Sorted_Y_Coordinates_Scaled[:],self.CM.Local_Amplitude,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
+            mesh,contour = self.SmoothMap(self.CM.Sorted_X_Coordinates_Scaled[:], self.CM.Sorted_Y_Coordinates_Scaled[:],self.CM.Local_Amplitude,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist,MeshMap=MeshMap,ContourMap=ContourMap)
             
-        self.CreateInteractiveGrid(n,ColorBar=ColorBar,Labels=Labels,Title=Title)
+        self.CreateInteractiveGrid(n,ColorBar=ColorBar,Labels=Labels,Title=Title,NoWarning=NoWarning)
        
-        return self.Wid.canvas.fig,self.CM.Sorted_X_Coordinates_Scaled,self.CM.Sorted_Y_Coordinates_Scaled,color,surface
+        return self.Wid.canvas.fig,self.CM.Sorted_X_Coordinates_Scaled,self.CM.Sorted_Y_Coordinates_Scaled,color,surface,mesh,contour
         
 #        except ValueError:
 #            Main.error = QtGui.QMessageBox.about(Main, "Error",
@@ -2349,18 +2357,40 @@ class Mapping(object):
         self.Display_Mapping_Results(BypassReMapping=True)
         
     def Save_Associated_Image(self):
-        
-        for i in list(set(Requete.Block_ids)):
-            b=Block.load(i,session=Requete.Global_Session)
-            b.picture=self.pic
-            b.save()
-         
-        self.DB_Picture=True
-        print "Picture saved"
-         
+        try:
+            for i in list(set(Requete.Block_ids)):
+                b=Block.load(i,session=Requete.Global_Session)
+                b.picture=self.pic
+                b.save()
+             
+            self.DB_Picture=True
+            print "Picture saved"
+        except AttributeError:
+            msg="""
+            <b>Picture Error</b>
+            <p>No Picture set, no Picture Saved
+            """  
+            Infos.Error(msg)             
+
+    def Set_Range(self,Min,Max):
+        self.Manual_Min_Field.setText(str(Min))
+        self.Manual_Max_Field.setText(str(Max))
+     
     def Load_Associated_Image(self):
         
-        self.DB_Picture=True
-        self.pic=Block.load(list(set(Requete.Block_ids))[0],session=Requete.Global_Session).picture
-
-        
+        try:
+            
+            self.DB_Picture=True
+            self.pic=Block.load(list(set(Requete.Block_ids))[0],session=Requete.Global_Session).picture
+            print 'Picture Loaded'
+        except (AttributeError,sqlalchemy.exc.OperationalError):
+            print 'Error while trying to use the block.picture table'
+            print 'The field do not exist'
+            print 'SynaptiQs is creating the required field. On a big database, it may take a while'
+            print 'DO NOT INTERRUPT'
+            from OpenElectrophy.gui.tabledesign import TableDesign
+            from OpenElectrophy.gui.guiutil.paramwidget import *
+            T=TableDesign(metadata = Requete.Global_Meta,session = Requete.Global_Session)
+            T.addField(fieldname='picture',fieldtype='numpy.ndarray')
+            T.tablename='block'
+            T.apply()
