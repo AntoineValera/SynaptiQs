@@ -71,6 +71,15 @@ class Infos(object):
         
         self.HelpWidget.show()
 
+
+    def Zip(self,params):
+        if type(params) not in [list,tuple,numpy.ndarray]:
+            print "Input error, please put a list of list here"
+            return []
+        temp=[list(a) for a in zip(*params)]
+        print temp[0],temp[1]
+        return temp
+        
     def LineEdited(self):
         obj=QtCore.QObject().sender().objectName()
         obj=obj.split('.')

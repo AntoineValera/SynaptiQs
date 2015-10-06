@@ -74,7 +74,7 @@ class Analysis(object):
         
         ##scipy.signal.decimate could accelerate the display
       
-            
+        print 'in'    
         if List_of_Ids == None:
             List_of_Ids = Requete.Analogsignal_ids
             NumberofChannels=Requete.NumberofChannels
@@ -104,10 +104,9 @@ class Analysis(object):
                     Main.progress.setValue(i)
                 if Main.SQLTabWidget.currentIndex() == 2: # if Local file only
                     Requete.Current_Sweep_Number=i
-                if ((List_of_Ids is Requete.Analogsignal_ids) and (i >= int(Main.From.text())) and (i <= int(Main.To.text())) and (Requete.tag["Selection"][i*Requete.NumberofChannels+n] == 1)) or (List_of_Ids is not Requete.Analogsignal_ids):
+                if ((List_of_Ids is Requete.Analogsignal_ids) and (i >= int(Main.From.text())) and (i <= int(Main.To.text())) and (Requete.tag["Selection"][i][n] == 1)) or (List_of_Ids is not Requete.Analogsignal_ids):
                     counter+=1
                     self.List_of_Averaged_Sweeps.append(i)
-    
                     if Main.Analyze_Filtered_Traces_Button.checkState() == 0:
                         Navigate.Load_This_Trace(List_of_Ids[i])
                         self.mean = self.mean+Navigate.si[n]
@@ -282,35 +281,34 @@ class Analysis(object):
     
                 #This can be optimized
                 if Main.Superimpose_Used_Traces == True or Display_Superimposed_Traces == True :
-                    
-                    self.Wid.canvas.Object_Selection_Mode = 'Trace'
-                    for i,j in enumerate(List_of_Ids):
-                        if ((List_of_Ids is Requete.Analogsignal_ids) and (i >= int(Main.From.text())) and (i <= int(Main.To.text())) and (Requete.tag["Selection"][i] == 1)) or (List_of_Ids is not Requete.Analogsignal_ids):
-                            if Main.SQLTabWidget.currentIndex() == 2:
-                                Requete.Current_Sweep_Number=i
-                                Navigate.Load_This_Trace(i)
-                            else:
-                                Navigate.Load_This_Trace(j)
-                            
-                            if Main.Analyze_Filtered_Traces_Button.checkState() == 0:
-                                locals()["Displayed_"+str(i)]=Navigate.si[n]
-                            elif Main.Analyze_Filtered_Traces_Button.checkState() == 2:
-                                locals()["Displayed_"+str(i)]=Navigate.Filtered_Signal[n]
-                            
-                            if List_of_Ids is Requete.Analogsignal_ids:
-                                #i is the sweepnumber
-                                #print i,self.Currently_Used_Sweep_nb_for_Local_Average[i]
-                                self.Currently_Used_Sweep_nb_for_Local_Average.append(i+n)#[i][n]=i
-                            else:
-                                #j is the analogsignal id
-                                self.Currently_Used_Sweep_nb_for_Local_Average.append(j)#[i][n]=j
-                            
-                            self.Wid.canvas.axes.plot(Requete.timescale,eval("Displayed_"+str(i)),'k',alpha=0.3,picker=1)
-                            self.Wid.Status.setText("It's an average of "+str(counter)+" Sweeps"+" at position "+str(Position)+
-                                                    "<p>"+"Average A1 = "+str(self.Mean_Amplitude_1)+"\t Average C1 = "+str(self.Mean_Charge_1)+
-                                                    "<p>"+"Average A2 = "+str(self.Mean_Amplitude_2)+"\t Average C2 = "+str(self.Mean_Charge_2)+
-                                                    "<p>"+"Average A3 = "+str(self.Mean_Amplitude_3)+"\t Average C3 = "+str(self.Mean_Charge_3)+
-                                                    "<p>"+"Sweep "+str(self.Currently_Used_Sweep_nb_for_Local_Average)+" were used")
+                        self.Wid.canvas.Object_Selection_Mode = 'Trace'
+                        for i,j in enumerate(List_of_Ids):
+                            if ((List_of_Ids is Requete.Analogsignal_ids) and (i >= int(Main.From.text())) and (i <= int(Main.To.text())) and (Requete.tag["Selection"][i][n] == 1)) or (List_of_Ids is not Requete.Analogsignal_ids):
+                                if Main.SQLTabWidget.currentIndex() == 2:
+                                    Requete.Current_Sweep_Number=i
+                                    Navigate.Load_This_Trace(i)
+                                else:
+                                    Navigate.Load_This_Trace(j)
+                                
+                                if Main.Analyze_Filtered_Traces_Button.checkState() == 0:
+                                    locals()["Displayed_"+str(i)]=Navigate.si[n]
+                                elif Main.Analyze_Filtered_Traces_Button.checkState() == 2:
+                                    locals()["Displayed_"+str(i)]=Navigate.Filtered_Signal[n]
+                                
+                                if List_of_Ids is Requete.Analogsignal_ids:
+                                    #i is the sweepnumber
+                                    #print i,self.Currently_Used_Sweep_nb_for_Local_Average[i]
+                                    self.Currently_Used_Sweep_nb_for_Local_Average.append(i+n)#[i][n]=i
+                                else:
+                                    #j is the analogsignal id
+                                    self.Currently_Used_Sweep_nb_for_Local_Average.append(j)#[i][n]=j
+                                
+                                self.Wid.canvas.axes.plot(Requete.timescale,eval("Displayed_"+str(i)),'k',alpha=0.3,picker=1)
+                                self.Wid.Status.setText("It's an average of "+str(counter)+" Sweeps"+" at position "+str(Position)+
+                                                        "<p>"+"Average A1 = "+str(self.Mean_Amplitude_1)+"\t Average C1 = "+str(self.Mean_Charge_1)+
+                                                        "<p>"+"Average A2 = "+str(self.Mean_Amplitude_2)+"\t Average C2 = "+str(self.Mean_Charge_2)+
+                                                        "<p>"+"Average A3 = "+str(self.Mean_Amplitude_3)+"\t Average C3 = "+str(self.Mean_Charge_3)+
+                                                        "<p>"+"Sweep "+str(self.Currently_Used_Sweep_nb_for_Local_Average)+" were used")
                 else:
                     self.Wid.Status.setText("It's an average of "+str(counter)+" Sweeps"+
                                                             "<p>"+"Average A1 = "+str(self.Mean_Amplitude_1)+"\t Average C1 = "+str(self.Mean_Charge_1)+
@@ -339,6 +337,76 @@ class Analysis(object):
     
             Requete.Current_Sweep_Number=int(Main.Sweep_Number_Input_Field.text())  
         return self.Mean_Amplitude_1,self.Mean_Amplitude_2,self.Mean_Amplitude_3,self.Mean_Charge_1,self.Mean_Charge_2,self.Mean_Charge_3, self.mean, List_of_Ids
+
+
+    def Display_Superimposed_Traces(self,Traces_to_Display=None,color='k',alpha=0.3):
+        
+        """
+        This function displays all the tagged traces if Traces_to_Display == None, or the AnalogSignal.ids in Traces_to_Display List
+        You can substract the leak with by checking the Main.Remove_Leak_Button checkbox
+        """
+        #TODO merge with Average
+        self.Wid = MyMplWidget(title = 'SuperImposed Traces')
+        self.Wid.canvas.Object_Selection_Mode = 'Trace'
+        
+        
+        if Traces_to_Display == None: #SynaptiQs internal Call
+            Traces_to_Display = Requete.Analogsignal_ids
+            Number_of_Superimposed_Traces=0
+            
+            if Main.Analyze_Filtered_Traces_Button.checkState() == 0:
+                SignalMode="Navigate.si[n]"
+            else:
+                SignalMode="Navigate.Filtered_Signal[n]"     
+            for n in range(Requete.NumberofChannels):       
+                for i in range(len(Traces_to_Display)):
+                    Main.progress.setMinimum(0)
+                    Main.progress.setMaximum(len(Traces_to_Display)-1)
+                    Main.progress.setValue(i) 
+    
+                    if i >= int(Main.From.text()):
+                        if i <= int(Main.To.text()):                
+                            if Requete.tag["Selection"][i][n] == 1:
+                                if Main.SQLTabWidget.currentIndex() == 2: # if Local file only
+                                    Requete.Current_Sweep_Number=i
+                                Navigate.Load_This_Trace(Traces_to_Display[i])
+                                Signal=eval(SignalMode)
+                                #Signal=scipy.signal.decimate(Signal,10)
+                                #Timescale=scipy.signal.decimate(Requete.timescale,10)
+                                #Timescale=Requete.timescale
+                                self.Wid.canvas.axes.plot(Requete.timescale,Signal,color=color,alpha=alpha)
+                                Number_of_Superimposed_Traces+=1
+               
+                        
+        else: #Plugin Call
+            Number_of_Superimposed_Traces=0
+     
+            for i in range(len(Traces_to_Display)):
+                temp_event=AnalogSignal.load(Traces_to_Display[i],session=Requete.Global_Session)
+                temp_signal=temp_event.signal  
+                temp_time_scale=numpy.array(range(len(temp_signal)))/(temp_event.sampling_rate/1000)
+                Navigate.Load_This_Trace(Traces_to_Display[i])
+                self.Wid.canvas.axes.plot(temp_time_scale,temp_signal,color=color,alpha=alpha)
+                Number_of_Superimposed_Traces+=1
+
+        self.Wid.canvas.axes.set_xlabel("Time")
+        self.Wid.canvas.axes.set_ylabel("Amplitude")
+        
+        
+        self.Wid.show()
+        
+        
+        Info_Message="It's a superposition of "+str(Number_of_Superimposed_Traces)+" sweeps"
+        Main.status_text.setText(Info_Message) 
+
+
+
+
+
+
+
+
+
 
     def PeakDetection(self,v, delta, x = None):
         
@@ -388,26 +456,27 @@ class Analysis(object):
         Requete.AmpSpikeTrainfromLocal={}
         
         counter=0
-        for i in range(len(Source)):
-            Main.progress.setMinimum(0)
-            Main.progress.setMaximum(len(Source)-1)
-            Main.progress.setValue(i)
-            Requete.Current_Sweep_Number=i            
-            Navigate.Load_This_Trace(i)     
-            
-            
-            if i >= int(Main.From.text()) and i <= int(Main.To.text()) and Requete.tag["Selection"][i] == 1:
-
-                Max,Min=self.PeakDetection(Navigate.si, Thr, x = Navigate.timescale) 
-                Current_Spike_Times=[]
-                Amplitude_At_Spike_Time=[]
-                for event in Min:
-                    Current_Spike_Times.append(event[0])
-                    Amplitude_At_Spike_Time.append(event[1])
-                    
-                Requete.SpikeTrainfromLocal[str(i)]=Current_Spike_Times
-                Requete.AmpSpikeTrainfromLocal[str(i)]=Amplitude_At_Spike_Time
-                counter+=1
+        for n in range(Requete.NumberofChannels):
+            for i in range(len(Source)):
+                Main.progress.setMinimum(0)
+                Main.progress.setMaximum(len(Source)-1)
+                Main.progress.setValue(i)
+                Requete.Current_Sweep_Number=i            
+                Navigate.Load_This_Trace(i)     
+                
+                
+                if i >= int(Main.From.text()) and i <= int(Main.To.text()) and Requete.tag["Selection"][i][n] == 1:
+    
+                    Max,Min=self.PeakDetection(Navigate.si, Thr, x = Navigate.timescale) 
+                    Current_Spike_Times=[]
+                    Amplitude_At_Spike_Time=[]
+                    for event in Min:
+                        Current_Spike_Times.append(event[0])
+                        Amplitude_At_Spike_Time.append(event[1])
+                        
+                    Requete.SpikeTrainfromLocal[str(i)]=Current_Spike_Times
+                    Requete.AmpSpikeTrainfromLocal[str(i)]=Amplitude_At_Spike_Time
+                    counter+=1
         return        
         
 
@@ -556,7 +625,7 @@ class Analysis(object):
         elif Main.Analyze_Filtered_Traces_Button.checkState() == 2 or Measure_Filtered == True:
             si = Navigate.Filtered_Signal  
             
-       
+        FullPopupList=[]    
         for n in range(Requete.NumberofChannels):    
             #On importe le signal
             self.Check_Measuring_Parameters_Validity()
@@ -580,8 +649,7 @@ class Analysis(object):
                 Main.progress.setMaximum(len(Requete.Analogsignal_ids)-1)
                 Main.progress.setValue(compteur2)
                 
-                print compteur2*Requete.NumberofChannels+n
-                if Requete.tag["Selection"][compteur2*Requete.NumberofChannels+n] == 1 and compteur2 >= int(Main.From.text()) and compteur2 <= int(Main.To.text()): #On n'analyse que les amplitudes sur les sweeps taggués
+                if Requete.tag["Selection"][compteur2][n] == 1 and compteur2 >= int(Main.From.text()) and compteur2 <= int(Main.To.text()): #On n'analyse que les amplitudes sur les sweeps taggués
                     if Main.SQLTabWidget.currentIndex() == 2:
                         Requete.Current_Sweep_Number=i
                         Navigate.Load_This_Trace(i)
@@ -687,14 +755,17 @@ class Analysis(object):
             if Rendering==True:
                 
                 #TODO: only show the 2nd round
-                self.popupWidget = QtGui.QWidget()
-                self.popupWidget.setMinimumSize(600,600) #definit la taille minimale du Widget (largeur, hauteur)          
+                name='popupWidget'+str(n)
+                setattr(self,name,QtGui.QWidget())
+                popup=eval('self.'+name)
+                FullPopupList.append(popup)
+                popup.setMinimumSize(600,600) #definit la taille minimale du Widget (largeur, hauteur)          
 
                 vbox = QtGui.QVBoxLayout()
                 hbox = QtGui.QHBoxLayout()
        
                     #1 : Création des onglet; valeurs chiffrées
-                self.ValueTab = QtGui.QTabWidget(self.popupWidget)
+                self.ValueTab = QtGui.QTabWidget(popup)
                 self.ValueTab.setMaximumSize(400,1024)
     
                 self.Amplitude_table = SpreadSheet(parent=self.ValueTab,Source=[self.Amplitudes_1,self.Amplitudes_2,self.Amplitudes_3],Labels=["Amp1","Amp2","Amp3"])
@@ -707,7 +778,7 @@ class Analysis(object):
                 self.ValueTab.addTab(self.Charge_table,"Charges")
                 
                     #2 : Création des onglet; Graphiques
-                self.Graphtab = QtGui.QTabWidget(self.popupWidget)
+                self.Graphtab = QtGui.QTabWidget(popup)
                 self.Wid=MyMplWidget()#self.Amplitude_graph)
                 self.Wid2=MyMplWidget()#self.Charge_graph)
                 self.Graphtab.addTab(self.Wid,"Amplitudes")
@@ -716,7 +787,7 @@ class Analysis(object):
                 vbox.addWidget(self.Graphtab)
                 hbox.addStrut(50)
                 hbox.addLayout(vbox)
-                self.popupWidget.setLayout(hbox)
+                popup.setLayout(hbox)
        
                 self.Wid.canvas.axes.plot(self.baseline,'k--',)
                 A1, = self.Wid.canvas.axes.plot(self.Amplitudes_1,'bo-',alpha=0.7)
@@ -737,7 +808,7 @@ class Analysis(object):
                 self.Wid2.canvas.axes.set_ylabel("Charge (pC)")  
               
               
-            self.popupWidget.show()       
+                  
             Infos.Add_Array(Arrays=[ "Analysis.Amplitudes_1",
                         "Analysis.Amplitudes_2",
                         "Analysis.Amplitudes_3",
@@ -750,7 +821,9 @@ class Analysis(object):
     
             if leaktemporaryremoved == True and All_from_Zero == False:
                 Main.Remove_Leak_Button.setCheckState(2) 
-                
+        
+        for i in FullPopupList:
+            i.show()
         return self.Amplitudes_1,self.Amplitudes_2,self.Amplitudes_3,self.Charges_1,self.Charges_2,self.Charges_3
         
         
@@ -1120,26 +1193,27 @@ class Analysis(object):
             self.Wid.canvas.axes.axis(h)
             counter=0
     
-            if Source is Requete.Spiketrain_ids:        
-                for i in range(len(Source)):
-                    Main.progress.setMinimum(0)
-                    Main.progress.setMaximum(len(Source)-1)
-                    Main.progress.setValue(i)
-                    
-                    
-                    if i >= int(Main.From.text()) and i <= int(Main.To.text()) and Requete.tag["Selection"][i] == 1:
+            if Source is Requete.Spiketrain_ids: 
+                for n in range(Requete.NumberofChannels):
+                    for i in range(len(Source)):
+                        Main.progress.setMinimum(0)
+                        Main.progress.setMaximum(len(Source)-1)
+                        Main.progress.setValue(i)
                         
-                        sptr=SpikeTrain.load(Source[i],session=Requete.Global_Session)
-                        try:
-                            for j in range(len(sptr._spike_times)):
-                                sptr._spike_times[j]-=sptr.t_start
-                                #print sptr.t_start, sptr._spike_times 
-                                y=i*numpy.ones(len(sptr._spike_times))   
-                                self.Wid.canvas.axes.plot(sptr._spike_times,y, 'k|')
                         
-                        except ValueError:
-                            print "ID ",Source[i]," passed"
-                        counter+=1    
+                        if i >= int(Main.From.text()) and i <= int(Main.To.text()) and Requete.tag["Selection"][i][n] == 1:
+                            
+                            sptr=SpikeTrain.load(Source[i],session=Requete.Global_Session)
+                            try:
+                                for j in range(len(sptr._spike_times)):
+                                    sptr._spike_times[j]-=sptr.t_start
+                                    #print sptr.t_start, sptr._spike_times 
+                                    y=i*numpy.ones(len(sptr._spike_times))   
+                                    self.Wid.canvas.axes.plot(sptr._spike_times,y, 'k|')
+                            
+                            except ValueError:
+                                print "ID ",Source[i]," passed"
+                            counter+=1    
     
             else:
                 for i in range(len(Source)):
@@ -1156,22 +1230,22 @@ class Analysis(object):
             h=[0,0,-1,len(Source)]
             self.Wid.canvas.axes.axis(h)
             counter=0
-            
-            for i in range(len(Source)):
-                Main.progress.setMinimum(0)
-                Main.progress.setMaximum(len(Source)-1)
-                Main.progress.setValue(i)
-                
-                if i >= int(Main.From.text()) and i <= int(Main.To.text()) and Requete.tag["Selection"][i] == 1:
-                    try:
-                        sptr=Requete.SpikeTrainfromLocal[str(i)]
-                        #for j in range(len(sptr)):
-                        y=i*numpy.ones(len(sptr)) 
-                        self.Wid.canvas.axes.plot(sptr,y, 'k|')
-                        concatenatedEvents.extend(sptr)
-                    except (ValueError,KeyError):
-                        print "ID ",Source[i]," passed"
-                    counter+=1              
+            for n in range(Requete.NumberofChannels):
+                for i in range(len(Source)):
+                    Main.progress.setMinimum(0)
+                    Main.progress.setMaximum(len(Source)-1)
+                    Main.progress.setValue(i)
+                    
+                    if i >= int(Main.From.text()) and i <= int(Main.To.text()) and Requete.tag["Selection"][i][n] == 1:
+                        try:
+                            sptr=Requete.SpikeTrainfromLocal[str(i)]
+                            #for j in range(len(sptr)):
+                            y=i*numpy.ones(len(sptr)) 
+                            self.Wid.canvas.axes.plot(sptr,y, 'k|')
+                            concatenatedEvents.extend(sptr)
+                        except (ValueError,KeyError):
+                            print "ID ",Source[i]," passed"
+                        counter+=1              
                 
             self.Wid.canvas.axes.set_xlabel("Time")
             self.Wid.canvas.axes.set_ylabel("Sweep Number")
@@ -1191,103 +1265,103 @@ class Analysis(object):
         return self.Wid  
 
     def Display_Events(self,leftsweep=5.,rightsweep=5.,Source=None,Baseline=None,Range=None,Rendering=True):
-    	"""
-    	This function is able to display at the same time 	-a raster plot and
-    														-a superposition of all detected events
-    	if Source is None (or Requete.Spiketrain_ids) all the tagging/Intervall system of SynaptiQs is used
-    	leftsweep/rightsweep is the intervall used for display around _spiketime
-    	Baseline is the time BEFORE the event used for offset substraction. if None, the whole AnalogSignal_id corresponding signal is used
-    	Range is the range in second where the events are selected
-    	to be solved : sometimes, some events are missed. their position is printed.
-    	"""
-    	from OpenElectrophy import AnalogSignal,SpikeTrain
-    	from matplotlib import numpy
+        """
+        This function is able to display at the same time     -a raster plot and
+                                                            -a superposition of all detected events
+        if Source is None (or Requete.Spiketrain_ids) all the tagging/Intervall system of SynaptiQs is used
+        leftsweep/rightsweep is the intervall used for display around _spiketime
+        Baseline is the time BEFORE the event used for offset substraction. if None, the whole AnalogSignal_id corresponding signal is used
+        Range is the range in second where the events are selected
+        to be solved : sometimes, some events are missed. their position is printed.
+        """
+        from OpenElectrophy import AnalogSignal,SpikeTrain
+        from matplotlib import numpy
     
     
-    	if Source== None:
-    		Source=Requete.Spiketrain_ids
+        if Source== None:
+            Source=Requete.Spiketrain_ids
     
-    	if Rendering == True:
-    		self.Widget=QtGui.QWidget()
-    		vbox=QtGui.QVBoxLayout()
-    		Raster=self.Raster_Plot(Source=Source,Rendering=False,Bar_time=0.2,Bar_Width=0.2)
-    		self.Wid = MyMplWidget(subplots=None)
-    		self.Wid.canvas.axes = self.Wid.canvas.fig.add_subplot(111)
+        if Rendering == True:
+            self.Widget=QtGui.QWidget()
+            vbox=QtGui.QVBoxLayout()
+            Raster=self.Raster_Plot(Source=Source,Rendering=False,Bar_time=0.2,Bar_Width=0.2)
+            self.Wid = MyMplWidget(subplots=None)
+            self.Wid.canvas.axes = self.Wid.canvas.fig.add_subplot(111)
     
-    	As=AnalogSignal.load(Requete.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary[Source[0]])
-    	pnts_by_s=As.sampling_rate
-    	counter=0
+        As=AnalogSignal.load(Requete.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary[Source[0]])
+        pnts_by_s=As.sampling_rate
+        counter=0
     
-    	L=int(leftsweep*pnts_by_s)
-    	H=int(rightsweep*pnts_by_s)
-    	average_trace=numpy.zeros(L+H)
-    	croped_axe=numpy.arange(float(leftsweep*-1),float(rightsweep),float(1/pnts_by_s))
+        L=int(leftsweep*pnts_by_s)
+        H=int(rightsweep*pnts_by_s)
+        average_trace=numpy.zeros(L+H)
+        croped_axe=numpy.arange(float(leftsweep*-1),float(rightsweep),float(1/pnts_by_s))
     
-    	if Range == None:
-    		Range = [0.,len(As.signal)/pnts_by_s]
-    	else:
-    		if Rendering == True:
-    			Raster.canvas.axes.axvspan(Range[0],Range[1],facecolor='r', alpha=0.3)
+        if Range == None:
+            Range = [0.,len(As.signal)/pnts_by_s]
+        else:
+            if Rendering == True:
+                Raster.canvas.axes.axvspan(Range[0],Range[1],facecolor='r', alpha=0.3)
+
+
+        for n in range(Requete.NumberofChannels):
+                for j,i in enumerate(Source):
+                    if (Source is Requete.Spiketrain_ids) and (j < int(Main.From.text())) or (j > int(Main.To.text())) or (Requete.tag["Selection"][j][n] == 0):
+                        pass
+                    else:
+                        st=SpikeTrain.load(i)
+                        As=AnalogSignal.load(Requete.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary[i])
+                        pnts_by_s=As.sampling_rate
+            
+                        if Baseline == None:
+                            baseline=numpy.mean(As.signal)
+                        else: baseline=Baseline
+                        
+                        try:
+                            for k in st._spike_times:
+                                if (k-st.t_start > Range[0]) and (k-st.t_start < Range[1]):
+                                    lower=int((k-st.t_start)*pnts_by_s)-L
+                                    higher=int((k-st.t_start)*pnts_by_s)+H
+                                    event = As.signal[lower:higher]
+                                    
+                                    event=event-numpy.mean(event[(leftsweep-baseline)*pnts_by_s:leftsweep*pnts_by_s])
+            
+                                    try:
+                                        average_trace+=event
+                                        counter+=1
+                                    except ValueError:
+                                        print 'error in spiketrain id %s, at %s ms' % (i,(k-st.t_start)*pnts_by_s/1000)
+            
+                                    #print len(croped_axe), len(event)
+            
+                                    if len(list(croped_axe))>len(list(event)):
+                                        croped_axe=list(croped_axe)
+                                        #print len(croped_axe), len(event)
+                                        #croped_axe.pop()
+                                    if Rendering == True :
+                                        if len(list(croped_axe)) != len(list(event)):
+                                            print j,i, 'passed'
+                                            pass
+                                        else:
+                                            self.Wid.canvas.axes.plot(croped_axe,event,color='k',alpha=0.15)
+                        except ValueError:
+                            pass
+                                
     
+        average_trace/=counter
+        #HACK
+        Min=min([len(croped_axe),len(average_trace)])
+        croped_axe=croped_axe[:Min]
+        average_trace=average_trace[:Min]
+        print croped_axe,average_trace
+        if Rendering == True:
+            self.Wid.canvas.axes.plot(croped_axe,average_trace,color='red',alpha=1)
+            vbox.addWidget(Raster)
+            vbox.addWidget(self.Wid)
+            self.Widget.setLayout(vbox)
+            self.Widget.show()
     
-    
-    	for j,i in enumerate(Source):
-    		if (Source is Requete.Spiketrain_ids) and (j < int(Main.From.text())) or (j > int(Main.To.text())) or (Requete.tag["Selection"][j] == 0):
-    			pass
-    		else:
-    			st=SpikeTrain.load(i)
-    			As=AnalogSignal.load(Requete.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary[i])
-    			pnts_by_s=As.sampling_rate
-    
-    			if Baseline == None:
-    				baseline=numpy.mean(As.signal)
-    			else: baseline=Baseline
-    			
-    			try:
-    				for k in st._spike_times:
-    					if (k-st.t_start > Range[0]) and (k-st.t_start < Range[1]):
-    						lower=int((k-st.t_start)*pnts_by_s)-L
-    						higher=int((k-st.t_start)*pnts_by_s)+H
-    						event = As.signal[lower:higher]
-    						
-    						event=event-numpy.mean(event[(leftsweep-baseline)*pnts_by_s:leftsweep*pnts_by_s])
-    
-    						try:
-    							average_trace+=event
-    							counter+=1
-    						except ValueError:
-    							print 'error in spiketrain id %s, at %s ms' % (i,(k-st.t_start)*pnts_by_s/1000)
-    
-    						#print len(croped_axe), len(event)
-    
-    						if len(list(croped_axe))>len(list(event)):
-    							croped_axe=list(croped_axe)
-    							#print len(croped_axe), len(event)
-    							#croped_axe.pop()
-    						if Rendering == True :
-    							if len(list(croped_axe)) != len(list(event)):
-    								print j,i, 'passed'
-    								pass
-    							else:
-    								self.Wid.canvas.axes.plot(croped_axe,event,color='k',alpha=0.15)
-    			except ValueError:
-    				pass
-    						
-    
-    	average_trace/=counter
-    	#HACK
-    	Min=min([len(croped_axe),len(average_trace)])
-    	croped_axe=croped_axe[:Min]
-    	average_trace=average_trace[:Min]
-    	print croped_axe,average_trace
-    	if Rendering == True:
-    		self.Wid.canvas.axes.plot(croped_axe,average_trace,color='red',alpha=1)
-    		vbox.addWidget(Raster)
-    		vbox.addWidget(self.Wid)
-    		self.Widget.setLayout(vbox)
-    		self.Widget.show()
-    
-    	return croped_axe,average_trace
+        return croped_axe,average_trace
 
     def Load_Tags(self):
         
@@ -1303,10 +1377,10 @@ class Analysis(object):
         if (path.exec_()) :
             parameters = open(path.selectedFiles()[0])
             a=parameters.readlines()
-            
             for i in range(len(a)):
-                a[i].replace('\n','')
-                Requete.tag["Selection"][i]=float(a[i])
+                for n in range(len(i)):
+                    a[i].replace('\n','')
+                    Requete.tag["Selection"][i][n]=float(a[i][n])
             parameters.close()
             print "///////////////Tags Loaded from selected file"
 
@@ -1335,21 +1409,21 @@ class Analysis(object):
        
         if Leakend==None:
             Leakend=value-1
-            
-        for i in range(len(Requete.Analogsignal_ids)):
-
-            Main.progress.setMinimum(0)
-            Main.progress.setMaximum(len(Requete.Analogsignal_ids)-1)
-            Main.progress.setValue(i)  
-
-            if Requete.tag["Selection"][i] == 1:
-                sig = AnalogSignal().load(Requete.Analogsignal_ids[i],session=Requete.Global_Session)
-                si = sig.signal
-                self.Leak[i] = numpy.mean(si[float(Leakbegin)*Navigate.Points_by_ms:float(Leakend)*Navigate.Points_by_ms])
-                self.Seal_test[i] = min(si[float(value)*Navigate.Points_by_ms:float(value+window)*Navigate.Points_by_ms])-self.Leak[i]
-                self.Noise_Level[i] = numpy.std(si[float(Leakbegin)*Navigate.Points_by_ms:float(Leakend)*Navigate.Points_by_ms])
-                self.Leak_Drop[i] = numpy.mean(si[float(Leakbegin)*Navigate.Points_by_ms:float(Leakend)*Navigate.Points_by_ms])-numpy.mean(si[((Leakbegin)*Navigate.Points_by_ms)*-1:-1])
-                
+        for n in range(Requete.NumberofChannels):    
+            for i in range(len(Requete.Analogsignal_ids)):
+    
+                Main.progress.setMinimum(0)
+                Main.progress.setMaximum(len(Requete.Analogsignal_ids)-1)
+                Main.progress.setValue(i)  
+    
+                if Requete.tag["Selection"][i][n] == 1:
+                    sig = AnalogSignal().load(Requete.Analogsignal_ids[i],session=Requete.Global_Session)
+                    si = sig.signal
+                    self.Leak[i] = numpy.mean(si[float(Leakbegin)*Navigate.Points_by_ms:float(Leakend)*Navigate.Points_by_ms])
+                    self.Seal_test[i] = min(si[float(value)*Navigate.Points_by_ms:float(value+window)*Navigate.Points_by_ms])-self.Leak[i]
+                    self.Noise_Level[i] = numpy.std(si[float(Leakbegin)*Navigate.Points_by_ms:float(Leakend)*Navigate.Points_by_ms])
+                    self.Leak_Drop[i] = numpy.mean(si[float(Leakbegin)*Navigate.Points_by_ms:float(Leakend)*Navigate.Points_by_ms])-numpy.mean(si[((Leakbegin)*Navigate.Points_by_ms)*-1:-1])
+                    
         self.Seal_test=numpy.array(self.Seal_test)        
                 
         self.Manip_Diagnosis_Widget.canvas.axes = self.Manip_Diagnosis_Widget.canvas.fig.add_subplot(511)
@@ -1432,9 +1506,10 @@ class Analysis(object):
     def Display_Infos(self):
         a='None'
         self.Tagged_Sweeps=0
-        for i in range(len(Requete.Analogsignal_ids)):
-            if Requete.tag["Selection"][i]==1:
-                self.Tagged_Sweeps+=1
+        for n in range(Requete.NumberofChannels):
+            for i in range(len(Requete.Analogsignal_ids)):
+                if Requete.tag["Selection"][i][n]==1:
+                    self.Tagged_Sweeps+=1
         msgBox = QtGui.QMessageBox()
         msgBox.setText(
         """

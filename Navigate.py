@@ -93,27 +93,27 @@ class Navigate(object):
                 Info_Message="Sweep # = "+str(Requete.Current_Sweep_Number)+" current AnalogSignal.id is "+str(Requete.Analogsignal_ids[Requete.Current_Sweep_Number])+" ,current segment.id is "+str(Requete.Segment_ids[Requete.Current_Sweep_Number])
             Main.status_text.setText(Info_Message)
             
-    
-            if Requete.tag["Selection"][Requete.Current_Sweep_Number] == None: #Au cas où le champs Tag est de type None, on met 0
-                
-                Requete.tag["Selection"][Requete.Current_Sweep_Number]=int(0)
-                Requete.sig.save()
+            for n in range(Requete.NumberofChannels):
+                if Requete.tag["Selection"][Requete.Current_Sweep_Number][n] == None: #Au cas où le champs Tag est de type None, on met 0
+                    Requete.tag["Selection"][Requete.Current_Sweep_Number][n]=int(0)
+                    Requete.sig.save()
     
             if Main.Display_Spikes_Button.checkState() == 2:
                 if Main.SQLTabWidget.currentIndex() == 2:
-                    print "No spiketrain here, under devloppement"
+                    print "No spiketrain here, under developpement"
                     pass
                 else:
                     Requete.Call_Spikes()            
             Main.MainFigure.canvas.Update_Figure()  
             
-            
-             #Lecture du Tag
-            if Requete.tag["Selection"][Requete.Current_Sweep_Number] == 1:
-                Main.Tagging_Button.setChecked(True)
-        
-            elif Requete.tag["Selection"][Requete.Current_Sweep_Number] == 0:
-                Main.Tagging_Button.setChecked(False)        
+            #Lecture du Tag
+            for n in range(Requete.NumberofChannels):
+                
+                if Requete.tag["Selection"][Requete.Current_Sweep_Number][n] == 1:
+                    Main.Tagging_Button.setChecked(True)
+                elif Requete.tag["Selection"][Requete.Current_Sweep_Number][n] == 0:
+                    Main.Tagging_Button.setChecked(False) 
+
                 
             Main.slider.setValue(Requete.Current_Sweep_Number)
 
@@ -185,6 +185,7 @@ class Navigate(object):
             self.si=[]
             self.Filtered_Signal=[]
             for i in Analogisgnal_id_to_Load:
+                print i
                 self.sig = AnalogSignal().load(i,session=Requete.Global_Session)
                 #Resampling to the lowest sampling rate in the selection. It doesn't change anything if there is only one sampling rate
                 self.si.append(scipy.signal.resample(self.sig.signal,(Requete.BypassedSamplingRate)*(len(self.sig.signal)/self.sig.sampling_rate)))
@@ -201,7 +202,7 @@ class Navigate(object):
                 Requete.Current_Spike_Times=[]
                 Requete.Amplitude_At_Spike_Time=[]
                 
-        #Croping of the signal to the shortest duration of the selection. It doesn't change anything if there is only one sampling rate
+        #Cropping of the signal to the shortest duration of the selection. It doesn't change anything if there is only one sampling rate
         for i,j in enumerate(self.si):
             self.si[i] = self.si[i][0:Requete.BypassedSamplingRate*Requete.Shortest_Sweep_Length+1]
         for i,j in enumerate(self.Filtered_Signal):   
@@ -327,86 +328,19 @@ class Navigate(object):
         self.Load_This_Sweep_Number(len(Requete.Analogsignal_ids)-1,SkipUpdate=True)
         Main.slider.setValue(len(Requete.Analogsignal_ids)-1)
 
-    def Display_Superimposed_Traces(self,Traces_to_Display=None,color='k',alpha=0.3):
-        
-        """
-        This function displays all the tagged traces if Traces_to_Display == None, or the AnalogSignal.ids in Traces_to_Display List
-        You can substract the leak with by checking the Main.Remove_Leak_Button checkbox
-        """
-    
-        self.Wid = MyMplWidget(title = 'SuperImposed Traces')
-        self.Wid.canvas.Object_Selection_Mode = 'Trace'
-        
-        
-        if Traces_to_Display == None: #SynaptiQs internal Call
-            Traces_to_Display = Requete.Analogsignal_ids
-            Number_of_Superimposed_Traces=0
-            
-            if Main.Analyze_Filtered_Traces_Button.checkState() == 0:
-                SignalMode="self.si"
-            else:
-                SignalMode="self.Filtered_Signal"     
-                   
-            for i in range(len(Traces_to_Display)):
-                Main.progress.setMinimum(0)
-                Main.progress.setMaximum(len(Traces_to_Display)-1)
-                Main.progress.setValue(i) 
-
-
-
-                if i >= int(Main.From.text()):
-                    if i <= int(Main.To.text()):                
-                        if Requete.tag["Selection"][i] == 1:
-                            if Main.SQLTabWidget.currentIndex() == 2: # if Local file only
-                                Requete.Current_Sweep_Number=i
-                            self.Load_This_Trace(Traces_to_Display[i])
-                            Signal=eval(SignalMode)
-                            #Signal=scipy.signal.decimate(Signal,10)
-                            #Timescale=scipy.signal.decimate(Requete.timescale,10)
-                            #Timescale=Requete.timescale
-                            self.Wid.canvas.axes.plot(Requete.timescale,Signal,color=color,alpha=alpha)
-                            Number_of_Superimposed_Traces+=1
-               
-                        
-        else: #Plugin Call
-            Number_of_Superimposed_Traces=0
-     
-            for i in range(len(Traces_to_Display)):
-                temp_event=AnalogSignal.load(Traces_to_Display[i],session=Requete.Global_Session)
-                temp_signal=temp_event.signal  
-                temp_time_scale=numpy.array(range(len(temp_signal)))/(temp_event.sampling_rate/1000)
-                self.Load_This_Trace(Traces_to_Display[i])
-                self.Wid.canvas.axes.plot(temp_time_scale,temp_signal,color=color,alpha=alpha)
-                Number_of_Superimposed_Traces+=1
-
-        self.Wid.canvas.axes.set_xlabel("Time")
-        self.Wid.canvas.axes.set_ylabel("Amplitude")
-        
-        
-        self.Wid.show()
-        
-        
-        Info_Message="It's a superposition of "+str(Number_of_Superimposed_Traces)+" sweeps"
-        Main.status_text.setText(Info_Message) 
-
-                 
-            
-
         
     def Change_Tag_Checkbox_State(self):
         """
-        This function change the Requete.tag["Selection"][Requete.Current_Sweep_Number]
+        This function change the Requete.tag["Selection"][Requete.Current_Sweep_Number] for all channels
         depending on the Main.Tagging_Button.checkState()
         """
-        
-        if Main.Tagging_Button.isChecked():
-            for n in range(Requete.NumberofChannels):
-                Requete.tag["Selection"][Requete.Current_Sweep_Number*Requete.NumberofChannels+n]=int(1)
-        else:
-            for n in range(Requete.NumberofChannels):
-                Requete.tag["Selection"][Requete.Current_Sweep_Number*Requete.NumberofChannels+n]=int(0)
-        
- 
+        new=Requete.tag["Selection"]
+        for n in range(Requete.NumberofChannels):
+            if Main.Tagging_Button.isChecked():
+                new[Requete.Current_Sweep_Number][n]=1
+            else:
+                new[Requete.Current_Sweep_Number][n]=0
+        Requete.tag["Selection"]=new  
     def Tag_All_Traces(self,ProgressDisplay=True):
         
         for i in range(len(Requete.Analogsignal_ids)):
@@ -416,10 +350,9 @@ class Navigate(object):
                 Main.progress.setValue(i)
          
             if i >= int(Main.From.text()) and i <= int(Main.To.text()):
-                
                 for n in range(Requete.NumberofChannels):
-                    Requete.tag["Selection"][i*Requete.NumberofChannels+n]=int(1)
-        
+                    Requete.tag["Selection"][i][n]=int(1)
+                    
         if ProgressDisplay == True:            
             Info_Message="Everything is Tagged"
             Main.status_text.setText(Info_Message) 
@@ -433,9 +366,8 @@ class Navigate(object):
                 Main.progress.setValue(i)
          
             if i >= int(Main.From.text()) and i <= int(Main.To.text()):
-                
                 for n in range(Requete.NumberofChannels):
-                    Requete.tag["Selection"][i*Requete.NumberofChannels+n]=int(0)
+                    Requete.tag["Selection"][i][n]=int(0)
                 
         if ProgressDisplay == True:           
             Info_Message="Everything is UnTagged"
@@ -451,10 +383,10 @@ class Navigate(object):
             
             if i >= int(Main.From.text()) and i <= int(Main.To.text()):
                 for n in range(Requete.NumberofChannels):
-                    if Requete.tag["Selection"][i*Requete.NumberofChannels+n]==1:
-                        Requete.tag["Selection"][i*Requete.NumberofChannels+n]=int(0)
-                    elif Requete.tag["Selection"][i*Requete.NumberofChannels+n]==0:
-                        Requete.tag["Selection"][i*Requete.NumberofChannels+n]=int(1)
+                    if Requete.tag["Selection"][i][n]==1:
+                        Requete.tag["Selection"][i][n]=int(0)
+                    elif Requete.tag["Selection"][i][n]==0:
+                        Requete.tag["Selection"][i][n]=int(1)
                     
         if ProgressDisplay == True:
             Info_Message="All Tags are Inverted"

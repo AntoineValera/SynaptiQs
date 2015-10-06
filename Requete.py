@@ -64,6 +64,7 @@ class Requete(object):
         self.Where_Supplement=''
         self.Arraylist=''
         self.query=""
+        
     def _all(self,All=False):
         List=[]
         i=self.__name__
@@ -116,7 +117,15 @@ class Requete(object):
                 self.Record_User_Parameters()
 
    
- 
+    def Convert(self):
+        print 'before', self.tag["Selection"]
+        selection=[[0]*self.NumberofChannels]*len(self.Analogsignal_ids)
+        for i in range(len(self.Analogsignal_ids)):
+            for j in range(self.NumberofChannels):
+                    selection[i][j]=int(self.tag["Selection"][i*self.NumberofChannels+j]) 
+        self.tag["Selection"]=selection 
+        print 'after', self.tag["Selection"]                      
+              
        
     def Final_Request(self):
         """
@@ -174,6 +183,7 @@ class Requete(object):
             
         self.timescale=numpy.array(range(int(self.BypassedSamplingRate*self.Shortest_Sweep_Length)))*1000/self.BypassedSamplingRate #This is a one second timescale with the highest sampling rate
         Main.slider.setRange(0, len(self.Analogsignal_ids)-1)#/self.NumberofChannels-1) #definit le range du slider sweepnb
+        Main.From.setText(str(0))
         Main.To.setText(str(len(self.Analogsignal_ids)-1))#/self.NumberofChannels-1)) 
         
         Mapping.Autofill_Coordinates_Values_from_Tag_Field()
@@ -184,7 +194,11 @@ class Requete(object):
             Main.User_Defined_Measurement_Parameters.setCurrentIndex(0)
             Analysis.Load_User_Defined_Parameters(0,True)
             Mapping.Load_User_Defined_Parameters(0,True)
-                 
+    
+
+
+
+             
     def Datacall(self): #Fait la requete SQL et affiche la premiere trace
         """
         This function do the final request
@@ -312,7 +326,7 @@ class Requete(object):
         
         if (len(list(set(self.Analogsignal_name))) or len(list(set(self.Spiketrain_Neuid)))) > 1:
             self.NumberofChannels=len(list(set(self.Analogsignal_name)))
-            print self.NumberofChannels
+            print 'There are ',self.NumberofChannels,' channels'
             List=zip(list(self.Analogsignal_name),list(self.Analogsignal_ids))
             listofarrays=[]
             for i,j in enumerate(list(set(self.Analogsignal_name))):
@@ -322,13 +336,12 @@ class Requete(object):
                         eval('self.'+j).append(l)
                 listofarrays.append(eval('self.'+j))
                 print 'channel ',j,' ids are ',eval('self.'+j)
-            self.Analogsignal_ids=zip(*listofarrays)
+            self.Analogsignal_ids=Infos.Zip(listofarrays)
             print self.Analogsignal_ids
             msgBox = QtGui.QMessageBox()
             msgBox.setText("""<b>Caution</b>
-            <p>Multi-Channel display not supported yet. 
-            <p>For each sweep, all different channels will be displayed one after the other
-            <p>You might experience some other bugs
+            <p>Multi-Channel display not fully supported yet. 
+            <p>You might experience some bugs
             """)
             msgBox.exec_()            
         else:
@@ -413,20 +426,35 @@ class Requete(object):
             self.Reset_the_Tag_Field(self.tag)
             return
         
-
         
-        #Pour le champs Tag, controle systematique de son existence      
+        #Pour le champs Tag, controle systematique de son existence    
+        NewSystem=True
+
         if self.tag.has_key("Selection")==False:
-            self.tag["Selection"]=[0]*len(self.Analogsignal_ids)
+            #for some reason, I had to to that since I move to multichannel
+            new=[]
             for i in range(len(self.Analogsignal_ids)):
-                self.tag["Selection"][i]=0
+                new.append([0]*int(self.NumberofChannels))            
+            self.tag["Selection"]=new
+            for i in range(len(self.Analogsignal_ids)):
+                for j in range(self.NumberofChannels):
+                    self.tag["Selection"][i][j]=0
         elif self.tag.has_key("Selection")==True:
             for i in range(len(self.Analogsignal_ids)):
-                try: 
-                    self.tag["Selection"][i]=int(self.tag["Selection"][i])
-                except ValueError:
-                    self.tag["Selection"][i]=0
-         
+                for j in range(self.NumberofChannels):
+                    try: 
+                        self.tag["Selection"][i][j]=int(self.tag["Selection"][i][j])
+                    except ValueError:
+                        self.tag["Selection"][i][j]=0
+                    except TypeError:
+                        NewSystem=False
+                        print 'Old tag system detected'
+                        break
+
+        #If the old tag system was used, we convert it here to the new system
+        if NewSystem==False:
+            self.Convert()
+          
        
         self.Add_Dictionnary_Arrays()
         self.Record_User_Parameters()
