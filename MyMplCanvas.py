@@ -120,12 +120,12 @@ class MyMplCanvas(FigureCanvasQTAgg):
         
         if self.already_displayed == False:
         
-            correction=1./float(Mapping.Stim_Resolution.text())  #so the clicked coordinate, in microns, select the coordinate in pixels
-            
+            #correction=1./float(Mapping.Current_Map.Stim_Resolution.text())  #so the clicked coordinate, in microns, select the coordinate in pixels
+            correction = 1./float(Mapping.CM.Scaling_Factor)
             x = (event.xdata*correction, event.ydata*correction)
             sys.stdout.flush()
             try:
-                q = Mapping.Sorted_X_and_Y_Coordinates #The list of avaible coordinates
+                q = Mapping.CM.Sorted_X_and_Y_Coordinates #The list of avaible coordinates
             except IOError:
                 msgBox = QtGui.QMessageBox()
                 msgBox.setText(
@@ -364,6 +364,7 @@ class MyMplCanvas(FigureCanvasQTAgg):
                 self.axes.clear()
                 
             if Main.Measure_From_Zero_Button.checkState() == 2:
+<<<<<<< HEAD
                 Main.Remove_Leak_Button.setCheckState(2) 
                 
             if Main.Remove_Leak_Button.checkState() == 2: #it's a line at 0
@@ -425,6 +426,24 @@ class MyMplCanvas(FigureCanvasQTAgg):
                     Requete.Current_Spike_Times=[]
                     print "No spikes to plot here"
             elif Main.Display_Spikes_Button.checkState() == 0:
+=======
+                if Mapping.CM.Types_of_Events_to_Measure == 'Negative':
+                    self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,0.,where=0.>Analysis.Charge_trace,alpha=0.3)
+                elif Mapping.CM.Types_of_Events_to_Measure == 'Positive':
+                    self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,0.,where=0.<Analysis.Charge_trace,alpha=0.3)                    
+            else:
+                if Mapping.CM.Types_of_Events_to_Measure == 'Negative':
+                    self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,Analysis.Base1[0],where=Analysis.Base1[0]>Analysis.Charge_trace,alpha=0.3)
+                elif Mapping.CM.Types_of_Events_to_Measure == 'Positive':
+                    self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,Analysis.Base1[0],where=Analysis.Base1[0]<Analysis.Charge_trace,alpha=0.3)
+
+        if Main.Display_Spikes_Button.checkState() == 2:
+            try:
+                #print Requete.Current_Spike_Times
+                #print Requete.Amplitude_At_Spike_Time
+                self.axes.plot(Requete.Current_Spike_Times,Requete.Amplitude_At_Spike_Time,'ro',linewidth=10)
+            except:
+>>>>>>> master
                 Requete.Current_Spike_Times=[]
             else:
                 pass

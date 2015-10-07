@@ -270,8 +270,17 @@ class Navigate(object):
     def Update_SweepNumber_Slider(self):
         Slider_Value=int(Main.slider.value())
         Main.Sweep_Number_Input_Field.setText(str(Slider_Value))
-        self.Load_This_Sweep_Number(Slider_Value,SkipUpdate=False)
-        
+        try:        
+            self.Load_This_Sweep_Number(Slider_Value,SkipUpdate=False)
+        except IndexError:
+            Requete.Analogsignal_ids=[]
+            Requete.Current_Sweep_Number=None
+            Main.slider.setValue(0)
+            Requete.Resetfields()
+            Mapping.Reset_Mapping_Variables()
+            Main.Show_Main_Figure()
+            
+            
         #if SkipUpdate == False:
             # if Main.FastMode == False:
            #      print Slider_Value

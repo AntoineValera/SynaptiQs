@@ -26,6 +26,8 @@ class Analysis(object):
     """
     def __init__(self):
         self.__name__="Analysis"
+        self.UseUserDefinedColorset = False
+        self.Color = 'k'
     def _all(self,All=False):
         List=[]
         i=self.__name__
@@ -37,10 +39,14 @@ class Analysis(object):
         for i in List:
             print i 
     def Remove_a_Leak(self,Signal):#,Leak_Removing_Interval_Start=0,Leak_Removing_Interval_End=-1):
+        #TODO ugly manual value to check here
         #SealTestStart=2500
         #SealTestStop=3600
         SealTestStart=2500
         SealTestStop=2501    
+        if 'Measurement_Interval' in locals() == False:
+            self.Display_Measures_Button.setCheckState(2)
+            self.Measure_On_Off_Activated()
         StimStart=self.Measurement_Interval[2]
     
     
@@ -48,9 +54,9 @@ class Analysis(object):
         mask[SealTestStart:SealTestStop]=1
         mask[StimStart:]=1
         mx = numpy.ma.masked_array(Signal, mask)
-        if Mapping.Types_of_Events_to_Measure == 'Negative':
+        if Mapping.CM.Types_of_Events_to_Measure == 'Negative':
             self.Current_Leak=scipy.stats.scoreatpercentile(mx, 85)
-        elif Mapping.Types_of_Events_to_Measure == 'Positive':
+        elif Mapping.CM.Types_of_Events_to_Measure == 'Positive':
             self.Current_Leak=scipy.stats.scoreatpercentile(mx, 15)            
             
         #self.Current_Leak=numpy.median(Signal[Leak_Removing_Interval_Start:Leak_Removing_Interval_End]) Median Filtering
@@ -59,8 +65,69 @@ class Analysis(object):
         Signal=Signal-self.Current_Leak
         return Signal
 
+
+    def Measure_Local_Extremum(self,Signal,loc,meth):
+
+
+            bgn=str("Main."+str(loc[0])+".text()")
+            end=str("Main."+str(loc[1])+".text()")
+            size=str("Main."+str(loc[2])+".text()")
+            meth=str("Main."+str(meth)+".currentText()")
+            
+            #We extract the wanted time for the ROI
+            #There is always a possibility to fall between two points,
+            #   in which case we take the floor value            
+            ROIBgn=int(float(eval(bgn))*Navigate.Points_by_ms)
+            ROIEnd=int(float(eval(end))*Navigate.Points_by_ms)
+            
+            #Small bug correction if ROIBgn=ROIEnd
+            if ROIBgn == ROIEnd:
+                ROIEnd+=1
+                #Small bug correction if ROIBgnis already the last point
+            if ROIBgn >= len(Signal):
+                ROIBgn = len(Signal)-1
+                ROIEnd = len(Signal)
+                return ROIBgn,ROIEnd 
+#                    msgBox = QtGui.QMessageBox()
+#                    msgBox.setText(
+#                    """
+#                    <b>Measure range is wrong</b>
+#                    <p>You can measure beyond the last point
+#                    %s ignored
+#                    """ %(loc)) 
+#                    msgBox.exec_()  
+#                    return 
+            #Location of the extremum position
+            if  eval(meth) == 'Max':
+                    ExtremumLocation = numpy.argmax(Signal[ROIBgn:ROIEnd])
+            elif eval(meth) == 'Min':
+                    ExtremumLocation = numpy.argmin(Signal[ROIBgn:ROIEnd])
+            
+            #Now, we create a range around that point corresponding to 'length'
+            #The average value will be the average of the range
+            LeftPointOfMeasurementWindow = int(ExtremumLocation-float(eval(size))*Navigate.Points_by_ms/2+float(eval(bgn))*Navigate.Points_by_ms)
+            #If the measurment window touch the begining of the signal, we crop it at 0
+            if LeftPointOfMeasurementWindow<0:
+                LeftPointOfMeasurementWindow=0
+            #Not sure when that apply 
+            if LeftPointOfMeasurementWindow<float(eval(bgn))*Navigate.Points_by_ms:
+                LeftPointOfMeasurementWindow=int(float(eval(bgn))*Navigate.Points_by_ms)
+             
+            #If the measurment window touch the end  of the signal, we crop it at len(Signal) 
+            RightPointOfMeasurementWindow = int(ExtremumLocation+float(eval(size))*Navigate.Points_by_ms/2+float(eval(bgn))*Navigate.Points_by_ms)
+            if RightPointOfMeasurementWindow>len(Signal):
+                RightPointOfMeasurementWindow=len(Signal)
+            #Not sure when that apply    
+            if RightPointOfMeasurementWindow>float(eval(end))*Navigate.Points_by_ms:
+                RightPointOfMeasurementWindow=int(float(eval(end))*Navigate.Points_by_ms)
+
+            return LeftPointOfMeasurementWindow,RightPointOfMeasurementWindow
     
+<<<<<<< HEAD
     def Measure_on_Average(self,List_of_Ids=None,Measure_All_from_Baseline1=False,Display_Superimposed_Traces=False,Rendering=True,Position=(None,None),Origin=None,All_from_Zero=False,ProgressDisplay=True,NumberofChannels=1):
+=======
+    def Measure_on_Average(self,List_of_Ids=None,Measure_All_from_Baseline1=False,Display_Superimposed_Traces=False,Rendering=True,Position=(None,None),Origin=None,All_from_Zero=False,ProgressDisplay=True,Color='k'):
+>>>>>>> master
         
         """
         This function measure the average trace of a given list of Analogsignal ids (default is Requete.Analogsignal_ids tagged traces)
@@ -70,6 +137,7 @@ class Analysis(object):
         If Measure_All_from_Baseline1 is True, mean amplitude 1, 2 and 3 and mean charge 1, 2 and 3 are calculated from baseline 1 value
         If All_from_Zero is True, mean amplitude 1, 2 and 3 and mean charge 1, 2 and 3 are calculated from 0 after leak substraction
         
+        color can be a string, or a vector
         """   
         
         ##scipy.signal.decimate could accelerate the display
@@ -78,6 +146,7 @@ class Analysis(object):
             List_of_Ids = Requete.Analogsignal_ids
             NumberofChannels=Requete.NumberofChannels
 
+<<<<<<< HEAD
         self.Currently_Used_Sweep_nb_for_Local_Average=[]#[[numpy.NaN]*Requete.NumberofChannels]*len(List_of_Ids)
                 
         for n in range(NumberofChannels):
@@ -88,6 +157,85 @@ class Analysis(object):
     #        elif Main.SQLTabWidget.currentIndex() == 2:
     #            sig = eval("Analysis.RecordA"+str(Requete.Current_Sweep_Number))
             
+=======
+        #TODO : Temporary implementation
+        if self.UseUserDefinedColorset == True:
+            Color=self.Color
+            
+        if type(Color) == str:
+            Color=[Color]*len(List_of_Ids)
+
+
+        self.Check_Measuring_Parameters_Validity()
+        
+#        if Main.SQLTabWidget.currentIndex() == 0 or Main.SQLTabWidget.currentIndex() == 1:
+#            sig = AnalogSignal().load(List_of_Ids[0],session=Requete.Global_Session)
+#        elif Main.SQLTabWidget.currentIndex() == 2:
+#            sig = eval("Analysis.RecordA"+str(Requete.Current_Sweep_Number))
+            
+        self.mean = Navigate.si-Navigate.si
+        counter=0
+        
+
+        self.List_of_Averaged_Sweeps=[]
+
+        for i in range(len(List_of_Ids)):
+            if ProgressDisplay==True:
+                Main.progress.setMinimum(0)
+                Main.progress.setMaximum(len(List_of_Ids)-1)
+                Main.progress.setValue(i)
+            if Main.SQLTabWidget.currentIndex() == 2: # if Local file only
+                Requete.Current_Sweep_Number=i
+            if ((List_of_Ids is Requete.Analogsignal_ids) and (i >= int(Main.From.text())) and (i <= int(Main.To.text())) and (Requete.tag["Selection"][i] == 1)) or (List_of_Ids is not Requete.Analogsignal_ids):
+                counter+=1
+                self.List_of_Averaged_Sweeps.append(i)
+
+                if Main.Analyze_Filtered_Traces_Button.checkState() == 0:
+                    Navigate.Load_This_Trace(List_of_Ids[i])
+                    self.mean = self.mean+Navigate.si
+                elif Main.Analyze_Filtered_Traces_Button.checkState() == 2:
+                    Navigate.Load_This_Trace(List_of_Ids[i])
+                    self.mean = self.mean+Navigate.Filtered_Signal                        
+
+                  
+        Info_Message="It's an average of "+str(counter)+" Sweeps"
+        Main.status_text.setText(Info_Message) 
+        
+        self.mean/=counter
+
+        if Main.Measure_From_Zero_Button.checkState() == 2:
+            All_from_Zero == True
+
+        if All_from_Zero == True:
+            Main.Remove_Leak_Button.setCheckState(2) 
+            Measure_All_from_Baseline1 = False
+        if Main.Remove_Leak_Button.checkState() == 2:
+            if All_from_Zero == False:
+                Main.Remove_Leak_Button.setCheckState(0)
+            leaktemporaryremoved=True
+        else:
+            leaktemporaryremoved=False  
+
+
+        self.Ampvalues = range(6)
+        self.Surfacevalues = range(6)
+        self.Measurement_Interval = range(6)
+        self.left = range(6)
+        
+
+        listofmeth=["Baseline1_meth","Peak1_meth",
+                         "Baseline2_meth","Peak2_meth",
+                         "Baseline3_meth","Peak3_meth"]
+        
+        compteur=0
+ 
+        for loc in Main.listofcoord:
+            
+            leftpnt,rightpnt = self.Measure_Local_Extremum(self.mean,loc,listofmeth[compteur])        
+                
+            avalue = numpy.mean(self.mean[leftpnt:rightpnt])
+            self.Ampvalues[compteur]=avalue
+>>>>>>> master
             
             
             self.mean = Navigate.si[n]-Navigate.si[n]
@@ -212,6 +360,7 @@ class Analysis(object):
                 self.Mean_Amplitude_2=self.Ampvalues[3]
                 self.Mean_Amplitude_3=self.Ampvalues[5]
                 
+<<<<<<< HEAD
                 self.baseline=numpy.zeros(int(len(self.Amplitudes_1)+2))
                 self.Mean_Charge_1=sum(self.mean[float(Main.Peak1_begin.text())*Navigate.Points_by_ms:float(Main.Peak1_end.text())*Navigate.Points_by_ms])/(Navigate.Points_by_ms*1000)
                 self.Mean_Charge_2=sum(self.mean[float(Main.Peak2_begin.text())*Navigate.Points_by_ms:float(Main.Peak2_end.text())*Navigate.Points_by_ms])/(Navigate.Points_by_ms*1000)
@@ -304,6 +453,34 @@ class Analysis(object):
                                 
                                 self.Wid.canvas.axes.plot(Requete.timescale,eval("Displayed_"+str(i)),'k',alpha=0.3,picker=1)
                                 self.Wid.Status.setText("It's an average of "+str(counter)+" Sweeps"+" at position "+str(Position)+
+=======
+                self.Currently_Used_Sweep_nb_for_Local_Average=[]
+                for i,j in enumerate(List_of_Ids):
+                    if ((List_of_Ids is Requete.Analogsignal_ids) and (i >= int(Main.From.text())) and (i <= int(Main.To.text())) and (Requete.tag["Selection"][i] == 1)) or (List_of_Ids is not Requete.Analogsignal_ids):
+                        if Main.SQLTabWidget.currentIndex() == 2:
+                            Requete.Current_Sweep_Number=i
+                            Navigate.Load_This_Trace(i)
+                        else:
+                            Navigate.Load_This_Trace(j)
+                        
+                        if Main.Analyze_Filtered_Traces_Button.checkState() == 0:
+                            locals()["Displayed_"+str(i)]=Navigate.si
+                        elif Main.Analyze_Filtered_Traces_Button.checkState() == 2:
+                            locals()["Displayed_"+str(i)]=Navigate.Filtered_Signal
+                        
+                        if List_of_Ids is Requete.Analogsignal_ids:
+                            self.Currently_Used_Sweep_nb_for_Local_Average.append(i)
+                        else:
+                            self.Currently_Used_Sweep_nb_for_Local_Average.append(j)
+                        self.Wid.canvas.axes.plot(Requete.timescale,eval("Displayed_"+str(i)),Color[i],alpha=0.3,picker=1)
+                        self.Wid.Status.setText("It's an average of "+str(counter)+" Sweeps"+" at position "+str(Position)+
+                                                "<p>"+"Average A1 = "+str(self.Mean_Amplitude_1)+"\t Average C1 = "+str(self.Mean_Charge_1)+
+                                                "<p>"+"Average A2 = "+str(self.Mean_Amplitude_2)+"\t Average C2 = "+str(self.Mean_Charge_2)+
+                                                "<p>"+"Average A3 = "+str(self.Mean_Amplitude_3)+"\t Average C3 = "+str(self.Mean_Charge_3)+
+                                                "<p>"+"Sweep "+str(self.Currently_Used_Sweep_nb_for_Local_Average)+" were used")
+            else:
+                self.Wid.Status.setText("It's an average of "+str(counter)+" Sweeps"+
+>>>>>>> master
                                                         "<p>"+"Average A1 = "+str(self.Mean_Amplitude_1)+"\t Average C1 = "+str(self.Mean_Charge_1)+
                                                         "<p>"+"Average A2 = "+str(self.Mean_Amplitude_2)+"\t Average C2 = "+str(self.Mean_Charge_2)+
                                                         "<p>"+"Average A3 = "+str(self.Mean_Amplitude_3)+"\t Average C3 = "+str(self.Mean_Charge_3)+
@@ -648,6 +825,7 @@ class Analysis(object):
                 Main.progress.setMaximum(len(Requete.Analogsignal_ids)-1)
                 Main.progress.setValue(compteur2)
                 
+<<<<<<< HEAD
                 if Requete.tag["Selection"][compteur2][n] == 1 and compteur2 >= int(Main.From.text()) and compteur2 <= int(Main.To.text()): #On n'analyse que les amplitudes sur les sweeps taggués
                     if Main.SQLTabWidget.currentIndex() == 2:
                         Requete.Current_Sweep_Number=i
@@ -693,6 +871,17 @@ class Analysis(object):
                         
                         if leftpnt<0:
                             leftpnt=0
+=======
+                for loc in Main.listofcoord:
+                    #loc[0] est le début du range
+                    #loc[1] est la fin du range
+                    #loc[2] est la taille du range qui sera utilisé pour le calcul de la moyenne
+                    leftpnt,rightpnt = self.Measure_Local_Extremum(si,loc,listofmeth[compteur])
+   
+                    avalue = numpy.mean(si[leftpnt:rightpnt]) #a value est l'amplitude
+                    Ampvalues[compteur]=avalue
+                    compteur+=1
+>>>>>>> master
                             
                         if leftpnt<float(eval(bgn))*Navigate.Points_by_ms:
                             leftpnt=int(float(eval(bgn))*Navigate.Points_by_ms)
@@ -1063,58 +1252,8 @@ class Analysis(object):
             compteur=0
             
             for loc in Main.listofcoord:
-
                 
-                #loc[0] est le début du range
-                #loc[1] est la fin du range
-                #loc[2] est la taille du range qui sera utilisé pour le calcul de la moyenne
-                #aloc est la position du minimum
-                
-                bgn=str("Main."+str(loc[0])+".text()")
-                end=str("Main."+str(loc[1])+".text()")
-                size=str("Main."+str(loc[2])+".text()")
-                meth=str("Main."+str(listofmeth[compteur])+".currentText()")
-                                
-
-                if  eval(meth) == 'Max':
-                    try:
-                        aloc = numpy.argmax(si[int(float(eval(bgn))*Navigate.Points_by_ms):int(float(eval(end))*Navigate.Points_by_ms)])
-                    except ValueError:
-                        msgBox = QtGui.QMessageBox()
-                        msgBox.setText(
-                        """
-                        <b>Measure range is wrong</b>
-                        <p>You can not have null intervall
-                        """) 
-                        msgBox.exec_()  
-                        return
-  
-                        
-                elif eval(meth) == 'Min':
-                    try:
-                        aloc = numpy.argmin(si[int(float(eval(bgn))*Navigate.Points_by_ms):int(float(eval(end))*Navigate.Points_by_ms)])
-                    except ValueError:
-                        msgBox = QtGui.QMessageBox()
-                        msgBox.setText(
-                        """
-                        <b>Measure range is wrong</b>
-                        <p>You can not have null intervall
-                        """)      
-                        msgBox.exec_()  
-                        return
-                            
-                leftpnt = int(aloc-float(eval(size))*Navigate.Points_by_ms/2+float(eval(bgn))*Navigate.Points_by_ms)
-
-                if leftpnt<0:
-                    leftpnt=0
-                if leftpnt<float(eval(bgn))*Navigate.Points_by_ms:
-                    leftpnt=int(float(eval(bgn))*Navigate.Points_by_ms)                  
-
-                rightpnt = int(aloc+float(eval(size))*Navigate.Points_by_ms/2+float(eval(bgn))*Navigate.Points_by_ms)
-                if rightpnt>len(si):
-                    rightpnt=len(si)
-                if rightpnt>float(eval(end))*Navigate.Points_by_ms:
-                    rightpnt=int(float(eval(end))*Navigate.Points_by_ms)
+                leftpnt,rightpnt = self.Measure_Local_Extremum(si,loc,listofmeth[compteur])
 
                 avalue = numpy.mean(si[leftpnt:rightpnt])
                 Ampvalues[compteur]=avalue

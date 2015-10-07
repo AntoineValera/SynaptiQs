@@ -30,6 +30,7 @@ except ImportError:
     print "Error while loading TryItIO module"
 
 
+    
 try:
     from exampleio import ExampleIO
     all_format += [ [ 'example' , { 'class' : ExampleIO  , 'info' :  'a fake file reader for example' } ] ]
@@ -167,7 +168,7 @@ try :
     from neuromaticio import NeuromaticIO
     all_format += [ [ 'Neuromatic' , { 'class' : NeuromaticIO  , 'info' :  'Neuromatic file' } ] ]
 except ImportError:
-    print "Error while loading Neuromatic module"
+    print "Error while loading Neuromatic module. Is your Python PATH registered?"
 
 # Specific platform IO : neuroshare DLLs
 

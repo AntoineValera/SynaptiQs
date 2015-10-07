@@ -192,7 +192,7 @@ class TableDesign(QDialog) :
                     t = 'unknown'
                 item = QTableWidgetItem(t)
                 self.listFields.setItem(r, 1 , item)
-                item.setBackground(QBrush('red'))
+                #item.setBackground(QBrush('red'))
                 r+=1
 
         self.listParents.clear()
@@ -206,7 +206,8 @@ class TableDesign(QDialog) :
         for name in self.new_children:
             item = QListWidgetItem(QIcon(':/list-add.png'), name)
             self.listChildren.addItem(item)
-    
+        
+        
     
     def createTable(self):
         params = [
@@ -242,17 +243,25 @@ class TableDesign(QDialog) :
             
             self.comboTable.setCurrentIndex( len(self.allTableNames)-1)
         
-    def addField(self):
+    def addField(self,fieldname=None,fieldtype=None):
         f = translate2.keys()
-        params = [
-                            [ 'fieldname' ,  { 'value' :  '' }],
-                            [ 'fieldtype' ,  { 'value' :  'Text' , 'possible' : f }],
-                        ]
-        dia = ParamDialog(params)
-        if dia.exec_():
-            d = dia.get_dict()
-            self.new_fields+= [ [ d['fieldname'] , translate2[d['fieldtype']]  ] ]
-            self.refresh()
+        if fieldname == None or fieldtype == None:
+            params = [
+                                [ 'fieldname' ,  { 'value' :  '' }],
+                                [ 'fieldtype' ,  { 'value' :  'Text' , 'possible' : f }],
+                            ]
+            dia = ParamDialog(params)
+            if dia.exec_():
+                d = dia.get_dict()
+                self.new_fields+= [ [ d['fieldname'] , translate2[d['fieldtype']]  ] ]
+                print self.new_fields
+                self.refresh()        
+        else:
+            self.new_fields+= [ [ fieldname , translate2[fieldtype] ] ]
+            self.refresh()  
+            
+
+
         
     
     def removeField(self):
@@ -299,7 +308,6 @@ class TableDesign(QDialog) :
         
     def apply(self):
         oeclass = self.metadata.dictMappedClasses[self.tablename] 
-        
         for childname in self.new_children:
             if childname not in self.metadata.dictMappedClasses: continue
             childclass = self.metadata.dictMappedClasses[childname] 

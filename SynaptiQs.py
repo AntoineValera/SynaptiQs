@@ -10,17 +10,24 @@ Version 2.1.0
 
 
 import sys,sip
+
+
+
+#try:
+
+sip.setapi('QString', 2)
+sip.setapi('QVariant', 2)
+Ipython=True
+#except ValueError:
+
 from PyQt4 import QtCore, QtGui
 from matplotlib import pyplot
 from OpenElectrophy import *
-from scipy import *
+from scipy import *   
+ 
+app = QtGui.QApplication(sys.argv)
 
-
-try:
-    sip.setapi('QString', 2)
-    Ipython=True
-except ValueError:
-    app = QtGui.QApplication(sys.argv)
+if sip.getapi('QString') == 1:
     msgBox = QtGui.QMessageBox()
     msgBox.setText(
     """
@@ -31,8 +38,7 @@ except ValueError:
     <p>SynaptiQs will now start without Ipython
     """)
     msgBox.exec_()   
-    Ipython=False
-    
+    Ipython=False    
     
 
 import sys,os,atexit,glob,warnings
@@ -44,6 +50,7 @@ from matplotlib import *
 
 if __name__ == "__main__": #Executé si l'application est en StandAlone
 
+        #sys.path.append('C:\Users\Antoine\WinPython-64bit-2.7.10.1\scripts\SynaptiQs')
     #with pyplot.xkcd():
         app = QtGui.QApplication(sys.argv) #Starts a new window application. First step to be done
     
@@ -52,7 +59,8 @@ if __name__ == "__main__": #Executé si l'application est en StandAlone
         __all__ = [ os.path.basename(f)[:-3] for f in glob.glob(os.path.dirname(__file__)+"/*.py")]
         for i in __all__:
             setattr(sys.modules[__name__],i,__import__(i))
-    
+        
+        Map = Map
         Navigate = Navigate.Navigate() #Appel de la classe Navigate qui contient les fonctions de navigation et d'affichage
         Requete = Requete.Requete()
         Analysis = Analysis.Analysis() #Appel de la classe Analysis qui permet les mesures d'amplitude
@@ -68,7 +76,7 @@ if __name__ == "__main__": #Executé si l'application est en StandAlone
         
         
         
-        Infos.Class_List=[Navigate,Requete,Analysis,Main,MyMplCanvas,MyMplWidget,Infos,Mapping,Fitting,Histogram,SpreadSheet,Import] #Add all classes needed in the Script function
+        Infos.Class_List=[Navigate,Requete,Analysis,Main,MyMplCanvas,MyMplWidget,Infos,Mapping,Fitting,Histogram,SpreadSheet,Import,Map] #Add all classes needed in the Script function
     
         #setattr(Infos,'Class_List',Class_List)
     
@@ -92,6 +100,8 @@ if __name__ == "__main__": #Executé si l'application est en StandAlone
         Main.Create_Window() #Execute l'initialisation de l'appli
         Plugins=Plugins.Plugins()
         Import=Import.MyWindow()
+        
+        
         
         setattr(__builtin__,'Plugins',Plugins)
         setattr(__builtin__,'Import',Plugins)
