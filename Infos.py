@@ -76,7 +76,6 @@ class Infos(object):
             print "Input error, please put a list of list here"
             return []
         temp=[list(a) for a in zip(*params)]
-        print temp[0],temp[1]
         return temp
 
     def Error(self,message):

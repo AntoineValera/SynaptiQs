@@ -45,7 +45,7 @@ class Mapping(object):
         self.Use_Number_of_Turns=True
         self.Image_ColorMap='Greys'
         self.NormalizeMappingMode='Charge' #controls the measurement type you can use for map normalization
-        
+        self.CurrentChannel = 0
         self.Mapping_ID = 0
         self.StoredMaps=[]
         self.AllowToAddaMapping=False
@@ -542,6 +542,7 @@ class Mapping(object):
 
         ListofVar=[self.__name__+'.Max_Valid_Dist',
                    self.__name__+'.Use_Number_of_Turns',
+                   self.__name__+'.CurrentChannel',
                    self.__name__+'.Image_ColorMap',
                    self.__name__+'.Analysis_mode',
                    self.__name__+'.Transparency']
@@ -1142,7 +1143,7 @@ class Mapping(object):
             self.Y_Number_Field.setText(str(NewY))
         elif PreviousY != NewY:
             print 'Warning, number of Y steps was adjusted using Y_Step Value'
-            self.X_Number_Field.setText(str(NewY))            
+            self.Y_Number_Field.setText(str(NewY))            
 
     def Set_Coordinates_in_Tag_Variable(self):
         
@@ -1152,24 +1153,24 @@ class Mapping(object):
         """
         warning_displayed = False
         for i in range(len(Requete.Analogsignal_ids)):
-            try:                
+            #try:                
                 Requete.tag["X_coord"][i]=self.CM.Sorted_X_Coordinates_Full[i]
                 Requete.tag["Y_coord"][i]=self.CM.Sorted_Y_Coordinates_Full[i]
-            except IndexError: 
-                if warning_displayed == False:
-                    msg="""
-                    <b>Error</b>
-                    <p>Did you set the grid boundaries correctly?
-                    Was each mapping complete, or was your mapping interrupted?
-                    The total number of sweeps must be EXACTLY #points in a grid X #turns
-                    If the mapping is irregular you might consider a user defined mapping
-                    """
-                    Infos.Error(msg)
-                    warning_displayed = True
-
-                print "Index error for sweep ", i
-                Requete.tag["X_coord"][i]=None
-                Requete.tag["Y_coord"][i]=None
+#            except IndexError: 
+#                if warning_displayed == False:
+#                    msg="""
+#                    <b>Error</b>
+#                    <p>Did you set the grid boundaries correctly?
+#                    Was each mapping complete, or was your mapping interrupted?
+#                    The total number of sweeps must be EXACTLY #points in a grid X #turns
+#                    If the mapping is irregular you might consider a user defined mapping
+#                    """
+#                    Infos.Error(msg)
+#                    warning_displayed = True
+#
+#                print "Index error for sweep ", i
+#                Requete.tag["X_coord"][i]=None
+#                Requete.tag["Y_coord"][i]=None
 
 
         Requete.tag["XSteps"]=['']*len(Requete.Analogsignal_ids)
@@ -1195,40 +1196,39 @@ class Mapping(object):
         """                
 
         self.CM.Initially_Excluded_AnalogSignal_Ids={}
-        try:
-            for i,j in enumerate(Requete.Analogsignal_ids):
-
-                if Requete.tag["Selection"][i][0]==0:
-                    self.CM.Initially_Excluded_AnalogSignal_Ids[i] = j
-
-            #Creation des liste de coordonnées
-            self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary={} #Keys = ids , Values = (X,Y)
-            self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary={} #Keys = ids , Values = Sweep #
-            for i,j in enumerate(Requete.Analogsignal_ids):
-                self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[j]=i
-                if Requete.tag["Selection"][i][0]!=0:
-                    self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[j]=(int(Requete.tag["X_coord"][i]),int(Requete.tag["Y_coord"][i]))
-                else:
-                    self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[j]=None
-            
-            #On inverse le dictionaire
-            self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary={}  #Keys = (X,Y)coordinates , Values = array of corresponding ids
-            for i,j in self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary.iteritems():
-                self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[j] = self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary.get(j, [])
-                self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[j].append(i)
-                if self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary.has_key(None) == True: #None coordinates are deleted
-                    del self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[None]         
-            
-        except TypeError:
-            msg="""
-            <b>Error</b>
-            <p>Did you set the grid boundaries correctly?
-            Was each mapping complete, or was your mapping interrupted?
-            The total number of sweeps must be EXACTLY #points in a grid X #turns
-            If the mapping is irregular you might consider a user defined mapping
-            """
-            Infos.Error(msg)
-            return True       
+#        try:
+        for i,j in enumerate(Requete.Analogsignal_ids):
+            if Requete.tag["Selection"][i][self.CurrentChannel]==0:
+                self.CM.Initially_Excluded_AnalogSignal_Ids[i] = j[self.CurrentChannel]
+       
+        #Creation des liste de coordonnées
+        self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary={} #Keys = ids , Values = (X,Y)
+        self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary={} #Keys = ids , Values = Sweep #
+        for i,j in enumerate(Requete.Analogsignal_ids):
+            self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[j[self.CurrentChannel]]=i
+            if Requete.tag["Selection"][i][self.CurrentChannel] != 0:
+                self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[j[self.CurrentChannel]]=(int(Requete.tag["X_coord"][i]),int(Requete.tag["Y_coord"][i]))
+            else:
+                self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[j[self.CurrentChannel]]=None
+        
+        #On inverse le dictionaire
+        self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary={}  #Keys = (X,Y)coordinates , Values = array of corresponding ids
+        for i,j in self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary.iteritems():
+            self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[j] = self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary.get(j, [])
+            self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[j].append(i)
+            if self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary.has_key(None) == True: #None coordinates are deleted
+                del self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[None]         
+        
+#        except TypeError:
+#            msg="""
+#            <b>Error</b>
+#            <p>Did you set the grid boundaries correctly?
+#            Was each mapping complete, or was your mapping interrupted?
+#            The total number of sweeps must be EXACTLY #points in a grid X #turns
+#            If the mapping is irregular you might consider a user defined mapping
+#            """
+#            Infos.Error(msg)
+#            return True             
 
         self.CM.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary={}
         self.CM.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary={}
@@ -1277,17 +1277,14 @@ class Mapping(object):
         #On fait une moyenne par position
         #TODO : only channel 1 can be mapped now
         for keys in self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary:
-            #TODO : replace sweepnumbers by analogsignal ids?
-            #time.sleep(0.1)
             Navigate.UnTag_All_Traces(ProgressDisplay=False)
             for i in self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]:
-                Requete.tag["Selection"][self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]][0]=1 #Keys = ids , Values = Sweepnumber
+                Requete.tag["Selection"][self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]][self.CurrentChannel]=1 #Keys = ids , Values = Sweepnumber
 
             self.mappingprogress.setMinimum(0)
             self.mappingprogress.setMaximum(len(self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary)-1)
             self.mappingprogress.setValue(counter)
- 
-            MA1,MA2,MA3,MC1,MC2,MC3,current_averaged_trace,current_List_of_Ids = Analysis.Measure_on_Average(Rendering=False,ProgressDisplay=False)
+            MA1,MA2,MA3,MC1,MC2,MC3,current_averaged_trace,current_List_of_Ids = Analysis.Measure_on_Average(Rendering=False,ProgressDisplay=False,Channel=[self.CurrentChannel])
             try:
                 self.CM.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary[keys]=MA1 #one point array
                 self.CM.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary[keys]=MC1 #one point array
@@ -1308,9 +1305,10 @@ class Mapping(object):
 
         
         Navigate.Tag_All_Traces(ProgressDisplay=False)
-
+        print self.CM.Initially_Excluded_AnalogSignal_Ids 
         for i in self.CM.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
-            Requete.tag["Selection"][i][0]=0
+            print i
+            Requete.tag["Selection"][i][self.CurrentChannel]=0
 
         
         # TODO: if the mapping contains more theoretical points than real point, ther eis a value error here
@@ -1520,9 +1518,9 @@ class Mapping(object):
         Navigate.Tag_All_Traces(ProgressDisplay=False)
         for i in range(len(Requete.Analogsignal_ids)):
 
-            Requete.tag["Selection"][i][0]=1
+            Requete.tag["Selection"][i][self.CurrentChannel]=1
         for i in self.CM.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
-            Requete.tag["Selection"][i][0]=0        
+            Requete.tag["Selection"][i][self.CurrentChannel]=0        
         
         print 'current', self.Thresholding_Mode.currentIndex()
         #Except in Combo mode, after every other measure, the self.Thresholding_Mode is set to % of success (--> 4)
@@ -1600,7 +1598,7 @@ class Mapping(object):
         self.CM.Initially_Excluded_AnalogSignal_Ids={}
         blacklist=[]
         for i,j in enumerate(Requete.Analogsignal_ids):
-            if Requete.tag["Selection"][i][0]==0:
+            if Requete.tag["Selection"][i][self.CurrentChannel]==0:
                 blacklist.append(j)
                 self.CM.Initially_Excluded_AnalogSignal_Ids[i] = j
         
@@ -1618,9 +1616,9 @@ class Mapping(object):
                 keys=(int(self.X_Neuron.text()),int(self.Y_Neuron.text()))
             else:
                 try:
-                    self.X_Neuron.setText(str(self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())]][0]))
-                    self.Y_Neuron.setText(str(self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())]][1]))
-                    keys=self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())]]
+                    self.X_Neuron.setText(str(self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())][self.CurrentChannel]][0]))
+                    self.Y_Neuron.setText(str(self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())][self.CurrentChannel]][1]))
+                    keys=self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())][self.CurrentChannel]]
                 except TypeError:
                     msg="""
                     This position contains no Data (Perhaps everything is unttaged)"""
@@ -1630,9 +1628,9 @@ class Mapping(object):
                     abort=self.Create_Dictionnaries()        
                     if abort == True:
                         return 
-                    self.X_Neuron.setText(str(self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())]][0]))
-                    self.Y_Neuron.setText(str(self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())]][1]))
-                    keys=self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())]]                                     
+                    self.X_Neuron.setText(str(self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())][self.CurrentChannel]][0]))
+                    self.Y_Neuron.setText(str(self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())][self.CurrentChannel]][1]))
+                    keys=self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[Requete.Analogsignal_ids[int(self.SweepPosition.text())][self.CurrentChannel]]                                     
         #Otherwise, X and Y can be directly passed      
         else:
             keys=(X,Y) 
@@ -1650,7 +1648,7 @@ class Mapping(object):
             for i in self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]:
                 if i not in blacklist:
 
-                    Requete.tag["Selection"][self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]][0]=1 #Keys = ids , Values = Sweepnumber
+                    Requete.tag["Selection"][self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]][self.CurrentChannel]=1 #Keys = ids , Values = Sweepnumber
                     self.Currently_Used_Sweep_nb_for_Local_Average.append(self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i])
             
             if Silent==False:
@@ -1672,10 +1670,10 @@ class Mapping(object):
 
             Navigate.Tag_All_Traces()
             if Silent == False:
-                print Requete.tag["Selection"]
+                print Requete.tag["Selection"][self.CurrentChannel]
 
             for i in self.CM.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
-                Requete.tag["Selection"][i][0]=0              
+                Requete.tag["Selection"][i][self.CurrentChannel]=0              
 
 
     def DisplayMode(self,Display):

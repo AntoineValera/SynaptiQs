@@ -124,7 +124,7 @@ class Analysis(object):
             return LeftPointOfMeasurementWindow,RightPointOfMeasurementWindow
     
 
-    def Measure_on_Average(self,List_of_Ids=None,Measure_All_from_Baseline1=False,Display_Superimposed_Traces=False,Rendering=True,Position=(None,None),Origin=None,All_from_Zero=False,ProgressDisplay=True,NumberofChannels=1,Color='k'):
+    def Measure_on_Average(self,List_of_Ids=None,Measure_All_from_Baseline1=False,Display_Superimposed_Traces=False,Rendering=True,Position=(None,None),Origin=None,All_from_Zero=False,ProgressDisplay=True,Channel=None,Color='k'):
 
         
         """
@@ -136,18 +136,29 @@ class Analysis(object):
         If All_from_Zero is True, mean amplitude 1, 2 and 3 and mean charge 1, 2 and 3 are calculated from 0 after leak substraction
         
         color can be a string, or a vector
+        
         """   
         
         ##scipy.signal.decimate could accelerate the display
       
         if List_of_Ids == None:
             List_of_Ids = Requete.Analogsignal_ids
-            NumberofChannels=Requete.NumberofChannels
-
+            if Channel == None:
+                Channels=range(Requete.NumberofChannels)
+                
+            else:
+                if type(Channel) == list:
+                    Channels=Channel
+                else:
+                    print 'channel paramter must be a list'
+                    return
+        
+            
 
         self.Currently_Used_Sweep_nb_for_Local_Average=[]#[[numpy.NaN]*Requete.NumberofChannels]*len(List_of_Ids)
-                
-        for n in range(NumberofChannels):
+        NumberofChannels=len(Channels)      
+        
+        for n in Channels:
             self.Check_Measuring_Parameters_Validity()
                 
         #        if Main.SQLTabWidget.currentIndex() == 0 or Main.SQLTabWidget.currentIndex() == 1:

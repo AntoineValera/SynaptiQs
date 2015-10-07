@@ -123,10 +123,14 @@ class Requete(object):
             new.append([0]*int(self.NumberofChannels))
             for j in range(self.NumberofChannels):
                     new[i][j]=int(self.tag["Selection"][i*self.NumberofChannels+j]) 
-                    
-                    
         self.tag["Selection"]=new 
-
+#        new2=[]
+#        for i in range(len(self.Analogsignal_ids)):
+#            new2.append([0]*int(self.NumberofChannels))
+#            for j in range(self.NumberofChannels):
+#                    new2[i][j]=int(self.tag["X_Coord"][i*self.NumberofChannels+j])
+#        self.tag["X_Coord"]=new2          
+                    
     def Final_Request(self):
         """
         This function call the final request.
@@ -194,14 +198,14 @@ class Requete(object):
             Main.User_Defined_Measurement_Parameters.setCurrentIndex(0)
             Analysis.Load_User_Defined_Parameters(0,True)
 
-            Mapping.Load_User_Defined_Parameters(0,True)
+            #Mapping.Load_User_Defined_Parameters(0,True)
             #Mapping.Load_User_Defined_Parameters(0,True)
     
 
     def copythis(self,indexes,new):
         from copy import deepcopy
         temp=deepcopy(indexes)
-        for i in range(len(indexes)):#aka segments
+        for i in range(len(indexes)):#aka channels
             for j in range(len(indexes[i])): #aka individual analogsignals or spiketrains
                 temp[i][j]=new[indexes[i][j]]
         return temp
@@ -375,16 +379,16 @@ class Requete(object):
             
             #we add the list to a list of list
             ListOfIndexesPerChannel.append(eval('self.'+j))
-            print 'channel ',j,' ids are ',eval('self.'+j)
+            #print 'channel ',j,' ids are ',eval('self.'+j)
         
-
+        
             
         for i in RequeteArrays:
             i=i.replace('Requete.','self.')
             temp=self.copythis(ListOfIndexesPerChannel,eval(i))
             i=i.replace('self.','')
             setattr(self,i,Infos.Zip(temp))
-            print i
+
 #        msgBox = QtGui.QMessageBox()
 #        msgBox.setText("""<b>Caution</b>
 #        <p>Multi-Channel display not fully supported yet. 
@@ -394,13 +398,6 @@ class Requete(object):
         #else:
         #    self.NumberofChannels=1
          
-         
-         
-        print self.Analogsignal_ids 
-        print self.Block_ids
-        print self.Segment_ids
-        
-        
         
         
         self.Current_Sweep_Number=0
@@ -471,13 +468,21 @@ class Requete(object):
             """)                  
             msgBox.exec_()
 
+        #Todo: the tag thing is ugly and must be improved. this is a hack to keep it working with multichannel
+        select=range(0,len(self.tag),self.NumberofChannels)  
+        temp=[]
+        for i in select:
+            temp.append(self.tag[i])
             
-        self.tag = self.Transform_a_String_in_Dictionnary(source=self.tag)
+        tag = self.Transform_a_String_in_Dictionnary(source=temp)
+
         
+        #For Selection, we still have to do it the old way
+        self.tag = self.Transform_a_String_in_Dictionnary(source=self.tag)
+
         if Main.Reset_Check.checkState()==2:
             self.Reset_the_Tag_Field(self.tag)
             return
-        
         
         #Pour le champs Tag, controle systematique de son existence    
         NewSystem=True
@@ -500,14 +505,22 @@ class Requete(object):
                         self.tag["Selection"][i][j]=0
                     except TypeError:
                         NewSystem=False
-                        print 'Old tag system detected'
                         break
+
 
         #If the old tag system was used, we convert it here to the new system
         if NewSystem==False:
+            print 'Old tag system detected'
             self.Convert()
           
 
+        #Finally, we overwrite the whole self.tag except Selection
+        for keys in self.tag:
+            if keys != 'Selection':
+                self.tag[keys]=tag[keys]
+
+        
+        
         
         self.Add_Dictionnary_Arrays()
         self.Record_User_Parameters()
