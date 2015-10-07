@@ -71,8 +71,6 @@ class Infos(object):
         
         self.HelpWidget.show()
 
-<<<<<<< HEAD
-
     def Zip(self,params):
         if type(params) not in [list,tuple,numpy.ndarray]:
             print "Input error, please put a list of list here"
@@ -80,7 +78,7 @@ class Infos(object):
         temp=[list(a) for a in zip(*params)]
         print temp[0],temp[1]
         return temp
-=======
+
     def Error(self,message):
         '''
         display an error message as a popup
@@ -89,8 +87,7 @@ class Infos(object):
         msgBox.setText(message)  
         msgBox.exec_()        
         
-        
->>>>>>> master
+
         
     def LineEdited(self):
         obj=QtCore.QObject().sender().objectName()

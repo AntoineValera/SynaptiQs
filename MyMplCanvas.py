@@ -273,7 +273,7 @@ class MyMplCanvas(FigureCanvasQTAgg):
                 #this is very slow if there are a lot of superimposed traces
                 for i in q:
     
-                    Navigate.Load_This_Trace(Requete.Analogsignal_ids[i])
+                    Navigate.Load_This_Trace(Requete.Analogsignal_ids[i][n])
 #                    if Main.Analyze_Filtered_Traces_Button.checkState() == 0:
                     si = Navigate.si[n]
 #                    elif Main.Analyze_Filtered_Traces_Button.checkState() == 2:
@@ -363,13 +363,13 @@ class MyMplCanvas(FigureCanvasQTAgg):
             if Main.Superimposetraces.checkState() == 0:
                 self.axes.clear()
                 
+                
             if Main.Measure_From_Zero_Button.checkState() == 2:
-<<<<<<< HEAD
                 Main.Remove_Leak_Button.setCheckState(2) 
                 
             if Main.Remove_Leak_Button.checkState() == 2: #it's a line at 0
                 self.axes.plot(Requete.timescale,numpy.zeros(int(len(Requete.timescale))),'r--',picker=0)
-                
+                    
             if Main.RAW_Display.checkState() == 2:
                 try:
                     self.axes.plot(Requete.timescale,Navigate.si[n],Color_of_Standard_Trace,picker=1)
@@ -407,16 +407,16 @@ class MyMplCanvas(FigureCanvasQTAgg):
            
             if Main.Display_Charge_Button.checkState() == 2:
                 if Main.Measure_From_Zero_Button.checkState() == 2:
-                    if Mapping.Types_of_Events_to_Measure == 'Negative':
+                    if Mapping.CM.Types_of_Events_to_Measure == 'Negative':
                         self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,0.,where=0.>Analysis.Charge_trace,alpha=0.3)
-                    elif Mapping.Types_of_Events_to_Measure == 'Positive':
+                    elif Mapping.CM.Types_of_Events_to_Measure == 'Positive':
                         self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,0.,where=0.<Analysis.Charge_trace,alpha=0.3)                    
                 else:
-                    if Mapping.Types_of_Events_to_Measure == 'Negative':
+                    if Mapping.CM.Types_of_Events_to_Measure == 'Negative':
                         self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,Analysis.Base1[0],where=Analysis.Base1[0]>Analysis.Charge_trace,alpha=0.3)
-                    elif Mapping.Types_of_Events_to_Measure == 'Positive':
+                    elif Mapping.CM.Types_of_Events_to_Measure == 'Positive':
                         self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,Analysis.Base1[0],where=Analysis.Base1[0]<Analysis.Charge_trace,alpha=0.3)
-    
+        
             if Main.Display_Spikes_Button.checkState() == 2:
                 try:
                     #print Requete.Current_Spike_Times
@@ -426,24 +426,6 @@ class MyMplCanvas(FigureCanvasQTAgg):
                     Requete.Current_Spike_Times=[]
                     print "No spikes to plot here"
             elif Main.Display_Spikes_Button.checkState() == 0:
-=======
-                if Mapping.CM.Types_of_Events_to_Measure == 'Negative':
-                    self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,0.,where=0.>Analysis.Charge_trace,alpha=0.3)
-                elif Mapping.CM.Types_of_Events_to_Measure == 'Positive':
-                    self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,0.,where=0.<Analysis.Charge_trace,alpha=0.3)                    
-            else:
-                if Mapping.CM.Types_of_Events_to_Measure == 'Negative':
-                    self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,Analysis.Base1[0],where=Analysis.Base1[0]>Analysis.Charge_trace,alpha=0.3)
-                elif Mapping.CM.Types_of_Events_to_Measure == 'Positive':
-                    self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,Analysis.Base1[0],where=Analysis.Base1[0]<Analysis.Charge_trace,alpha=0.3)
-
-        if Main.Display_Spikes_Button.checkState() == 2:
-            try:
-                #print Requete.Current_Spike_Times
-                #print Requete.Amplitude_At_Spike_Time
-                self.axes.plot(Requete.Current_Spike_Times,Requete.Amplitude_At_Spike_Time,'ro',linewidth=10)
-            except:
->>>>>>> master
                 Requete.Current_Spike_Times=[]
             else:
                 pass
