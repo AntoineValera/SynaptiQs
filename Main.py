@@ -81,7 +81,7 @@ class Main(QtGui.QWidget,object):#
                 #Ligne2      Last MySQL Password
                 #Ligne3      Last MySQL DBname                
                 #Ligne4      Last MySQL DB_IP_adress:port               
-                #Ligne5      Basic Analysis.Tag Fields
+                #Ligne5      Basic Analysis.tag Fields
                 #Ligne6      Working folder
                 #Ligne7      *empty*                
                 #Ligne8      *empty*   
@@ -340,7 +340,7 @@ class Main(QtGui.QWidget,object):#
         self.Reset_Check = QtGui.QCheckBox(self.FilteringWidget)
         self.Reset_Check.setGeometry(5, 200, 120, 23)
         self.Reset_Check.setText( "Reset All Tags")   
-        self.Reset_Check.setToolTip("""To reset the Analogsignal.Tag field\n Check this box and do the SQL request""")
+        self.Reset_Check.setToolTip("""To reset the Analogsignal.tag field\n Check this box and do the SQL request""")
     
 
         self.Personalize = QtGui.QPushButton(self.FilteringWidget)
@@ -362,7 +362,7 @@ class Main(QtGui.QWidget,object):#
         self.SaveData = QtGui.QPushButton(self.FilteringWidget)
         self.SaveData.setGeometry(240, 180, 83, 23)
         self.SaveData.setText( "Save Params")
-        self.SaveData.setToolTip("""Save the Tags in the\nAnalogsignal.Tag field""")
+        self.SaveData.setToolTip("""Save the Tags in the\nAnalogsignal.tag field""")
         
         self.Tagging_Tools = QtGui.QPushButton(self.FilteringWidget) #creation du bouton
         self.Tagging_Tools.setGeometry(240, 200, 83, 23) #taille et position (X,Y,Xsize,Ysize)
@@ -619,7 +619,7 @@ class Main(QtGui.QWidget,object):#
         self.LoadTags = QtGui.QPushButton(self.NavigationWidget)
         self.LoadTags.setGeometry(170, 20, 80, 23)
         self.LoadTags.setText( "Load Tags")
-        self.LoadTags.setToolTip("""Load the Tags in the\nAnalogsignal.Tag["Selection"] field""")   
+        self.LoadTags.setToolTip("""Load the Tags in the\nAnalogsignal.tag["Selection"] field""")   
         
         self.TagAll = QtGui.QPushButton(self.NavigationWidget) #creation du bouton
         self.TagAll.setGeometry(170, 60, 80, 23) #taille et position (X,Y,Xsize,Ysize)
@@ -831,7 +831,7 @@ class Main(QtGui.QWidget,object):#
       
         averageaction = lambda: Analysis.Measure_on_Average(Display_Superimposed_Traces=True)
         QtCore.QObject.connect(self.Average, QtCore.SIGNAL("clicked()"),averageaction)
-        QtCore.QObject.connect(self.Superimpose, QtCore.SIGNAL("clicked()"),Navigate.Display_Superimposed_Traces)
+        QtCore.QObject.connect(self.Superimpose, QtCore.SIGNAL("clicked()"),Analysis.Display_Superimposed_Traces)
         QtCore.QObject.connect(self.Rasterplot, QtCore.SIGNAL("clicked()"),Analysis.Raster_Plot)
         QtCore.QObject.connect(self.Start_Spike_Sorting, QtCore.SIGNAL("clicked()"),Infos.SpikeSorting)
         QtCore.QObject.connect(self.ShowEvents, QtCore.SIGNAL("clicked()"),Analysis.Display_Events)

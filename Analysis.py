@@ -123,7 +123,11 @@ class Analysis(object):
 
             return LeftPointOfMeasurementWindow,RightPointOfMeasurementWindow
     
+<<<<<<< HEAD
+    def Measure_on_Average(self,List_of_Ids=None,Measure_All_from_Baseline1=False,Display_Superimposed_Traces=False,Rendering=True,Position=(None,None),Origin=None,All_from_Zero=False,ProgressDisplay=True,NumberofChannels=1):
+=======
     def Measure_on_Average(self,List_of_Ids=None,Measure_All_from_Baseline1=False,Display_Superimposed_Traces=False,Rendering=True,Position=(None,None),Origin=None,All_from_Zero=False,ProgressDisplay=True,Color='k'):
+>>>>>>> master
         
         """
         This function measure the average trace of a given list of Analogsignal ids (default is Requete.Analogsignal_ids tagged traces)
@@ -138,10 +142,22 @@ class Analysis(object):
         
         ##scipy.signal.decimate could accelerate the display
       
-            
         if List_of_Ids == None:
             List_of_Ids = Requete.Analogsignal_ids
+            NumberofChannels=Requete.NumberofChannels
 
+<<<<<<< HEAD
+        self.Currently_Used_Sweep_nb_for_Local_Average=[]#[[numpy.NaN]*Requete.NumberofChannels]*len(List_of_Ids)
+                
+        for n in range(NumberofChannels):
+            self.Check_Measuring_Parameters_Validity()
+            
+    #        if Main.SQLTabWidget.currentIndex() == 0 or Main.SQLTabWidget.currentIndex() == 1:
+    #            sig = AnalogSignal().load(List_of_Ids[0],session=Requete.Global_Session)
+    #        elif Main.SQLTabWidget.currentIndex() == 2:
+    #            sig = eval("Analysis.RecordA"+str(Requete.Current_Sweep_Number))
+            
+=======
         #TODO : Temporary implementation
         if self.UseUserDefinedColorset == True:
             Color=self.Color
@@ -219,101 +235,225 @@ class Analysis(object):
                 
             avalue = numpy.mean(self.mean[leftpnt:rightpnt])
             self.Ampvalues[compteur]=avalue
+>>>>>>> master
             
-            self.Measurement_Interval[compteur]=rightpnt-leftpnt
-            self.left[compteur]=leftpnt
-            compteur+=1
+            
+            self.mean = Navigate.si[n]-Navigate.si[n]
+    
+            counter=0
+            
+    
+            self.List_of_Averaged_Sweeps=[]
+            for i in range(len(List_of_Ids)):
+                if ProgressDisplay==True:
+                    Main.progress.setMinimum(0)
+                    Main.progress.setMaximum(len(List_of_Ids)-1)
+                    Main.progress.setValue(i)
+                if Main.SQLTabWidget.currentIndex() == 2: # if Local file only
+                    Requete.Current_Sweep_Number=i
+                if ((List_of_Ids is Requete.Analogsignal_ids) and (i >= int(Main.From.text())) and (i <= int(Main.To.text())) and (Requete.tag["Selection"][i][n] == 1)) or (List_of_Ids is not Requete.Analogsignal_ids):
+                    counter+=1
+                    self.List_of_Averaged_Sweeps.append(i)
+                    if Main.Analyze_Filtered_Traces_Button.checkState() == 0:
+                        Navigate.Load_This_Trace(List_of_Ids[i])
+                        self.mean = self.mean+Navigate.si[n]
+                    elif Main.Analyze_Filtered_Traces_Button.checkState() == 2:
+                        Navigate.Load_This_Trace(List_of_Ids[i])
+                        self.mean = self.mean+Navigate.Filtered_Signal[n]                      
+    
+                      
+            Info_Message="It's an average of "+str(counter)+" Sweeps"
+            Main.status_text.setText(Info_Message) 
+            
+            self.mean/=counter
+    
+            if Main.Measure_From_Zero_Button.checkState() == 2:
+                All_from_Zero == True
+    
+            if All_from_Zero == True:
+                Main.Remove_Leak_Button.setCheckState(2) 
+                Measure_All_from_Baseline1 = False
+            if Main.Remove_Leak_Button.checkState() == 2:
+                if All_from_Zero == False:
+                    Main.Remove_Leak_Button.setCheckState(0)
+                leaktemporaryremoved=True
+            else:
+                leaktemporaryremoved=False  
+    
+    
+            self.Ampvalues = range(6)
+            self.Surfacevalues = range(6)
+            self.Measurement_Interval = range(6)
+            self.left = range(6)
+            
+    
+            listofmeth=["Baseline1_meth","Peak1_meth",
+                             "Baseline2_meth","Peak2_meth",
+                             "Baseline3_meth","Peak3_meth"]
+            
+            compteur=0
+     
+            for loc in Main.listofcoord:
+            
+                bgn=str("Main."+str(loc[0])+".text()")
+                end=str("Main."+str(loc[1])+".text()")
+                size=str("Main."+str(loc[2])+".text()")
+                meth=str("Main."+str(listofmeth[compteur])+".currentText()")
+                                    
+    
+                if  eval(meth) == 'Max':
+                            #if there is a bug here, it's because the preset parameters you used ware aclculated on a different samplig rate, and not corrected                
+                    try:
+                        aloc = numpy.argmax(self.mean[int(float(eval(bgn))*Navigate.Points_by_ms):int(float(eval(end))*Navigate.Points_by_ms)])
+                    except ValueError:
+                        aloc = 0            
+                elif eval(meth) == 'Min':
+                            #if there is a bug here, it's because the preset parameters you used ware aclculated on a different samplig rate, and not corrected                
+                    try:
+                        aloc = numpy.argmin(self.mean[int(float(eval(bgn))*Navigate.Points_by_ms):int(float(eval(end))*Navigate.Points_by_ms)])
+                    except ValueError:
+                        aloc = 0
+                        
+                leftpnt = int(aloc-float(eval(size))*Navigate.Points_by_ms/2+float(eval(bgn))*Navigate.Points_by_ms)
+    
+                if leftpnt<0:
+                    leftpnt=0
+                if leftpnt<float(eval(bgn))*Navigate.Points_by_ms:
+                    leftpnt=int(float(eval(bgn))*Navigate.Points_by_ms)
+                rightpnt = int(aloc+float(eval(size))*Navigate.Points_by_ms/2+float(eval(bgn))*Navigate.Points_by_ms)
+                
+                if rightpnt>len(self.mean):
+                    rightpnt=len(self.mean)
+                if rightpnt>float(eval(end))*Navigate.Points_by_ms:
+                    rightpnt=int(float(eval(end))*Navigate.Points_by_ms)
+                    
+                avalue = numpy.mean(self.mean[leftpnt:rightpnt])
+                self.Ampvalues[compteur]=avalue
+                
+                self.Measurement_Interval[compteur]=rightpnt-leftpnt
+                self.left[compteur]=leftpnt
+                compteur+=1
                        
         
-        if Main.Measure_From_Baseline1_Button.checkState() == 0 :
+            if Main.Measure_From_Baseline1_Button.checkState() == 0 :
+                
+                self.Mean_Amplitude_1=(self.Ampvalues[1]-self.Ampvalues[0])
+                self.Mean_Amplitude_2=(self.Ampvalues[3]-self.Ampvalues[2])
+                self.Mean_Amplitude_3=(self.Ampvalues[5]-self.Ampvalues[4])
+                
+                self.Mean_Charge_1=sum(self.mean[int(float(Main.Peak1_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak1_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)-self.Ampvalues[0]*float(len(self.mean[int(float(Main.Peak1_begin.text())):int(float(Main.Peak1_end.text()))]))/1000
+                self.Mean_Charge_2=sum(self.mean[int(float(Main.Peak2_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak2_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)-self.Ampvalues[2]*float(len(self.mean[int(float(Main.Peak2_begin.text())):int(float(Main.Peak2_end.text()))]))/1000
+                self.Mean_Charge_3=sum(self.mean[int(float(Main.Peak3_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak3_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)-self.Ampvalues[4]*float(len(self.mean[int(float(Main.Peak3_begin.text())):int(float(Main.Peak3_end.text()))]))/1000     
+    
+            elif Main.Measure_From_Baseline1_Button.checkState() == 2 or Measure_All_from_Baseline1 == True:
+    
+                self.Mean_Amplitude_1=(self.Ampvalues[1]-self.Ampvalues[0])
+                self.Mean_Amplitude_2=(self.Ampvalues[3]-self.Ampvalues[0])
+                self.Mean_Amplitude_3=(self.Ampvalues[5]-self.Ampvalues[0])
+                
+                self.Mean_Charge_1=sum(self.mean[float(Main.Peak1_begin.text())*Navigate.Points_by_ms:float(Main.Peak1_end.text())*Navigate.Points_by_ms])/(Navigate.Points_by_ms*1000)-self.Ampvalues[0]*float(len(self.mean[float(Main.Peak1_begin.text()):float(Main.Peak1_end.text())]))/1000
+                self.Mean_Charge_2=sum(self.mean[float(Main.Peak2_begin.text())*Navigate.Points_by_ms:float(Main.Peak2_end.text())*Navigate.Points_by_ms])/(Navigate.Points_by_ms*1000)-self.Ampvalues[0]*float(len(self.mean[float(Main.Peak2_begin.text()):float(Main.Peak2_end.text())]))/1000
+                self.Mean_Charge_3=sum(self.mean[float(Main.Peak3_begin.text())*Navigate.Points_by_ms:float(Main.Peak3_end.text())*Navigate.Points_by_ms])/(Navigate.Points_by_ms*1000)-self.Ampvalues[0]*float(len(self.mean[float(Main.Peak3_begin.text()):float(Main.Peak3_end.text())]))/1000 
             
-            self.Mean_Amplitude_1=(self.Ampvalues[1]-self.Ampvalues[0])
-            self.Mean_Amplitude_2=(self.Ampvalues[3]-self.Ampvalues[2])
-            self.Mean_Amplitude_3=(self.Ampvalues[5]-self.Ampvalues[4])
-            
-            self.Mean_Charge_1=sum(self.mean[int(float(Main.Peak1_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak1_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)-self.Ampvalues[0]*float(len(self.mean[int(float(Main.Peak1_begin.text())):int(float(Main.Peak1_end.text()))]))/1000
-            self.Mean_Charge_2=sum(self.mean[int(float(Main.Peak2_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak2_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)-self.Ampvalues[2]*float(len(self.mean[int(float(Main.Peak2_begin.text())):int(float(Main.Peak2_end.text()))]))/1000
-            self.Mean_Charge_3=sum(self.mean[int(float(Main.Peak3_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak3_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)-self.Ampvalues[4]*float(len(self.mean[int(float(Main.Peak3_begin.text())):int(float(Main.Peak3_end.text()))]))/1000     
-
-        elif Main.Measure_From_Baseline1_Button.checkState() == 2 or Measure_All_from_Baseline1 == True:
-
-            self.Mean_Amplitude_1=(self.Ampvalues[1]-self.Ampvalues[0])
-            self.Mean_Amplitude_2=(self.Ampvalues[3]-self.Ampvalues[0])
-            self.Mean_Amplitude_3=(self.Ampvalues[5]-self.Ampvalues[0])
-            
-            self.Mean_Charge_1=sum(self.mean[float(Main.Peak1_begin.text())*Navigate.Points_by_ms:float(Main.Peak1_end.text())*Navigate.Points_by_ms])/(Navigate.Points_by_ms*1000)-self.Ampvalues[0]*float(len(self.mean[float(Main.Peak1_begin.text()):float(Main.Peak1_end.text())]))/1000
-            self.Mean_Charge_2=sum(self.mean[float(Main.Peak2_begin.text())*Navigate.Points_by_ms:float(Main.Peak2_end.text())*Navigate.Points_by_ms])/(Navigate.Points_by_ms*1000)-self.Ampvalues[0]*float(len(self.mean[float(Main.Peak2_begin.text()):float(Main.Peak2_end.text())]))/1000
-            self.Mean_Charge_3=sum(self.mean[float(Main.Peak3_begin.text())*Navigate.Points_by_ms:float(Main.Peak3_end.text())*Navigate.Points_by_ms])/(Navigate.Points_by_ms*1000)-self.Ampvalues[0]*float(len(self.mean[float(Main.Peak3_begin.text()):float(Main.Peak3_end.text())]))/1000 
-        
-        elif All_from_Zero == True:
-            self.Mean_Amplitude_1=self.Ampvalues[1]
-            self.Mean_Amplitude_2=self.Ampvalues[3]
-            self.Mean_Amplitude_3=self.Ampvalues[5]
-            
-            self.baseline=numpy.zeros(int(len(self.Amplitudes_1)+2))
-            self.Mean_Charge_1=sum(self.mean[float(Main.Peak1_begin.text())*Navigate.Points_by_ms:float(Main.Peak1_end.text())*Navigate.Points_by_ms])/(Navigate.Points_by_ms*1000)
-            self.Mean_Charge_2=sum(self.mean[float(Main.Peak2_begin.text())*Navigate.Points_by_ms:float(Main.Peak2_end.text())*Navigate.Points_by_ms])/(Navigate.Points_by_ms*1000)
-            self.Mean_Charge_3=sum(self.mean[float(Main.Peak3_begin.text())*Navigate.Points_by_ms:float(Main.Peak3_end.text())*Navigate.Points_by_ms])/(Navigate.Points_by_ms*1000) 
-
-
-        
-        if leaktemporaryremoved == True and All_from_Zero == False:
-            Main.Remove_Leak_Button.setCheckState(2)
-
-
-
-        if Rendering == True: #Still some pb if called from outside
-            'rendering of average'
-
-            Info_Message="Amp1 = "+str(self.Mean_Amplitude_1)+"    Amp2 = "+str(self.Mean_Amplitude_2)+"    Amp3 = "+str(self.Mean_Amplitude_3)
-            Main.status_text.setText(Info_Message)
+            elif All_from_Zero == True:
+                self.Mean_Amplitude_1=self.Ampvalues[1]
+                self.Mean_Amplitude_2=self.Ampvalues[3]
+                self.Mean_Amplitude_3=self.Ampvalues[5]
+                
+<<<<<<< HEAD
+                self.baseline=numpy.zeros(int(len(self.Amplitudes_1)+2))
+                self.Mean_Charge_1=sum(self.mean[float(Main.Peak1_begin.text())*Navigate.Points_by_ms:float(Main.Peak1_end.text())*Navigate.Points_by_ms])/(Navigate.Points_by_ms*1000)
+                self.Mean_Charge_2=sum(self.mean[float(Main.Peak2_begin.text())*Navigate.Points_by_ms:float(Main.Peak2_end.text())*Navigate.Points_by_ms])/(Navigate.Points_by_ms*1000)
+                self.Mean_Charge_3=sum(self.mean[float(Main.Peak3_begin.text())*Navigate.Points_by_ms:float(Main.Peak3_end.text())*Navigate.Points_by_ms])/(Navigate.Points_by_ms*1000) 
+    
     
             
-            self.Base1 = numpy.ones(self.Measurement_Interval[0])*self.Ampvalues[0]
-            self.Base1_coord = numpy.array(range(len(self.Base1)))+self.left[0]
-            self.Peak1 = numpy.ones(self.Measurement_Interval[1])*self.Ampvalues[1]
-            self.Peak1_coord = numpy.array(range(len(self.Peak1)))+self.left[1]
-            self.Base2 = numpy.ones(self.Measurement_Interval[2])*self.Ampvalues[2]
-            self.Base2_coord = numpy.array(range(len(self.Base2)))+self.left[2]
-            self.Peak2 = numpy.ones(self.Measurement_Interval[3])*self.Ampvalues[3]
-            self.Peak2_coord = numpy.array(range(len(self.Peak2)))+self.left[3]
-            self.Base3 = numpy.ones(self.Measurement_Interval[4])*self.Ampvalues[4]
-            self.Base3_coord = numpy.array(range(len(self.Base3)))+self.left[4]
-            self.Peak3 = numpy.ones(self.Measurement_Interval[5])*self.Ampvalues[5]
-            self.Peak3_coord = numpy.array(range(len(self.Peak3)))+self.left[5]
-      
-#            if Main.Measure_From_Baseline1_Button.checkState() == 2 or Measure_All_from_Baseline1 == True:
-#                self.Base1-=self.Ampvalues[0]
-#                self.Peak1-=self.Ampvalues[0]
-#                self.Base2-=self.Ampvalues[0]
-#                self.Peak2-=self.Ampvalues[0]
-#                self.Base3-=self.Ampvalues[0]
-#                self.Peak3-=self.Ampvalues[0]
+            if leaktemporaryremoved == True and All_from_Zero == False:
+                Main.Remove_Leak_Button.setCheckState(2)
+    
+    
+    
+            if Rendering == True: #Still some pb if called from outside
+                'rendering of average'
+    
+                Info_Message="Amp1 = "+str(self.Mean_Amplitude_1)+"    Amp2 = "+str(self.Mean_Amplitude_2)+"    Amp3 = "+str(self.Mean_Amplitude_3)
+                Main.status_text.setText(Info_Message)
+        
+                #Creating measurements labels
+                self.Base1 = numpy.ones(self.Measurement_Interval[0])*self.Ampvalues[0]
+                self.Base1_coord = numpy.array(range(len(self.Base1)))+self.left[0]
+                self.Peak1 = numpy.ones(self.Measurement_Interval[1])*self.Ampvalues[1]
+                self.Peak1_coord = numpy.array(range(len(self.Peak1)))+self.left[1]
+                self.Base2 = numpy.ones(self.Measurement_Interval[2])*self.Ampvalues[2]
+                self.Base2_coord = numpy.array(range(len(self.Base2)))+self.left[2]
+                self.Peak2 = numpy.ones(self.Measurement_Interval[3])*self.Ampvalues[3]
+                self.Peak2_coord = numpy.array(range(len(self.Peak2)))+self.left[3]
+                self.Base3 = numpy.ones(self.Measurement_Interval[4])*self.Ampvalues[4]
+                self.Base3_coord = numpy.array(range(len(self.Base3)))+self.left[4]
+                self.Peak3 = numpy.ones(self.Measurement_Interval[5])*self.Ampvalues[5]
+                self.Peak3_coord = numpy.array(range(len(self.Peak3)))+self.left[5]
+          
+    #            if Main.Measure_From_Baseline1_Button.checkState() == 2 or Measure_All_from_Baseline1 == True:
+    #                self.Base1-=self.Ampvalues[0]
+    #                self.Peak1-=self.Ampvalues[0]
+    #                self.Base2-=self.Ampvalues[0]
+    #                self.Peak2-=self.Ampvalues[0]
+    #                self.Base3-=self.Ampvalues[0]
+    #                self.Peak3-=self.Ampvalues[0]
+    
+                #Only Once
+                if QtCore.QObject().sender().__class__.__name__ == 'QCheckBox':
+                    if n == 0:
+                        self.Wid.canvas.axes.clear()    
+                else:
+                    if n == 0:
+                        #For the first trace, we create the widget
+                        self.Wid = MyMplWidget(title = 'Averaged Trace',subplots=[NumberofChannels,1,n+1])
+                    
+                        
+                        self.Wid.canvas.Superimpose_Used_Traces_Button = QtGui.QCheckBox()
+                        self.Wid.canvas.Superimpose_Used_Traces_Button.setText("Superimpose")
+                    
+                        if Main.Superimpose_Used_Traces == False or Display_Superimposed_Traces == False:
+                            self.Wid.canvas.Superimpose_Used_Traces_Button.setCheckState(0) 
+                        if Main.Superimpose_Used_Traces == True or Display_Superimposed_Traces == True :
+                            self.Wid.canvas.Superimpose_Used_Traces_Button.setCheckState(2)
+                          
+                        self.Wid.toolbar.addWidget(self.Wid.canvas.Superimpose_Used_Traces_Button)
+                        QtCore.QObject.connect(self.Wid.canvas.Superimpose_Used_Traces_Button,QtCore.SIGNAL('stateChanged(int)'),self.Wid.canvas.Update_Superimpose)            
+                    else:
+                        
+                        #For the next ones we do just add subplots
+                        self.Wid.canvas.axes = self.Wid.canvas.fig.add_subplot(NumberofChannels,1,n+1)
 
-
-            if QtCore.QObject().sender().__class__.__name__ == 'QCheckBox':
-                self.Wid.canvas.axes.clear()    
-            else:
-                self.Wid = MyMplWidget(title = 'Averaged Trace')
-                
-                
-                self.Wid.canvas.Superimpose_Used_Traces_Button = QtGui.QCheckBox()
-                self.Wid.canvas.Superimpose_Used_Traces_Button.setText("Superimpose")
-            
-                if Main.Superimpose_Used_Traces == False or Display_Superimposed_Traces == False:
-                    self.Wid.canvas.Superimpose_Used_Traces_Button.setCheckState(0) 
+    
+                #This can be optimized
                 if Main.Superimpose_Used_Traces == True or Display_Superimposed_Traces == True :
-                    self.Wid.canvas.Superimpose_Used_Traces_Button.setCheckState(2)
-                  
-                self.Wid.toolbar.addWidget(self.Wid.canvas.Superimpose_Used_Traces_Button)
-                QtCore.QObject.connect(self.Wid.canvas.Superimpose_Used_Traces_Button,QtCore.SIGNAL('stateChanged(int)'),self.Wid.canvas.Update_Superimpose)            
-            
-
-            #This can be optimized
-            if Main.Superimpose_Used_Traces == True or Display_Superimposed_Traces == True :
-                
-                self.Wid.canvas.Object_Selection_Mode = 'Trace'
-                
+                        self.Wid.canvas.Object_Selection_Mode = 'Trace'
+                        for i,j in enumerate(List_of_Ids):
+                            if ((List_of_Ids is Requete.Analogsignal_ids) and (i >= int(Main.From.text())) and (i <= int(Main.To.text())) and (Requete.tag["Selection"][i][n] == 1)) or (List_of_Ids is not Requete.Analogsignal_ids):
+                                if Main.SQLTabWidget.currentIndex() == 2:
+                                    Requete.Current_Sweep_Number=i
+                                    Navigate.Load_This_Trace(i)
+                                else:
+                                    Navigate.Load_This_Trace(j)
+                                
+                                if Main.Analyze_Filtered_Traces_Button.checkState() == 0:
+                                    locals()["Displayed_"+str(i)]=Navigate.si[n]
+                                elif Main.Analyze_Filtered_Traces_Button.checkState() == 2:
+                                    locals()["Displayed_"+str(i)]=Navigate.Filtered_Signal[n]
+                                
+                                if List_of_Ids is Requete.Analogsignal_ids:
+                                    #i is the sweepnumber
+                                    #print i,self.Currently_Used_Sweep_nb_for_Local_Average[i]
+                                    self.Currently_Used_Sweep_nb_for_Local_Average.append(i+n)#[i][n]=i
+                                else:
+                                    #j is the analogsignal id
+                                    self.Currently_Used_Sweep_nb_for_Local_Average.append(j)#[i][n]=j
+                                
+                                self.Wid.canvas.axes.plot(Requete.timescale,eval("Displayed_"+str(i)),'k',alpha=0.3,picker=1)
+                                self.Wid.Status.setText("It's an average of "+str(counter)+" Sweeps"+" at position "+str(Position)+
+=======
                 self.Currently_Used_Sweep_nb_for_Local_Average=[]
                 for i,j in enumerate(List_of_Ids):
                     if ((List_of_Ids is Requete.Analogsignal_ids) and (i >= int(Main.From.text())) and (i <= int(Main.To.text())) and (Requete.tag["Selection"][i] == 1)) or (List_of_Ids is not Requete.Analogsignal_ids):
@@ -340,31 +480,109 @@ class Analysis(object):
                                                 "<p>"+"Sweep "+str(self.Currently_Used_Sweep_nb_for_Local_Average)+" were used")
             else:
                 self.Wid.Status.setText("It's an average of "+str(counter)+" Sweeps"+
+>>>>>>> master
                                                         "<p>"+"Average A1 = "+str(self.Mean_Amplitude_1)+"\t Average C1 = "+str(self.Mean_Charge_1)+
                                                         "<p>"+"Average A2 = "+str(self.Mean_Amplitude_2)+"\t Average C2 = "+str(self.Mean_Charge_2)+
                                                         "<p>"+"Average A3 = "+str(self.Mean_Amplitude_3)+"\t Average C3 = "+str(self.Mean_Charge_3)+
-                                                        "<p>"+"Sweep "+str(self.List_of_Averaged_Sweeps)+" were used") 
-             
-
-            self.Wid.canvas.axes.plot(Requete.timescale,self.mean,picker=1)
-            self.Wid.canvas.axes.plot(self.Base1_coord/Navigate.Points_by_ms,self.Base1,'r',linewidth=3)
-            self.Wid.canvas.axes.plot(self.Peak1_coord/Navigate.Points_by_ms,self.Peak1,'r',linewidth=3)
-            self.Wid.canvas.axes.plot(self.Base2_coord/Navigate.Points_by_ms,self.Base2,'r',linewidth=3)
-            self.Wid.canvas.axes.plot(self.Peak2_coord/Navigate.Points_by_ms,self.Peak2,'r',linewidth=3)
-            self.Wid.canvas.axes.plot(self.Base3_coord/Navigate.Points_by_ms,self.Base3,'r',linewidth=3)
-            self.Wid.canvas.axes.plot(self.Peak3_coord/Navigate.Points_by_ms,self.Peak3,'r',linewidth=3)
-            self.Wid.canvas.axes.set_xlabel("Time (ms)")
-            self.Wid.canvas.axes.set_ylabel("Amplitude")
-            
-            
+                                                        "<p>"+"Sweep "+str(self.Currently_Used_Sweep_nb_for_Local_Average)+" were used")
+                else:
+                    self.Wid.Status.setText("It's an average of "+str(counter)+" Sweeps"+
+                                                            "<p>"+"Average A1 = "+str(self.Mean_Amplitude_1)+"\t Average C1 = "+str(self.Mean_Charge_1)+
+                                                            "<p>"+"Average A2 = "+str(self.Mean_Amplitude_2)+"\t Average C2 = "+str(self.Mean_Charge_2)+
+                                                            "<p>"+"Average A3 = "+str(self.Mean_Amplitude_3)+"\t Average C3 = "+str(self.Mean_Charge_3)+
+                                                            "<p>"+"Sweep "+str(self.List_of_Averaged_Sweeps)+" were used") 
+                 
+                
+                print self.Currently_Used_Sweep_nb_for_Local_Average
+                self.Wid.canvas.axes.plot(Requete.timescale,self.mean,picker=1)
+                self.Wid.canvas.axes.plot(self.Base1_coord/Navigate.Points_by_ms,self.Base1,'r',linewidth=3)
+                self.Wid.canvas.axes.plot(self.Peak1_coord/Navigate.Points_by_ms,self.Peak1,'r',linewidth=3)
+                self.Wid.canvas.axes.plot(self.Base2_coord/Navigate.Points_by_ms,self.Base2,'r',linewidth=3)
+                self.Wid.canvas.axes.plot(self.Peak2_coord/Navigate.Points_by_ms,self.Peak2,'r',linewidth=3)
+                self.Wid.canvas.axes.plot(self.Base3_coord/Navigate.Points_by_ms,self.Base3,'r',linewidth=3)
+                self.Wid.canvas.axes.plot(self.Peak3_coord/Navigate.Points_by_ms,self.Peak3,'r',linewidth=3)
+                self.Wid.canvas.axes.set_xlabel("Time (ms)")
+                self.Wid.canvas.axes.set_ylabel("Amplitude")
+                
+        if Rendering == True:     
             if QtCore.QObject().sender().__class__.__name__ == 'QCheckBox':
                 self.Wid.canvas.draw()
             else:
                 self.Wid.show()
-                
-
-        Requete.Current_Sweep_Number=int(Main.Sweep_Number_Input_Field.text())  
+                    
+    
+            Requete.Current_Sweep_Number=int(Main.Sweep_Number_Input_Field.text())  
         return self.Mean_Amplitude_1,self.Mean_Amplitude_2,self.Mean_Amplitude_3,self.Mean_Charge_1,self.Mean_Charge_2,self.Mean_Charge_3, self.mean, List_of_Ids
+
+
+    def Display_Superimposed_Traces(self,Traces_to_Display=None,color='k',alpha=0.3):
+        
+        """
+        This function displays all the tagged traces if Traces_to_Display == None, or the AnalogSignal.ids in Traces_to_Display List
+        You can substract the leak with by checking the Main.Remove_Leak_Button checkbox
+        """
+        #TODO merge with Average
+        self.Wid = MyMplWidget(title = 'SuperImposed Traces')
+        self.Wid.canvas.Object_Selection_Mode = 'Trace'
+        
+        
+        if Traces_to_Display == None: #SynaptiQs internal Call
+            Traces_to_Display = Requete.Analogsignal_ids
+            Number_of_Superimposed_Traces=0
+            
+            if Main.Analyze_Filtered_Traces_Button.checkState() == 0:
+                SignalMode="Navigate.si[n]"
+            else:
+                SignalMode="Navigate.Filtered_Signal[n]"     
+            for n in range(Requete.NumberofChannels):       
+                for i in range(len(Traces_to_Display)):
+                    Main.progress.setMinimum(0)
+                    Main.progress.setMaximum(len(Traces_to_Display)-1)
+                    Main.progress.setValue(i) 
+    
+                    if i >= int(Main.From.text()):
+                        if i <= int(Main.To.text()):                
+                            if Requete.tag["Selection"][i][n] == 1:
+                                if Main.SQLTabWidget.currentIndex() == 2: # if Local file only
+                                    Requete.Current_Sweep_Number=i
+                                Navigate.Load_This_Trace(Traces_to_Display[i])
+                                Signal=eval(SignalMode)
+                                #Signal=scipy.signal.decimate(Signal,10)
+                                #Timescale=scipy.signal.decimate(Requete.timescale,10)
+                                #Timescale=Requete.timescale
+                                self.Wid.canvas.axes.plot(Requete.timescale,Signal,color=color,alpha=alpha)
+                                Number_of_Superimposed_Traces+=1
+               
+                        
+        else: #Plugin Call
+            Number_of_Superimposed_Traces=0
+     
+            for i in range(len(Traces_to_Display)):
+                temp_event=AnalogSignal.load(Traces_to_Display[i],session=Requete.Global_Session)
+                temp_signal=temp_event.signal  
+                temp_time_scale=numpy.array(range(len(temp_signal)))/(temp_event.sampling_rate/1000)
+                Navigate.Load_This_Trace(Traces_to_Display[i])
+                self.Wid.canvas.axes.plot(temp_time_scale,temp_signal,color=color,alpha=alpha)
+                Number_of_Superimposed_Traces+=1
+
+        self.Wid.canvas.axes.set_xlabel("Time")
+        self.Wid.canvas.axes.set_ylabel("Amplitude")
+        
+        
+        self.Wid.show()
+        
+        
+        Info_Message="It's a superposition of "+str(Number_of_Superimposed_Traces)+" sweeps"
+        Main.status_text.setText(Info_Message) 
+
+
+
+
+
+
+
+
+
 
     def PeakDetection(self,v, delta, x = None):
         
@@ -414,26 +632,27 @@ class Analysis(object):
         Requete.AmpSpikeTrainfromLocal={}
         
         counter=0
-        for i in range(len(Source)):
-            Main.progress.setMinimum(0)
-            Main.progress.setMaximum(len(Source)-1)
-            Main.progress.setValue(i)
-            Requete.Current_Sweep_Number=i            
-            Navigate.Load_This_Trace(i)     
-            
-            
-            if i >= int(Main.From.text()) and i <= int(Main.To.text()) and Requete.tag["Selection"][i] == 1:
-
-                Max,Min=self.PeakDetection(Navigate.si, Thr, x = Navigate.timescale) 
-                Current_Spike_Times=[]
-                Amplitude_At_Spike_Time=[]
-                for event in Min:
-                    Current_Spike_Times.append(event[0])
-                    Amplitude_At_Spike_Time.append(event[1])
-                    
-                Requete.SpikeTrainfromLocal[str(i)]=Current_Spike_Times
-                Requete.AmpSpikeTrainfromLocal[str(i)]=Amplitude_At_Spike_Time
-                counter+=1
+        for n in range(Requete.NumberofChannels):
+            for i in range(len(Source)):
+                Main.progress.setMinimum(0)
+                Main.progress.setMaximum(len(Source)-1)
+                Main.progress.setValue(i)
+                Requete.Current_Sweep_Number=i            
+                Navigate.Load_This_Trace(i)     
+                
+                
+                if i >= int(Main.From.text()) and i <= int(Main.To.text()) and Requete.tag["Selection"][i][n] == 1:
+    
+                    Max,Min=self.PeakDetection(Navigate.si, Thr, x = Navigate.timescale) 
+                    Current_Spike_Times=[]
+                    Amplitude_At_Spike_Time=[]
+                    for event in Min:
+                        Current_Spike_Times.append(event[0])
+                        Amplitude_At_Spike_Time.append(event[1])
+                        
+                    Requete.SpikeTrainfromLocal[str(i)]=Current_Spike_Times
+                    Requete.AmpSpikeTrainfromLocal[str(i)]=Amplitude_At_Spike_Time
+                    counter+=1
         return        
         
 
@@ -582,44 +801,77 @@ class Analysis(object):
         elif Main.Analyze_Filtered_Traces_Button.checkState() == 2 or Measure_Filtered == True:
             si = Navigate.Filtered_Signal  
             
-       
+        FullPopupList=[]    
+        for n in range(Requete.NumberofChannels):    
+            #On importe le signal
+            self.Check_Measuring_Parameters_Validity()
+            Ampvalues = range(6)
+            Chargevalues = range(6)
+            self.Amplitudes_1=range(len(Requete.Analogsignal_ids))
+            self.Amplitudes_2=range(len(Requete.Analogsignal_ids))
+            self.Amplitudes_3=range(len(Requete.Analogsignal_ids))
+            self.Charges_1=range(len(Requete.Analogsignal_ids))
+            self.Charges_2=range(len(Requete.Analogsignal_ids))
+            self.Charges_3=range(len(Requete.Analogsignal_ids))
+            compteur2=0
+    
+            listofmeth=     ["Baseline1_meth","Peak1_meth",
+                             "Baseline2_meth","Peak2_meth",
+                             "Baseline3_meth","Peak3_meth"]
             
-        #On importe le signal
-        self.Check_Measuring_Parameters_Validity()
-        Ampvalues = range(6)
-        Chargevalues = range(6)
-        self.Amplitudes_1=range(len(Requete.Analogsignal_ids))
-        self.Amplitudes_2=range(len(Requete.Analogsignal_ids))
-        self.Amplitudes_3=range(len(Requete.Analogsignal_ids))
-        self.Charges_1=range(len(Requete.Analogsignal_ids))
-        self.Charges_2=range(len(Requete.Analogsignal_ids))
-        self.Charges_3=range(len(Requete.Analogsignal_ids))
-        compteur2=0
-
-        listofmeth=     ["Baseline1_meth","Peak1_meth",
-                         "Baseline2_meth","Peak2_meth",
-                         "Baseline3_meth","Peak3_meth"]
-        
-        
-        for i,j in enumerate(Requete.Analogsignal_ids):
-            Main.progress.setMinimum(0)
-            Main.progress.setMaximum(len(Requete.Analogsignal_ids)-1)
-            Main.progress.setValue(compteur2)
             
-
-            if Requete.tag["Selection"][compteur2] == 1 and compteur2 >= int(Main.From.text()) and compteur2 <= int(Main.To.text()): #On n'analyse que les amplitudes sur les sweeps taggués
-                if Main.SQLTabWidget.currentIndex() == 2:
-                    Requete.Current_Sweep_Number=i
-                    Navigate.Load_This_Trace(i)
-                else:
-                    Navigate.Load_This_Trace(j)
-                if Main.Analyze_Filtered_Traces_Button.checkState() == 0:
-                    si = Navigate.si
-                elif Main.Analyze_Filtered_Traces_Button.checkState() == 2:
-                    si = Navigate.Filtered_Signal                         
+            for i,j in enumerate(Requete.Analogsignal_ids):
+                Main.progress.setMinimum(0)
+                Main.progress.setMaximum(len(Requete.Analogsignal_ids)-1)
+                Main.progress.setValue(compteur2)
                 
-                compteur=0
-                
+<<<<<<< HEAD
+                if Requete.tag["Selection"][compteur2][n] == 1 and compteur2 >= int(Main.From.text()) and compteur2 <= int(Main.To.text()): #On n'analyse que les amplitudes sur les sweeps taggués
+                    if Main.SQLTabWidget.currentIndex() == 2:
+                        Requete.Current_Sweep_Number=i
+                        Navigate.Load_This_Trace(i)
+                    else:
+                        Navigate.Load_This_Trace(j)
+                    if Main.Analyze_Filtered_Traces_Button.checkState() == 0:
+                        si = Navigate.si[n]
+                    elif Main.Analyze_Filtered_Traces_Button.checkState() == 2:
+                        si = Navigate.Filtered_Signal[n]                        
+                    
+                    compteur=0
+                    
+                    for loc in Main.listofcoord:
+                        #loc[0] est le début du range
+                        #loc[1] est la fin du range
+                        #loc[2] est la taille du range qui sera utilisé pour le calcul de la moyenne
+                        #aloc est la position du minimum
+                        
+                        bgn=str("Main."+str(loc[0])+".text()")
+                        end=str("Main."+str(loc[1])+".text()")
+                        size=str("Main."+str(loc[2])+".text()")
+                        meth=str("Main."+str(listofmeth[compteur])+".currentText()")
+                        
+                        try:
+                            if  eval(meth) == 'Max':
+                                #if there is a bug here, it's because the preset parameters you used ware aclculated on a different samplig rate, and not corrected                        
+                                aloc = numpy.argmax(si[int(float(eval(bgn))*Navigate.Points_by_ms):int(float(eval(end))*Navigate.Points_by_ms)])
+                            elif eval(meth) == 'Min':
+                                #if there is a bug here, it's because the preset parameters you used ware aclculated on a different samplig rate, and not corrected
+                                aloc = numpy.argmin(si[int(float(eval(bgn))*Navigate.Points_by_ms):int(float(eval(end))*Navigate.Points_by_ms)])
+                        except ValueError:
+                            msgBox = QtGui.QMessageBox()
+                            msgBox.setText(
+                            """
+                            <b>Range Error</b>
+                            <p>You used measure parameters that are out of range, or
+                            <p>You used measure parameters with a smaller timescale than the signal itself
+                            """) 
+                            msgBox.exec_() 
+                            return                        
+                        leftpnt = int(aloc-float(eval(size))*Navigate.Points_by_ms/2+float(eval(bgn))*Navigate.Points_by_ms)
+                        
+                        if leftpnt<0:
+                            leftpnt=0
+=======
                 for loc in Main.listofcoord:
                     #loc[0] est le début du range
                     #loc[1] est la fin du range
@@ -629,115 +881,137 @@ class Analysis(object):
                     avalue = numpy.mean(si[leftpnt:rightpnt]) #a value est l'amplitude
                     Ampvalues[compteur]=avalue
                     compteur+=1
+>>>>>>> master
                             
-            else:
-                for a in range(6):
-                    Ampvalues[a]=numpy.NaN
-                    Chargevalues[a]=numpy.NaN   
-
-                 
-            if Main.Measure_From_Baseline1_Button.checkState() == 0:
-                self.Amplitudes_1[compteur2]=(Ampvalues[1]-Ampvalues[0])
-                self.Amplitudes_2[compteur2]=(Ampvalues[3]-Ampvalues[2])
-                self.Amplitudes_3[compteur2]=(Ampvalues[5]-Ampvalues[4])
-                
-
-                self.baseline=numpy.zeros(int(len(self.Amplitudes_1)+2))
-                self.Charges_1[compteur2]=sum(si[int(float(Main.Peak1_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak1_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)-Ampvalues[0]*float(len(si[int(float(Main.Peak1_begin.text())):int(float(Main.Peak1_end.text()))]))/1000
-                self.Charges_2[compteur2]=sum(si[int(float(Main.Peak2_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak2_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)-Ampvalues[2]*float(len(si[int(float(Main.Peak2_begin.text())):int(float(Main.Peak2_end.text()))]))/1000
-                self.Charges_3[compteur2]=sum(si[int(float(Main.Peak3_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak3_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)-Ampvalues[4]*float(len(si[int(float(Main.Peak3_begin.text())):int(float(Main.Peak3_end.text()))]))/1000                   
-                
-                
-            elif Main.Measure_From_Baseline1_Button.checkState() == 2 or Measure_All_from_Baseline1 == True:
-                self.Amplitudes_1[compteur2]=(Ampvalues[1]-Ampvalues[0])
-                self.Amplitudes_2[compteur2]=(Ampvalues[3]-Ampvalues[0])
-                self.Amplitudes_3[compteur2]=(Ampvalues[5]-Ampvalues[0]) 
-                
-                self.baseline=numpy.zeros(int(len(self.Amplitudes_1)+2))
-                self.Charges_1[compteur2]=sum(si[int(float(Main.Peak1_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak1_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)-Ampvalues[0]*float(len(si[int(float(Main.Peak1_begin.text())):int(float(Main.Peak1_end.text()))]))/1000
-                self.Charges_2[compteur2]=sum(si[int(float(Main.Peak2_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak2_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)-Ampvalues[0]*float(len(si[int(float(Main.Peak2_begin.text())):int(float(Main.Peak2_end.text()))]))/1000
-                self.Charges_3[compteur2]=sum(si[int(float(Main.Peak3_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak3_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)-Ampvalues[0]*float(len(si[int(float(Main.Peak3_begin.text())):int(float(Main.Peak3_end.text()))]))/1000   
-
-            elif All_from_Zero == True:
-                self.Amplitudes_1[compteur2]=Ampvalues[1]
-                self.Amplitudes_2[compteur2]=Ampvalues[3]
-                self.Amplitudes_3[compteur2]=Ampvalues[5]
-                
-                self.baseline=numpy.zeros(int(len(self.Amplitudes_1)+2))
-                self.Charges_1[compteur2]=sum(si[int(float(Main.Peak1_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak1_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)
-                self.Charges_2[compteur2]=sum(si[int(float(Main.Peak2_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak2_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)
-                self.Charges_3[compteur2]=sum(si[int(float(Main.Peak3_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak3_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000) 
+                        if leftpnt<float(eval(bgn))*Navigate.Points_by_ms:
+                            leftpnt=int(float(eval(bgn))*Navigate.Points_by_ms)
+                            
+                        rightpnt = int(aloc+float(eval(size))*Navigate.Points_by_ms/2+float(eval(bgn))*Navigate.Points_by_ms)
+                        
+                        if rightpnt>len(si):
+                            rightpnt=len(si)
+                            
+                        if rightpnt>float(eval(end))*Navigate.Points_by_ms:
+                            rightpnt=int(float(eval(end))*Navigate.Points_by_ms)
+       
+                        avalue = numpy.mean(si[leftpnt:rightpnt]) #a value est l'amplitude
+                        Ampvalues[compteur]=avalue
+                        compteur+=1
+                                
+                else:
+                    for a in range(6):
+                        Ampvalues[a]=numpy.NaN
+                        Chargevalues[a]=numpy.NaN   
     
-
-            compteur2+=1
-
-
-        if Rendering==True:
-
-            self.popupWidget = QtGui.QWidget()
-            self.popupWidget.setMinimumSize(600,600) #definit la taille minimale du Widget (largeur, hauteur)          
-
-            vbox = QtGui.QVBoxLayout()
-            hbox = QtGui.QHBoxLayout()
-   
-                #1 : Création des onglet; valeurs chiffrées
-            self.ValueTab = QtGui.QTabWidget(self.popupWidget)
-            self.ValueTab.setMaximumSize(400,1024)
-
-            self.Amplitude_table = SpreadSheet(parent=self.ValueTab,Source=[self.Amplitudes_1,self.Amplitudes_2,self.Amplitudes_3],Labels=["Amp1","Amp2","Amp3"])
-            self.Charge_table = SpreadSheet(parent=self.ValueTab,Source=[self.Charges_1,self.Charges_2,self.Charges_3],Labels=["Char1","Char2","Char3"])
-            vbox.addWidget(self.ValueTab)
-            hbox.addLayout(vbox)
-            vbox = QtGui.QVBoxLayout()
-            
-            self.ValueTab.addTab(self.Amplitude_table,"Amplitudes")
-            self.ValueTab.addTab(self.Charge_table,"Charges")
-            
-                #2 : Création des onglet; Graphiques
-            self.Graphtab = QtGui.QTabWidget(self.popupWidget)
-            self.Wid=MyMplWidget()#self.Amplitude_graph)
-            self.Wid2=MyMplWidget()#self.Charge_graph)
-            self.Graphtab.addTab(self.Wid,"Amplitudes")
-            self.Graphtab.addTab(self.Wid2,"Charges")
-            
-            vbox.addWidget(self.Graphtab)
-            hbox.addStrut(50)
-            hbox.addLayout(vbox)
-            self.popupWidget.setLayout(hbox)
-   
+                     
+                if Main.Measure_From_Baseline1_Button.checkState() == 0:
+                    self.Amplitudes_1[compteur2]=(Ampvalues[1]-Ampvalues[0])
+                    self.Amplitudes_2[compteur2]=(Ampvalues[3]-Ampvalues[2])
+                    self.Amplitudes_3[compteur2]=(Ampvalues[5]-Ampvalues[4])
+                    
     
-            self.Wid.canvas.axes.plot(self.baseline,'k--',)
-            A1, = self.Wid.canvas.axes.plot(self.Amplitudes_1,'bo-',alpha=0.7)
-            A2, = self.Wid.canvas.axes.plot(self.Amplitudes_2,'ro-',alpha=0.7)
-            A3, = self.Wid.canvas.axes.plot(self.Amplitudes_3,'go-',alpha=0.7)
-            l=self.Wid.canvas.axes.legend([A1, A2, A3], ["Amplitude 1", "Amplitude 2", "Amplitude 3"], loc='best',fancybox=True)
-            l.get_frame().set_alpha(0.5)
-            self.Wid.canvas.axes.set_xlabel("Sweep #")
-            self.Wid.canvas.axes.set_ylabel("Amplitude (pA)")        
+                    self.baseline=numpy.zeros(int(len(self.Amplitudes_1)+2))
+                    self.Charges_1[compteur2]=sum(si[int(float(Main.Peak1_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak1_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)-Ampvalues[0]*float(len(si[int(float(Main.Peak1_begin.text())):int(float(Main.Peak1_end.text()))]))/1000
+                    self.Charges_2[compteur2]=sum(si[int(float(Main.Peak2_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak2_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)-Ampvalues[2]*float(len(si[int(float(Main.Peak2_begin.text())):int(float(Main.Peak2_end.text()))]))/1000
+                    self.Charges_3[compteur2]=sum(si[int(float(Main.Peak3_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak3_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)-Ampvalues[4]*float(len(si[int(float(Main.Peak3_begin.text())):int(float(Main.Peak3_end.text()))]))/1000                   
+                    
+                    
+                elif Main.Measure_From_Baseline1_Button.checkState() == 2 or Measure_All_from_Baseline1 == True:
+                    self.Amplitudes_1[compteur2]=(Ampvalues[1]-Ampvalues[0])
+                    self.Amplitudes_2[compteur2]=(Ampvalues[3]-Ampvalues[0])
+                    self.Amplitudes_3[compteur2]=(Ampvalues[5]-Ampvalues[0]) 
+                    
+                    self.baseline=numpy.zeros(int(len(self.Amplitudes_1)+2))
+                    self.Charges_1[compteur2]=sum(si[int(float(Main.Peak1_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak1_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)-Ampvalues[0]*float(len(si[int(float(Main.Peak1_begin.text())):int(float(Main.Peak1_end.text()))]))/1000
+                    self.Charges_2[compteur2]=sum(si[int(float(Main.Peak2_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak2_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)-Ampvalues[0]*float(len(si[int(float(Main.Peak2_begin.text())):int(float(Main.Peak2_end.text()))]))/1000
+                    self.Charges_3[compteur2]=sum(si[int(float(Main.Peak3_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak3_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)-Ampvalues[0]*float(len(si[int(float(Main.Peak3_begin.text())):int(float(Main.Peak3_end.text()))]))/1000   
     
-            self.Wid2.canvas.axes.plot(self.baseline,'k--',)
-            C1, = self.Wid2.canvas.axes.plot(self.Charges_1,'bo-',alpha=0.7)
-            C2, = self.Wid2.canvas.axes.plot(self.Charges_2,'ro-',alpha=0.7)
-            C3, = self.Wid2.canvas.axes.plot(self.Charges_3,'go-',alpha=0.7)
-            l=self.Wid2.canvas.axes.legend([C1, C2, C3], ["Charge 1", "Charge 2", "Charge 3"], loc='best',fancybox=True)
-            l.get_frame().set_alpha(0.5)
-            self.Wid2.canvas.axes.set_xlabel("Sweep #")
-            self.Wid2.canvas.axes.set_ylabel("Charge (pC)")  
-            
-            self.popupWidget.show()       
+                elif All_from_Zero == True:
+                    self.Amplitudes_1[compteur2]=Ampvalues[1]
+                    self.Amplitudes_2[compteur2]=Ampvalues[3]
+                    self.Amplitudes_3[compteur2]=Ampvalues[5]
+                    
+                    self.baseline=numpy.zeros(int(len(self.Amplitudes_1)+2))
+                    self.Charges_1[compteur2]=sum(si[int(float(Main.Peak1_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak1_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)
+                    self.Charges_2[compteur2]=sum(si[int(float(Main.Peak2_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak2_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000)
+                    self.Charges_3[compteur2]=sum(si[int(float(Main.Peak3_begin.text())*Navigate.Points_by_ms):int(float(Main.Peak3_end.text())*Navigate.Points_by_ms)])/(Navigate.Points_by_ms*1000) 
+        
+    
+                compteur2+=1
+    
+    
+            if Rendering==True:
+                
+                #TODO: only show the 2nd round
+                name='popupWidget'+str(n)
+                setattr(self,name,QtGui.QWidget())
+                popup=eval('self.'+name)
+                FullPopupList.append(popup)
+                popup.setMinimumSize(600,600) #definit la taille minimale du Widget (largeur, hauteur)          
+
+                vbox = QtGui.QVBoxLayout()
+                hbox = QtGui.QHBoxLayout()
+       
+                    #1 : Création des onglet; valeurs chiffrées
+                self.ValueTab = QtGui.QTabWidget(popup)
+                self.ValueTab.setMaximumSize(400,1024)
+    
+                self.Amplitude_table = SpreadSheet(parent=self.ValueTab,Source=[self.Amplitudes_1,self.Amplitudes_2,self.Amplitudes_3],Labels=["Amp1","Amp2","Amp3"])
+                self.Charge_table = SpreadSheet(parent=self.ValueTab,Source=[self.Charges_1,self.Charges_2,self.Charges_3],Labels=["Char1","Char2","Char3"])
+                vbox.addWidget(self.ValueTab)
+                hbox.addLayout(vbox)
+                vbox = QtGui.QVBoxLayout()
+                
+                self.ValueTab.addTab(self.Amplitude_table,"Amplitudes")
+                self.ValueTab.addTab(self.Charge_table,"Charges")
+                
+                    #2 : Création des onglet; Graphiques
+                self.Graphtab = QtGui.QTabWidget(popup)
+                self.Wid=MyMplWidget()#self.Amplitude_graph)
+                self.Wid2=MyMplWidget()#self.Charge_graph)
+                self.Graphtab.addTab(self.Wid,"Amplitudes")
+                self.Graphtab.addTab(self.Wid2,"Charges")
+                
+                vbox.addWidget(self.Graphtab)
+                hbox.addStrut(50)
+                hbox.addLayout(vbox)
+                popup.setLayout(hbox)
+       
+                self.Wid.canvas.axes.plot(self.baseline,'k--',)
+                A1, = self.Wid.canvas.axes.plot(self.Amplitudes_1,'bo-',alpha=0.7)
+                A2, = self.Wid.canvas.axes.plot(self.Amplitudes_2,'ro-',alpha=0.7)
+                A3, = self.Wid.canvas.axes.plot(self.Amplitudes_3,'go-',alpha=0.7)
+                l=self.Wid.canvas.axes.legend([A1, A2, A3], ["Amplitude 1", "Amplitude 2", "Amplitude 3"], loc='best',fancybox=True)
+                l.get_frame().set_alpha(0.5)
+                self.Wid.canvas.axes.set_xlabel("Sweep #")
+                self.Wid.canvas.axes.set_ylabel("Amplitude (pA)")    
+                
+                self.Wid2.canvas.axes.plot(self.baseline,'k--',)
+                C1, = self.Wid2.canvas.axes.plot(self.Charges_1,'bo-',alpha=0.7)
+                C2, = self.Wid2.canvas.axes.plot(self.Charges_2,'ro-',alpha=0.7)
+                C3, = self.Wid2.canvas.axes.plot(self.Charges_3,'go-',alpha=0.7)
+                l=self.Wid2.canvas.axes.legend([C1, C2, C3], ["Charge 1", "Charge 2", "Charge 3"], loc='best',fancybox=True)
+                l.get_frame().set_alpha(0.5)
+                self.Wid2.canvas.axes.set_xlabel("Sweep #")
+                self.Wid2.canvas.axes.set_ylabel("Charge (pC)")  
+              
+              
+                  
             Infos.Add_Array(Arrays=[ "Analysis.Amplitudes_1",
                         "Analysis.Amplitudes_2",
                         "Analysis.Amplitudes_3",
                         "Analysis.Charges_1",
                         "Analysis.Charges_2",
                         "Analysis.Charges_3"])
- 
-
-
-
-        if leaktemporaryremoved == True and All_from_Zero == False:
-            Main.Remove_Leak_Button.setCheckState(2) 
-            
+     
+    
+    
+    
+            if leaktemporaryremoved == True and All_from_Zero == False:
+                Main.Remove_Leak_Button.setCheckState(2) 
+        
+        for i in FullPopupList:
+            i.show()
         return self.Amplitudes_1,self.Amplitudes_2,self.Amplitudes_3,self.Charges_1,self.Charges_2,self.Charges_3
         
         
@@ -946,17 +1220,16 @@ class Analysis(object):
         
 
 
-    def Measure_On_Off(self):
+    def Measure_On_Off(self,channel=0):
         """
         Cette Fonction permet l'affichage des curseurs et de la charge sur la trace
         """
    
         if Main.Display_Measures_Button.checkState() == 2:
-            
             if Main.Filtered_Display.checkState() == 0:
-                si = Navigate.si 
+                si = Navigate.si[channel] 
             elif Main.Filtered_Display.checkState() == 2:
-                si = Navigate.Filtered_Signal                
+                si = Navigate.Filtered_Signal[channel]               
 
             self.Check_Measuring_Parameters_Validity()
             
@@ -1058,26 +1331,27 @@ class Analysis(object):
             self.Wid.canvas.axes.axis(h)
             counter=0
     
-            if Source is Requete.Spiketrain_ids:        
-                for i in range(len(Source)):
-                    Main.progress.setMinimum(0)
-                    Main.progress.setMaximum(len(Source)-1)
-                    Main.progress.setValue(i)
-                    
-                    
-                    if i >= int(Main.From.text()) and i <= int(Main.To.text()) and Requete.tag["Selection"][i] == 1:
+            if Source is Requete.Spiketrain_ids: 
+                for n in range(Requete.NumberofChannels):
+                    for i in range(len(Source)):
+                        Main.progress.setMinimum(0)
+                        Main.progress.setMaximum(len(Source)-1)
+                        Main.progress.setValue(i)
                         
-                        sptr=SpikeTrain.load(Source[i],session=Requete.Global_Session)
-                        try:
-                            for j in range(len(sptr._spike_times)):
-                                sptr._spike_times[j]-=sptr.t_start
-                                #print sptr.t_start, sptr._spike_times 
-                                y=i*numpy.ones(len(sptr._spike_times))   
-                                self.Wid.canvas.axes.plot(sptr._spike_times,y, 'k|')
                         
-                        except ValueError:
-                            print "ID ",Source[i]," passed"
-                        counter+=1    
+                        if i >= int(Main.From.text()) and i <= int(Main.To.text()) and Requete.tag["Selection"][i][n] == 1:
+                            
+                            sptr=SpikeTrain.load(Source[i],session=Requete.Global_Session)
+                            try:
+                                for j in range(len(sptr._spike_times)):
+                                    sptr._spike_times[j]-=sptr.t_start
+                                    #print sptr.t_start, sptr._spike_times 
+                                    y=i*numpy.ones(len(sptr._spike_times))   
+                                    self.Wid.canvas.axes.plot(sptr._spike_times,y, 'k|')
+                            
+                            except ValueError:
+                                print "ID ",Source[i]," passed"
+                            counter+=1    
     
             else:
                 for i in range(len(Source)):
@@ -1094,22 +1368,22 @@ class Analysis(object):
             h=[0,0,-1,len(Source)]
             self.Wid.canvas.axes.axis(h)
             counter=0
-            
-            for i in range(len(Source)):
-                Main.progress.setMinimum(0)
-                Main.progress.setMaximum(len(Source)-1)
-                Main.progress.setValue(i)
-                
-                if i >= int(Main.From.text()) and i <= int(Main.To.text()) and Requete.tag["Selection"][i] == 1:
-                    try:
-                        sptr=Requete.SpikeTrainfromLocal[str(i)]
-                        #for j in range(len(sptr)):
-                        y=i*numpy.ones(len(sptr)) 
-                        self.Wid.canvas.axes.plot(sptr,y, 'k|')
-                        concatenatedEvents.extend(sptr)
-                    except (ValueError,KeyError):
-                        print "ID ",Source[i]," passed"
-                    counter+=1              
+            for n in range(Requete.NumberofChannels):
+                for i in range(len(Source)):
+                    Main.progress.setMinimum(0)
+                    Main.progress.setMaximum(len(Source)-1)
+                    Main.progress.setValue(i)
+                    
+                    if i >= int(Main.From.text()) and i <= int(Main.To.text()) and Requete.tag["Selection"][i][n] == 1:
+                        try:
+                            sptr=Requete.SpikeTrainfromLocal[str(i)]
+                            #for j in range(len(sptr)):
+                            y=i*numpy.ones(len(sptr)) 
+                            self.Wid.canvas.axes.plot(sptr,y, 'k|')
+                            concatenatedEvents.extend(sptr)
+                        except (ValueError,KeyError):
+                            print "ID ",Source[i]," passed"
+                        counter+=1              
                 
             self.Wid.canvas.axes.set_xlabel("Time")
             self.Wid.canvas.axes.set_ylabel("Sweep Number")
@@ -1129,103 +1403,103 @@ class Analysis(object):
         return self.Wid  
 
     def Display_Events(self,leftsweep=5.,rightsweep=5.,Source=None,Baseline=None,Range=None,Rendering=True):
-    	"""
-    	This function is able to display at the same time 	-a raster plot and
-    														-a superposition of all detected events
-    	if Source is None (or Requete.Spiketrain_ids) all the tagging/Intervall system of SynaptiQs is used
-    	leftsweep/rightsweep is the intervall used for display around _spiketime
-    	Baseline is the time BEFORE the event used for offset substraction. if None, the whole AnalogSignal_id corresponding signal is used
-    	Range is the range in second where the events are selected
-    	to be solved : sometimes, some events are missed. their position is printed.
-    	"""
-    	from OpenElectrophy import AnalogSignal,SpikeTrain
-    	from matplotlib import numpy
+        """
+        This function is able to display at the same time     -a raster plot and
+                                                            -a superposition of all detected events
+        if Source is None (or Requete.Spiketrain_ids) all the tagging/Intervall system of SynaptiQs is used
+        leftsweep/rightsweep is the intervall used for display around _spiketime
+        Baseline is the time BEFORE the event used for offset substraction. if None, the whole AnalogSignal_id corresponding signal is used
+        Range is the range in second where the events are selected
+        to be solved : sometimes, some events are missed. their position is printed.
+        """
+        from OpenElectrophy import AnalogSignal,SpikeTrain
+        from matplotlib import numpy
     
     
-    	if Source== None:
-    		Source=Requete.Spiketrain_ids
+        if Source== None:
+            Source=Requete.Spiketrain_ids
     
-    	if Rendering == True:
-    		self.Widget=QtGui.QWidget()
-    		vbox=QtGui.QVBoxLayout()
-    		Raster=self.Raster_Plot(Source=Source,Rendering=False,Bar_time=0.2,Bar_Width=0.2)
-    		self.Wid = MyMplWidget(subplots=None)
-    		self.Wid.canvas.axes = self.Wid.canvas.fig.add_subplot(111)
+        if Rendering == True:
+            self.Widget=QtGui.QWidget()
+            vbox=QtGui.QVBoxLayout()
+            Raster=self.Raster_Plot(Source=Source,Rendering=False,Bar_time=0.2,Bar_Width=0.2)
+            self.Wid = MyMplWidget(subplots=None)
+            self.Wid.canvas.axes = self.Wid.canvas.fig.add_subplot(111)
     
-    	As=AnalogSignal.load(Requete.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary[Source[0]])
-    	pnts_by_s=As.sampling_rate
-    	counter=0
+        As=AnalogSignal.load(Requete.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary[Source[0]])
+        pnts_by_s=As.sampling_rate
+        counter=0
     
-    	L=int(leftsweep*pnts_by_s)
-    	H=int(rightsweep*pnts_by_s)
-    	average_trace=numpy.zeros(L+H)
-    	croped_axe=numpy.arange(float(leftsweep*-1),float(rightsweep),float(1/pnts_by_s))
+        L=int(leftsweep*pnts_by_s)
+        H=int(rightsweep*pnts_by_s)
+        average_trace=numpy.zeros(L+H)
+        croped_axe=numpy.arange(float(leftsweep*-1),float(rightsweep),float(1/pnts_by_s))
     
-    	if Range == None:
-    		Range = [0.,len(As.signal)/pnts_by_s]
-    	else:
-    		if Rendering == True:
-    			Raster.canvas.axes.axvspan(Range[0],Range[1],facecolor='r', alpha=0.3)
+        if Range == None:
+            Range = [0.,len(As.signal)/pnts_by_s]
+        else:
+            if Rendering == True:
+                Raster.canvas.axes.axvspan(Range[0],Range[1],facecolor='r', alpha=0.3)
+
+
+        for n in range(Requete.NumberofChannels):
+                for j,i in enumerate(Source):
+                    if (Source is Requete.Spiketrain_ids) and (j < int(Main.From.text())) or (j > int(Main.To.text())) or (Requete.tag["Selection"][j][n] == 0):
+                        pass
+                    else:
+                        st=SpikeTrain.load(i)
+                        As=AnalogSignal.load(Requete.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary[i])
+                        pnts_by_s=As.sampling_rate
+            
+                        if Baseline == None:
+                            baseline=numpy.mean(As.signal)
+                        else: baseline=Baseline
+                        
+                        try:
+                            for k in st._spike_times:
+                                if (k-st.t_start > Range[0]) and (k-st.t_start < Range[1]):
+                                    lower=int((k-st.t_start)*pnts_by_s)-L
+                                    higher=int((k-st.t_start)*pnts_by_s)+H
+                                    event = As.signal[lower:higher]
+                                    
+                                    event=event-numpy.mean(event[(leftsweep-baseline)*pnts_by_s:leftsweep*pnts_by_s])
+            
+                                    try:
+                                        average_trace+=event
+                                        counter+=1
+                                    except ValueError:
+                                        print 'error in spiketrain id %s, at %s ms' % (i,(k-st.t_start)*pnts_by_s/1000)
+            
+                                    #print len(croped_axe), len(event)
+            
+                                    if len(list(croped_axe))>len(list(event)):
+                                        croped_axe=list(croped_axe)
+                                        #print len(croped_axe), len(event)
+                                        #croped_axe.pop()
+                                    if Rendering == True :
+                                        if len(list(croped_axe)) != len(list(event)):
+                                            print j,i, 'passed'
+                                            pass
+                                        else:
+                                            self.Wid.canvas.axes.plot(croped_axe,event,color='k',alpha=0.15)
+                        except ValueError:
+                            pass
+                                
     
+        average_trace/=counter
+        #HACK
+        Min=min([len(croped_axe),len(average_trace)])
+        croped_axe=croped_axe[:Min]
+        average_trace=average_trace[:Min]
+        print croped_axe,average_trace
+        if Rendering == True:
+            self.Wid.canvas.axes.plot(croped_axe,average_trace,color='red',alpha=1)
+            vbox.addWidget(Raster)
+            vbox.addWidget(self.Wid)
+            self.Widget.setLayout(vbox)
+            self.Widget.show()
     
-    
-    	for j,i in enumerate(Source):
-    		if (Source is Requete.Spiketrain_ids) and (j < int(Main.From.text())) or (j > int(Main.To.text())) or (Requete.tag["Selection"][j] == 0):
-    			pass
-    		else:
-    			st=SpikeTrain.load(i)
-    			As=AnalogSignal.load(Requete.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary[i])
-    			pnts_by_s=As.sampling_rate
-    
-    			if Baseline == None:
-    				baseline=numpy.mean(As.signal)
-    			else: baseline=Baseline
-    			
-    			try:
-    				for k in st._spike_times:
-    					if (k-st.t_start > Range[0]) and (k-st.t_start < Range[1]):
-    						lower=int((k-st.t_start)*pnts_by_s)-L
-    						higher=int((k-st.t_start)*pnts_by_s)+H
-    						event = As.signal[lower:higher]
-    						
-    						event=event-numpy.mean(event[(leftsweep-baseline)*pnts_by_s:leftsweep*pnts_by_s])
-    
-    						try:
-    							average_trace+=event
-    							counter+=1
-    						except ValueError:
-    							print 'error in spiketrain id %s, at %s ms' % (i,(k-st.t_start)*pnts_by_s/1000)
-    
-    						#print len(croped_axe), len(event)
-    
-    						if len(list(croped_axe))>len(list(event)):
-    							croped_axe=list(croped_axe)
-    							#print len(croped_axe), len(event)
-    							#croped_axe.pop()
-    						if Rendering == True :
-    							if len(list(croped_axe)) != len(list(event)):
-    								print j,i, 'passed'
-    								pass
-    							else:
-    								self.Wid.canvas.axes.plot(croped_axe,event,color='k',alpha=0.15)
-    			except ValueError:
-    				pass
-    						
-    
-    	average_trace/=counter
-    	#HACK
-    	Min=min([len(croped_axe),len(average_trace)])
-    	croped_axe=croped_axe[:Min]
-    	average_trace=average_trace[:Min]
-    	print croped_axe,average_trace
-    	if Rendering == True:
-    		self.Wid.canvas.axes.plot(croped_axe,average_trace,color='red',alpha=1)
-    		vbox.addWidget(Raster)
-    		vbox.addWidget(self.Wid)
-    		self.Widget.setLayout(vbox)
-    		self.Widget.show()
-    
-    	return croped_axe,average_trace
+        return croped_axe,average_trace
 
     def Load_Tags(self):
         
@@ -1241,10 +1515,10 @@ class Analysis(object):
         if (path.exec_()) :
             parameters = open(path.selectedFiles()[0])
             a=parameters.readlines()
-            
             for i in range(len(a)):
-                a[i].replace('\n','')
-                Requete.tag["Selection"][i]=float(a[i])
+                for n in range(len(i)):
+                    a[i].replace('\n','')
+                    Requete.tag["Selection"][i][n]=float(a[i][n])
             parameters.close()
             print "///////////////Tags Loaded from selected file"
 
@@ -1273,21 +1547,21 @@ class Analysis(object):
        
         if Leakend==None:
             Leakend=value-1
-            
-        for i in range(len(Requete.Analogsignal_ids)):
-
-            Main.progress.setMinimum(0)
-            Main.progress.setMaximum(len(Requete.Analogsignal_ids)-1)
-            Main.progress.setValue(i)  
-
-            if Requete.tag["Selection"][i] == 1:
-                sig = AnalogSignal().load(Requete.Analogsignal_ids[i],session=Requete.Global_Session)
-                si = sig.signal
-                self.Leak[i] = numpy.mean(si[float(Leakbegin)*Navigate.Points_by_ms:float(Leakend)*Navigate.Points_by_ms])
-                self.Seal_test[i] = min(si[float(value)*Navigate.Points_by_ms:float(value+window)*Navigate.Points_by_ms])-self.Leak[i]
-                self.Noise_Level[i] = numpy.std(si[float(Leakbegin)*Navigate.Points_by_ms:float(Leakend)*Navigate.Points_by_ms])
-                self.Leak_Drop[i] = numpy.mean(si[float(Leakbegin)*Navigate.Points_by_ms:float(Leakend)*Navigate.Points_by_ms])-numpy.mean(si[((Leakbegin)*Navigate.Points_by_ms)*-1:-1])
-                
+        for n in range(Requete.NumberofChannels):    
+            for i in range(len(Requete.Analogsignal_ids)):
+    
+                Main.progress.setMinimum(0)
+                Main.progress.setMaximum(len(Requete.Analogsignal_ids)-1)
+                Main.progress.setValue(i)  
+    
+                if Requete.tag["Selection"][i][n] == 1:
+                    sig = AnalogSignal().load(Requete.Analogsignal_ids[i],session=Requete.Global_Session)
+                    si = sig.signal
+                    self.Leak[i] = numpy.mean(si[float(Leakbegin)*Navigate.Points_by_ms:float(Leakend)*Navigate.Points_by_ms])
+                    self.Seal_test[i] = min(si[float(value)*Navigate.Points_by_ms:float(value+window)*Navigate.Points_by_ms])-self.Leak[i]
+                    self.Noise_Level[i] = numpy.std(si[float(Leakbegin)*Navigate.Points_by_ms:float(Leakend)*Navigate.Points_by_ms])
+                    self.Leak_Drop[i] = numpy.mean(si[float(Leakbegin)*Navigate.Points_by_ms:float(Leakend)*Navigate.Points_by_ms])-numpy.mean(si[((Leakbegin)*Navigate.Points_by_ms)*-1:-1])
+                    
         self.Seal_test=numpy.array(self.Seal_test)        
                 
         self.Manip_Diagnosis_Widget.canvas.axes = self.Manip_Diagnosis_Widget.canvas.fig.add_subplot(511)
@@ -1370,9 +1644,10 @@ class Analysis(object):
     def Display_Infos(self):
         a='None'
         self.Tagged_Sweeps=0
-        for i in range(len(Requete.Analogsignal_ids)):
-            if Requete.tag["Selection"][i]==1:
-                self.Tagged_Sweeps+=1
+        for n in range(Requete.NumberofChannels):
+            for i in range(len(Requete.Analogsignal_ids)):
+                if Requete.tag["Selection"][i][n]==1:
+                    self.Tagged_Sweeps+=1
         msgBox = QtGui.QMessageBox()
         msgBox.setText(
         """

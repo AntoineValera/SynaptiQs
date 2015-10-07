@@ -37,7 +37,9 @@ class Requete(object):
         Requete.Block_ids : all the block.id 's of the traces, in one array
         Requete.Block_date : all the block.date of the traces, in one array
         Requete.Segment_ids : all the segment.id 's of the traces, in one array
-        Requete.Analogsignal_ids : all the analogsignal.id 's of the traces, in one array
+        Requete.Analogsignal_ids : all the analogsignal.id 's of the traces, in one list
+                                   OR if multiple chanels
+                                   a list of tuples
         Requete.Analogsignal_name : all the analogsignal.name of the traces, in one array
         tag  : all the analogsignal.tag of the traces, in one array
             --> This one is then converted in Requete.tag, which is a dictionnary. XXXXXXXXXX explanations to be added here
@@ -62,6 +64,7 @@ class Requete(object):
         self.Where_Supplement=''
         self.Arraylist=''
         self.query=""
+        
     def _all(self,All=False):
         List=[]
         i=self.__name__
@@ -114,8 +117,16 @@ class Requete(object):
                 self.Record_User_Parameters()
 
    
- 
-       
+    def Convert(self):
+        new=[]
+        for i in range(len(self.Analogsignal_ids)):
+            new.append([0]*int(self.NumberofChannels))
+            for j in range(self.NumberofChannels):
+                    new[i][j]=int(self.tag["Selection"][i*self.NumberofChannels+j]) 
+                    
+                    
+        self.tag["Selection"]=new 
+
     def Final_Request(self):
         """
         This function call the final request.
@@ -156,13 +167,24 @@ class Requete(object):
         self.Signal_Length=self.Analogsignal_signal_shape/self.Analogsignal_sampling_rate
          
         if len(set(self.Signal_Length))>1:
-            print "Caution, the total length of the sweeps vary. Consequently, only the shortest common duration is used"
+            msgBox = QtGui.QMessageBox()
+            msgBox.setText(
+            """
+            <b>WARNING</b>
+            <p>Caution, the total length of the sweeps vary.
+            Only the shortest common duration is used.
+            SOME TRACES MIGHT BE CROPPED
+            """)    
+            msgBox.exec_()            
+            
+            
         
         self.Shortest_Sweep_Length=min(self.Signal_Length)
             
         self.timescale=numpy.array(range(int(self.BypassedSamplingRate*self.Shortest_Sweep_Length)))*1000/self.BypassedSamplingRate #This is a one second timescale with the highest sampling rate
-        Main.slider.setRange(0, len(self.Analogsignal_ids)-1) #definit le range du slider sweepnb
-        Main.To.setText(str(len(self.Analogsignal_ids)-1)) 
+        Main.slider.setRange(0, len(self.Analogsignal_ids)-1)#/self.NumberofChannels-1) #definit le range du slider sweepnb
+        Main.From.setText(str(0))
+        Main.To.setText(str(len(self.Analogsignal_ids)-1))#/self.NumberofChannels-1)) 
         
         Mapping.Autofill_Coordinates_Values_from_Tag_Field()
         
@@ -171,8 +193,23 @@ class Requete(object):
         if firstload == True:
             Main.User_Defined_Measurement_Parameters.setCurrentIndex(0)
             Analysis.Load_User_Defined_Parameters(0,True)
+<<<<<<< HEAD
+            Mapping.Load_User_Defined_Parameters(0,True)
+    
+
+    def copythis(self,indexes,new):
+        from copy import deepcopy
+        temp=deepcopy(indexes)
+        for i in range(len(indexes)):#aka segments
+            for j in range(len(indexes[i])): #aka individual analogsignals or spiketrains
+                temp[i][j]=new[indexes[i][j]]
+        return temp
+
+             
+=======
             #Mapping.Load_User_Defined_Parameters(0,True)
                  
+>>>>>>> master
     def Datacall(self): #Fait la requete SQL et affiche la premiere trace
         """
         This function do the final request
@@ -296,17 +333,76 @@ class Requete(object):
                         pass
       
         Mapping.Reset_Mapping_Variables() #here so it can know if there are some spiketrains to use or not        
-      
         
-        if (len(list(set(self.Analogsignal_name))) or len(list(set(self.Spiketrain_Neuid)))) > 1:
-            msgBox = QtGui.QMessageBox()
-            msgBox.setText("""<b>Caution</b>
-            <p>Multi-Channel display not supported yet. 
-            <p>For each sweep, all different channels will be displayed one after the other
-            <p>You might experience some other bugs
-            """)
-            msgBox.exec_()            
+        #TODO : recheck all variables to be deleted here
+        RequeteArrays=["Requete.Block_ids",
+                       "Requete.Segment_ids",
+                       "Requete.Analogsignal_ids",
+                       "Requete.Block_date",
+                       "Requete.Analogsignal_name",
+                       "Requete.Analogsignal_channel",
+                       "Requete.Block_fileOrigin",
+                       "Requete.Block_Info"]
+                       
+        OtherRequeteArrays=["Requete.tag['Selection']",
+                            "Requete.Analogsignal_sampling_rate",
+                            "Requete.Analogsignal_signal_shape"]
+                
+        OtherArrays=["Navigate.si",
+                     "Navigate.timescale",
+                     "Requete.NumberofChannels"]
+        
+        Infos.Add_Array(Arrays=RequeteArrays+OtherRequeteArrays+OtherArrays)  
+        
+        self.NumberofChannels=len(list(set(self.Analogsignal_name)))
+        
+        print 'There are ',self.NumberofChannels,' channels'
+        
+        List=zip(list(self.Analogsignal_name),list(self.Analogsignal_ids))
+        
+        ListOfIndexesPerChannel=[]
+        #We split the channels using self.Analogsignal_name
+        #a list is created for each name : eg if the channel name is RecordA
+        #we create self.RecordA, which contains all the analogsiganl ids of this channel
+        for i,j in enumerate(list(set(self.Analogsignal_name))):
+            #we create one list per channel
+            setattr(self,j,[])
+            
+            #We detect all ids form this channel
+            for k in range(len(self.Analogsignal_ids)):
+                if str(List[k][0]) == str(j):
+                    eval('self.'+j).append(k)
+            
+            #we add the list to a list of list
+            ListOfIndexesPerChannel.append(eval('self.'+j))
+            print 'channel ',j,' ids are ',eval('self.'+j)
+        
 
+            
+        for i in RequeteArrays:
+            i=i.replace('Requete.','self.')
+            temp=self.copythis(ListOfIndexesPerChannel,eval(i))
+            i=i.replace('self.','')
+            setattr(self,i,Infos.Zip(temp))
+            print i
+#        msgBox = QtGui.QMessageBox()
+#        msgBox.setText("""<b>Caution</b>
+#        <p>Multi-Channel display not fully supported yet. 
+#        <p>You might experience some bugs
+#        """)
+#        msgBox.exec_()            
+        #else:
+        #    self.NumberofChannels=1
+         
+         
+         
+        print self.Analogsignal_ids 
+        print self.Block_ids
+        print self.Segment_ids
+        
+        
+        
+        
         self.Current_Sweep_Number=0
         self.st_currentid=0
     
@@ -325,7 +421,7 @@ class Requete(object):
             return
         
         #In some query, the sampling rate and/or the wavelength can be different.
-        #The sampling rate issue is solved by upscaling all waves to the highest sampling rate detected
+        #The sampling rate issue is solved by downscaling all waves to the lowest sampling rate detected
         #The wavelength issue is solved by croping all waves to fit the shortest one
         self.BypassedSamplingRate=min(self.Analogsignal_sampling_rate)
         
@@ -349,19 +445,25 @@ class Requete(object):
         print "-----------> Spiketrains Ids (if exist) are :",self.Spiketrain_ids
         
         self.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary={}
-        for i,j in enumerate(self.Spiketrain_ids):
-            self.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary[j]=self.Analogsignal_ids[i]
+        for i in range((len(self.Spiketrain_ids)/self.NumberofChannels)):
+            self.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary[self.Spiketrain_ids[i]]=self.Analogsignal_ids[i]
+
         
         
         Main.MainFigure.canvas.fig.clear()
-        
-        for i in range(len(list(set(self.Analogsignal_name)))):
-            Main.MainFigure.canvas.fig.add_subplot(len(list(set(self.Analogsignal_name))),1,i+1)
+        flatlist=[item for sublist in self.Analogsignal_name for item in sublist]
+        for i in range(len(list(set(flatlist)))):
+            Main.MainFigure.canvas.fig.add_subplot(len(list(set(flatlist))),1,i+1)
+            #TODO : set subplot title
         
         
         
         try:
-            self.analogsignal_zero = AnalogSignal().load(self.Analogsignal_ids[0],session=self.Global_Session)
+            if self.NumberofChannels == 1:
+                self.analogsignal_zero = AnalogSignal().load(self.Analogsignal_ids[0],session=self.Global_Session)
+            else:
+                self.analogsignal_zero = AnalogSignal().load(self.Analogsignal_ids[0][0],session=self.Global_Session)
+                
         except:
             msgBox = QtGui.QMessageBox()
             msgBox.setText(
@@ -379,74 +481,58 @@ class Requete(object):
             self.Reset_the_Tag_Field(self.tag)
             return
         
-
         
-        #Pour le champs Tag, controle systematique de son existence      
+        #Pour le champs Tag, controle systematique de son existence    
+        NewSystem=True
+
         if self.tag.has_key("Selection")==False:
-            self.tag["Selection"]=[0]*len(self.Analogsignal_ids)
+            #for some reason, I had to to that since I move to multichannel
+            new=[]
             for i in range(len(self.Analogsignal_ids)):
-                self.tag["Selection"][i]=0
+                new.append([0]*int(self.NumberofChannels))            
+            self.tag["Selection"]=new
+            for i in range(len(self.Analogsignal_ids)):
+                for j in range(self.NumberofChannels):
+                    self.tag["Selection"][i][j]=0
         elif self.tag.has_key("Selection")==True:
             for i in range(len(self.Analogsignal_ids)):
-                try: 
-                    self.tag["Selection"][i]=int(self.tag["Selection"][i])
-                except ValueError:
-                    self.tag["Selection"][i]=0
-         
-       
+                for j in range(self.NumberofChannels):
+                    try: 
+                        self.tag["Selection"][i][j]=int(self.tag["Selection"][i][j])
+                    except ValueError:
+                        self.tag["Selection"][i][j]=0
+                    except TypeError:
+                        NewSystem=False
+                        print 'Old tag system detected'
+                        break
+
+        #If the old tag system was used, we convert it here to the new system
+        if NewSystem==False:
+            self.Convert()
+          
+
+        
         self.Add_Dictionnary_Arrays()
         self.Record_User_Parameters()
 
-        Infos.Add_Array(Arrays=["Navigate.si",
-                   "Navigate.timescale",
-                   "Requete.tag['Selection']",
-                   "Requete.Block_ids",
-                   "Requete.Segment_ids",
-                   "Requete.Analogsignal_ids",
-                   "Requete.Block_date",
-                   "Requete.Analogsignal_name",
-                   "Requete.Analogsignal_channel",
-                   "Requete.Analogsignal_sampling_rate",
-                   "Requete.Block_fileOrigin",
-                   "Requete.Block_Info",
-                   "Requete.Analogsignal_signal_shape"])                                         
+                                       
 
     def Transform_a_String_in_Dictionnary(self,source=None):
         
         destination={}
         compteur=0
-        
         if Main.Reset_Check.checkState()==0:
             try:    
                 for i in source:
-                    
                     i=str(i)
-                    
                     for j in i.split(','):
-                        if compteur == 0: ##on créé les bonnes entrées dans le dico au 1er tour
-                            
-                            j = j.replace('{', '')
-                            j = j.replace('}', '')
-                            j = j.replace(' ', '')
-                            j = j.replace('"', '')
-                            j = j.replace("'", '')
-                            j = j.replace(" ", '')
-                            k=j.split(':')
-                            
+                        ##on créé les bonnes entrées dans le dico au 1er tour
+                        for u in ['{','}',' ','"',"'"," "]:
+                            j = j.replace(u, '')
+                        k=j.split(':')
+                        if compteur == 0:
                             destination[k[0]]=['']*len(source)
-                            destination[k[0]][compteur]=k[1]
-                           
-        
-                        else:
-                            j = j.replace('{', '')
-                            j = j.replace('}', '')
-                            j = j.replace(' ', '')
-                            j = j.replace('"', '')
-                            j = j.replace("'", '')
-                            j = j.replace(" ", '')
-                            k=j.split(':')
-                            destination[k[0]][compteur]=k[1]
-           
+                        destination[k[0]][compteur]=k[1]
                     compteur+=1
             except IndexError:
                 msgBox = QtGui.QMessageBox()
@@ -489,6 +575,8 @@ class Requete(object):
         """
         If the AnalogSignal.Tag field is corrupted, it can be restored
         """
+        print 'this function is sensitive and was not checked yet'
+        return
         
         if Main.Reset_Check.checkState()==2:
             for i in self.Analogsignal_ids:
@@ -1179,34 +1267,32 @@ class Requete(object):
 
     
     def Save_Tags_To_Db(self):
-#        try:
-        for i in range(len(self.Analogsignal_ids)):
-            Main.progress.setMinimum(0)
-            Main.progress.setMaximum(len(self.Analogsignal_ids)-1)
-            Main.progress.setValue(i)
-            A=AnalogSignal().load(self.Analogsignal_ids[i])
-            Tag_Field_Dictionnary={}
-            
-            if 'None' in self.tag: #BUG; it sometimes happends I don't know why...
-                del self.tag['None']  
-                
-            for keys in self.tag:
-                Tag_Field_Dictionnary[keys]=self.tag[keys][i]
-              
-            dic=str(Tag_Field_Dictionnary).replace("'", '')
-            dic=dic.replace('"', '')
-            A.tag = dic
-            print "sweep # ",i,"saved with : ",A.tag
-            A.save()
-            A=AnalogSignal().load(self.Analogsignal_ids[i])
 
-#        except :
-#            msgBox = QtGui.QMessageBox()
-#            msgBox.setText(
-#            """
-#            <b>Exit Error</b>
-#            <p>Tags not saved
-#            <p>You can try to re-set "Find the Coord"
-#            """)     
-#            msgBox.exec_()
+        for i in range(len(self.Analogsignal_ids)):
+            for n in range(self.NumberofChannels):
+                Main.progress.setMinimum(0)
+                Main.progress.setMaximum(len(self.Analogsignal_ids)-1)
+                Main.progress.setValue(i)
+                A=AnalogSignal().load(self.Analogsignal_ids[i][n])
+                Tag_Field_Dictionnary={}
+                
+                if 'None' in self.tag: #BUG; it sometimes happends I don't know why...
+                    del self.tag['None']  
+                    
+                for keys in self.tag:
+                    try:
+                        Tag_Field_Dictionnary[keys]=self.tag[keys][i][n]
+                    except:
+                        Tag_Field_Dictionnary[keys]=self.tag[keys][i]
+                  
+                dic=str(Tag_Field_Dictionnary).replace("'", '')
+                dic=dic.replace('"', '')
+                A.tag = dic
+                print "sweep#",i,"tag (chan.", n," ; analogsignal",self.Analogsignal_ids[i][n],")saved as : ",A.tag
+                #TODO # Check why duplicate load
+                A.save()
+                A=AnalogSignal().load(self.Analogsignal_ids[i][n])
+        print "-----------> Saving completed"
+
+
 

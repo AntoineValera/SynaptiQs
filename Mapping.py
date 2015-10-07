@@ -1197,15 +1197,27 @@ class Mapping(object):
         self.CM.Initially_Excluded_AnalogSignal_Ids={}
         try:
             for i,j in enumerate(Requete.Analogsignal_ids):
+<<<<<<< HEAD
+                if Requete.tag["Selection"][i][0]==0:
+                    self.Initially_Excluded_AnalogSignal_Ids[i] = j
+=======
                 if Requete.tag["Selection"][i]==0:
                     self.CM.Initially_Excluded_AnalogSignal_Ids[i] = j
+>>>>>>> master
             #Creation des liste de coordonnées
             self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary={} #Keys = ids , Values = (X,Y)
             self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary={} #Keys = ids , Values = Sweep #
             for i,j in enumerate(Requete.Analogsignal_ids):
+<<<<<<< HEAD
+                self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[j]=i
+                
+                if Requete.tag["Selection"][i][0]!=0:
+                    self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[j]=(int(Requete.tag["X_coord"][i]),int(Requete.tag["Y_coord"][i]))
+=======
                 self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[j]=i
                 if Requete.tag["Selection"][i]!=0:
                     self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[j]=(int(Requete.tag["X_coord"][i]),int(Requete.tag["Y_coord"][i]))
+>>>>>>> master
                 else:
                     self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[j]=None
             
@@ -1273,6 +1285,13 @@ class Mapping(object):
 
         counter=0
         #On fait une moyenne par position
+<<<<<<< HEAD
+        
+        for keys in self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary:
+            Navigate.UnTag_All_Traces(ProgressDisplay=False)
+            for i in self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]:
+                Requete.tag["Selection"][self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]][0]=1 #Keys = ids , Values = Sweepnumber
+=======
 
         for keys in self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary:
             #TODO : replace sweepnumbers by analogsignal ids?
@@ -1280,6 +1299,7 @@ class Mapping(object):
             Navigate.UnTag_All_Traces(ProgressDisplay=False)
             for i in self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]:
                 Requete.tag["Selection"][self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]]=1 #Keys = ids , Values = Sweepnumber
+>>>>>>> master
 
             self.mappingprogress.setMinimum(0)
             self.mappingprogress.setMaximum(len(self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary)-1)
@@ -1306,8 +1326,13 @@ class Mapping(object):
 
         
         Navigate.Tag_All_Traces(ProgressDisplay=False)
+<<<<<<< HEAD
+        for i in self.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
+            Requete.tag["Selection"][i][0]=0
+=======
         for i in self.CM.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
             Requete.tag["Selection"][i]=0
+>>>>>>> master
         
         # TODO: if the mapping contains more theoretical points than real point, ther eis a value error here
         # this should be raised somewhere to warn the user
@@ -1515,9 +1540,15 @@ class Mapping(object):
         #On restaure les tags initiaux
         Navigate.Tag_All_Traces(ProgressDisplay=False)
         for i in range(len(Requete.Analogsignal_ids)):
+<<<<<<< HEAD
+            Requete.tag["Selection"][i][0]=int(1)
+        for i in self.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
+            Requete.tag["Selection"][i][0]=0        
+=======
             Requete.tag["Selection"][i]=int(1)
         for i in self.CM.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
             Requete.tag["Selection"][i]=0        
+>>>>>>> master
         
         print 'current', self.Thresholding_Mode.currentIndex()
         #Except in Combo mode, after every other measure, the self.Thresholding_Mode is set to % of success (--> 4)
@@ -1595,7 +1626,7 @@ class Mapping(object):
         self.CM.Initially_Excluded_AnalogSignal_Ids={}
         blacklist=[]
         for i,j in enumerate(Requete.Analogsignal_ids):
-            if Requete.tag["Selection"][i]==0:
+            if Requete.tag["Selection"][i][0]==0:
                 blacklist.append(j)
                 self.CM.Initially_Excluded_AnalogSignal_Ids[i] = j
         
@@ -1644,8 +1675,13 @@ class Mapping(object):
         try:
             for i in self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]:
                 if i not in blacklist:
+<<<<<<< HEAD
+                    Requete.tag["Selection"][self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]][0]=1 #Keys = ids , Values = Sweepnumber
+                    self.Currently_Used_Sweep_nb_for_Local_Average.append(self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i])
+=======
                     Requete.tag["Selection"][self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]]=1 #Keys = ids , Values = Sweepnumber
                     self.Currently_Used_Sweep_nb_for_Local_Average.append(self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i])
+>>>>>>> master
             
             if Silent==False:
                 print "Average Amplitudes on position ",keys
@@ -1667,8 +1703,13 @@ class Mapping(object):
             Navigate.Tag_All_Traces()
             if Silent == False:
                 print Requete.tag["Selection"]
+<<<<<<< HEAD
+            for i in self.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
+                Requete.tag["Selection"][i][0]=0              
+=======
             for i in self.CM.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
                 Requete.tag["Selection"][i]=0              
+>>>>>>> master
 
 
     def DisplayMode(self,Display):
@@ -2184,7 +2225,129 @@ class Mapping(object):
         return color,surface
         
         
+<<<<<<< HEAD
+        self.Table = SpreadSheet(Source=[XYTuple,self.Normalized_Surface,self.Local_Surface,self.Normalized_Amplitude,self.Local_Amplitude],Labels=["XY","Normalized C1","C1","Normalized A1","A1"])
+        self.Table.show()
+
+
+##############################################
+
+        def pointValue(x,y,power,smoothing,xv,yv,values):
+            nominator=0
+            denominator=0
+            for i in range(0,len(values)):
+                dist = sqrt((x-xv[i])*(x-xv[i])+(y-yv[i])*(y-yv[i])+smoothing*smoothing);
+                #If the point is really close to one of the data points, return the data point value to avoid singularities
+                if(dist<1E-30):
+                    return values[i]
+                nominator=nominator+(values[i]/pow(dist,power))
+                denominator=denominator+(1/pow(dist,power))
+            #Return NODATA if the denominator is zero
+            if denominator > 0.:
+                value = nominator/denominator
+            else:
+                value = -9999.
+            return value
+        
+        def invDist(xv,yv,values,xsize=100,ysize=100,power=2,smoothing=0,subsampling=1,minRange=0):
+            #TODO : Scientifically not clear, but visually nice
+            valuesGrid = numpy.zeros((ysize,xsize))
+            for x in range(0,int(xsize)):
+                for y in range(0,int(ysize)):
+                    valuesGrid[y][x] = pointValue(x*subsampling+minRange,y*subsampling+minRange,power,smoothing,xv,yv,values)
+            return valuesGrid
+        
+        
+        def SmoothMap(X,
+                      Y,
+                      Val,
+                      power=3.,
+                      smoothing=10.,
+                      subsampling=10.,
+                      cmap='gnuplot',
+                      Manual_Min_Field=None,
+                      Manual_Max_Field=None,
+                      Max_Valid_Dist=None):
+            
+            #TODO : Normalize map if necessary
+            
+            power=power
+            smoothing=smoothing
+            subsampling=subsampling
+            
+            xv = X
+            yv = Y
+            values = Val
+        
+            minRange=min(min(xv),min(yv)) #it's the negative value of x-axis AND y-axis
+            maxRange=max(max(xv),max(yv))
+            TotRange=maxRange-minRange
+            print 'maximal extent is', TotRange
+            print 'point resolution is', subsampling 
+            print float(TotRange)/subsampling, "should be an integer. If it's not, check code"
+            
+            #Creating the output grid (100x100, in the example)
+            ti = numpy.linspace(minRange,maxRange,TotRange/subsampling)
+            XI, YI = numpy.meshgrid(ti, ti)
+            #Creating the interpolation function and populating the output matrix value
+            ZI = invDist(xv,yv,values,TotRange/subsampling,TotRange/subsampling,power,smoothing,subsampling,minRange)
+            
+            points=zip(X.ravel(), Y.ravel())
+            refpoints=zip(XI.ravel(), YI.ravel())
+            tree = scipy.spatial.cKDTree(points)
+            z=ZI.ravel()
+            
+            for j,i in enumerate(refpoints):
+                if len(tree.query_ball_point((i[0],i[1]), float(Max_Valid_Dist))) == 0:
+                    z[j]=0.0
+
+   
+            #n = pyplot.normalize(0.0, 100.0)
+            if self.Manual_Min_Field.text() != "":
+                Min=float(self.Manual_Min_Field.text())
+            elif Manual_Min_Field!= None:
+                Min=float(Manual_Min_Field)
+            else:
+                Min=float(numpy.min(ZI))
+                
+            if self.Manual_Max_Field.text() != "":
+                Max=float(self.Manual_Max_Field.text())
+            elif Manual_Max_Field!= None:
+                Max=float(Manual_Max_Field)                
+            else:
+                Max=float(numpy.max(ZI))  
+                
+            pyplot.figure()   
+            pyplot.subplot(1, 1, 1)
+            pyplot.pcolor(XI, YI, ZI,cmap=cmap,vmin=Min,vmax=Max)
+            pyplot.title('Inv dist interpolation - power: ' + str(power) + ' smoothing: ' + str(smoothing))
+            pyplot.xlim(minRange, maxRange)
+            pyplot.ylim(minRange, maxRange)
+            pyplot.colorbar()
+
+            pyplot.figure()
+            
+            pyplot.contour(XI, YI, ZI, 10)
+            pyplot.xlim(minRange, maxRange)
+            pyplot.ylim(minRange, maxRange) 
+            
+            try:
+                self.pic = image.imread(str(self.Current_Picture_for_the_Map))
+                pyplot.imshow(self.pic,extent=(-320,320,-260,252),cmap=self.Image_ColorMap)
+            except:
+                pass
+            pyplot.show()
+    
+        print self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:],self.Local_Surface
+        if self.Charge=='Surface':
+            SmoothMap(self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:],self.Local_Surface,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
+        else:
+            SmoothMap(self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:],self.Local_Amplitude,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
+            
+
+=======
     def CreateInteractiveGrid(self,colorbar,xlim=(-320, 320),ylim=(-260, 252),ColorBar=True,Labels=False,Title='',NoWarning=False):
+>>>>>>> master
         if ColorBar==True:
             self.Wid.canvas.fig.colorbar(colorbar)
             
