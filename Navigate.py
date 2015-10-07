@@ -166,19 +166,6 @@ class Navigate(object):
         #Loading the signal
         # TODO : Check that filtered signal is implemented everywhere it should
         if Main.SQLTabWidget.currentIndex() == 0 or Main.SQLTabWidget.currentIndex() == 1:
-#            if Requete.NumberofChannels==1:
-#                for i in Analogisgnal_id_to_Load:
-#                    self.sig = AnalogSignal().load(Analogisgnal_id_to_Load,session=Requete.Global_Session)
-#                    #Resampling to the lowest sampling rate in the selection. It doesn't change anything if there is only one sampling rate
-#                    self.si = scipy.signal.resample(self.sig.signal,(Requete.BypassedSamplingRate)*(len(self.sig.signal)/self.sig.sampling_rate))
-#                    self.Filtered_Signal = scipy.signal.resample(self.sig.signal,(Requete.BypassedSamplingRate)*(len(self.sig.signal)/self.sig.sampling_rate))            
-            #else:
-            '''
-            Even if Requete.NumberofChannels ==1, we put self.si and self.Filtered_Signal as a list of len=1
-            it allows a more homogeneous processing of the signal
-            However, for backward compatibility, if len=1 a normal array is resataured in the end of the script
-            '''
-
             Analogisgnal_id_to_Load=list(Analogisgnal_id_to_Load)
             self.si=[]
             self.Filtered_Signal=[]
@@ -214,7 +201,8 @@ class Navigate(object):
         if Main.Remove_Leak_Button.checkState() == 2:
             for i,j in enumerate(self.si):
                 self.si[i]=Analysis.Remove_a_Leak(self.si[i])
-            
+        else:
+            Analysis.Current_Leak=0
         #Leak Removal for filtered signal
         #If Analyze_Filtered_Traces_Button is checked, then we apply Leak Removal and Filtering on self.Filtered_Signal
         if Main.Analyze_Filtered_Traces_Button.checkState () == 2 or Main.Filtered_Display.checkState() == 2:

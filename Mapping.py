@@ -1197,27 +1197,17 @@ class Mapping(object):
         self.CM.Initially_Excluded_AnalogSignal_Ids={}
         try:
             for i,j in enumerate(Requete.Analogsignal_ids):
-<<<<<<< HEAD
+
                 if Requete.tag["Selection"][i][0]==0:
-                    self.Initially_Excluded_AnalogSignal_Ids[i] = j
-=======
-                if Requete.tag["Selection"][i]==0:
                     self.CM.Initially_Excluded_AnalogSignal_Ids[i] = j
->>>>>>> master
+
             #Creation des liste de coordonnées
             self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary={} #Keys = ids , Values = (X,Y)
             self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary={} #Keys = ids , Values = Sweep #
             for i,j in enumerate(Requete.Analogsignal_ids):
-<<<<<<< HEAD
-                self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[j]=i
-                
-                if Requete.tag["Selection"][i][0]!=0:
-                    self.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[j]=(int(Requete.tag["X_coord"][i]),int(Requete.tag["Y_coord"][i]))
-=======
                 self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[j]=i
-                if Requete.tag["Selection"][i]!=0:
+                if Requete.tag["Selection"][i][0]!=0:
                     self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[j]=(int(Requete.tag["X_coord"][i]),int(Requete.tag["Y_coord"][i]))
->>>>>>> master
                 else:
                     self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[j]=None
             
@@ -1285,21 +1275,13 @@ class Mapping(object):
 
         counter=0
         #On fait une moyenne par position
-<<<<<<< HEAD
-        
-        for keys in self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary:
-            Navigate.UnTag_All_Traces(ProgressDisplay=False)
-            for i in self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]:
-                Requete.tag["Selection"][self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]][0]=1 #Keys = ids , Values = Sweepnumber
-=======
-
+        #TODO : only channel 1 can be mapped now
         for keys in self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary:
             #TODO : replace sweepnumbers by analogsignal ids?
             #time.sleep(0.1)
             Navigate.UnTag_All_Traces(ProgressDisplay=False)
             for i in self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]:
-                Requete.tag["Selection"][self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]]=1 #Keys = ids , Values = Sweepnumber
->>>>>>> master
+                Requete.tag["Selection"][self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]][0]=1 #Keys = ids , Values = Sweepnumber
 
             self.mappingprogress.setMinimum(0)
             self.mappingprogress.setMaximum(len(self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary)-1)
@@ -1326,13 +1308,10 @@ class Mapping(object):
 
         
         Navigate.Tag_All_Traces(ProgressDisplay=False)
-<<<<<<< HEAD
-        for i in self.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
-            Requete.tag["Selection"][i][0]=0
-=======
+
         for i in self.CM.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
-            Requete.tag["Selection"][i]=0
->>>>>>> master
+            Requete.tag["Selection"][i][0]=0
+
         
         # TODO: if the mapping contains more theoretical points than real point, ther eis a value error here
         # this should be raised somewhere to warn the user
@@ -1540,15 +1519,10 @@ class Mapping(object):
         #On restaure les tags initiaux
         Navigate.Tag_All_Traces(ProgressDisplay=False)
         for i in range(len(Requete.Analogsignal_ids)):
-<<<<<<< HEAD
-            Requete.tag["Selection"][i][0]=int(1)
-        for i in self.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
-            Requete.tag["Selection"][i][0]=0        
-=======
-            Requete.tag["Selection"][i]=int(1)
+
+            Requete.tag["Selection"][i][0]=1
         for i in self.CM.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
-            Requete.tag["Selection"][i]=0        
->>>>>>> master
+            Requete.tag["Selection"][i][0]=0        
         
         print 'current', self.Thresholding_Mode.currentIndex()
         #Except in Combo mode, after every other measure, the self.Thresholding_Mode is set to % of success (--> 4)
@@ -1675,13 +1649,9 @@ class Mapping(object):
         try:
             for i in self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]:
                 if i not in blacklist:
-<<<<<<< HEAD
-                    Requete.tag["Selection"][self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]][0]=1 #Keys = ids , Values = Sweepnumber
-                    self.Currently_Used_Sweep_nb_for_Local_Average.append(self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i])
-=======
-                    Requete.tag["Selection"][self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]]=1 #Keys = ids , Values = Sweepnumber
+
+                    Requete.tag["Selection"][self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]][0]=1 #Keys = ids , Values = Sweepnumber
                     self.Currently_Used_Sweep_nb_for_Local_Average.append(self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i])
->>>>>>> master
             
             if Silent==False:
                 print "Average Amplitudes on position ",keys
@@ -1703,13 +1673,9 @@ class Mapping(object):
             Navigate.Tag_All_Traces()
             if Silent == False:
                 print Requete.tag["Selection"]
-<<<<<<< HEAD
-            for i in self.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
-                Requete.tag["Selection"][i][0]=0              
-=======
+
             for i in self.CM.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
-                Requete.tag["Selection"][i]=0              
->>>>>>> master
+                Requete.tag["Selection"][i][0]=0              
 
 
     def DisplayMode(self,Display):
@@ -2224,8 +2190,7 @@ class Mapping(object):
     #                surface[i]=numpy.nan 
         return color,surface
         
-        
-<<<<<<< HEAD
+
         self.Table = SpreadSheet(Source=[XYTuple,self.Normalized_Surface,self.Local_Surface,self.Normalized_Amplitude,self.Local_Amplitude],Labels=["XY","Normalized C1","C1","Normalized A1","A1"])
         self.Table.show()
 
@@ -2345,9 +2310,8 @@ class Mapping(object):
             SmoothMap(self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:],self.Local_Amplitude,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
             
 
-=======
+
     def CreateInteractiveGrid(self,colorbar,xlim=(-320, 320),ylim=(-260, 252),ColorBar=True,Labels=False,Title='',NoWarning=False):
->>>>>>> master
         if ColorBar==True:
             self.Wid.canvas.fig.colorbar(colorbar)
             

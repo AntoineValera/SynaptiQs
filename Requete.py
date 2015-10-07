@@ -193,8 +193,9 @@ class Requete(object):
         if firstload == True:
             Main.User_Defined_Measurement_Parameters.setCurrentIndex(0)
             Analysis.Load_User_Defined_Parameters(0,True)
-<<<<<<< HEAD
+
             Mapping.Load_User_Defined_Parameters(0,True)
+            #Mapping.Load_User_Defined_Parameters(0,True)
     
 
     def copythis(self,indexes,new):
@@ -205,11 +206,10 @@ class Requete(object):
                 temp[i][j]=new[indexes[i][j]]
         return temp
 
-             
-=======
-            #Mapping.Load_User_Defined_Parameters(0,True)
+
+        
                  
->>>>>>> master
+
     def Datacall(self): #Fait la requete SQL et affiche la premiere trace
         """
         This function do the final request
@@ -459,10 +459,7 @@ class Requete(object):
         
         
         try:
-            if self.NumberofChannels == 1:
-                self.analogsignal_zero = AnalogSignal().load(self.Analogsignal_ids[0],session=self.Global_Session)
-            else:
-                self.analogsignal_zero = AnalogSignal().load(self.Analogsignal_ids[0][0],session=self.Global_Session)
+            self.analogsignal_zero = AnalogSignal().load(self.Analogsignal_ids[0][0],session=self.Global_Session)
                 
         except:
             msgBox = QtGui.QMessageBox()
