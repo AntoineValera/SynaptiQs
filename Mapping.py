@@ -1345,9 +1345,8 @@ class Mapping(object):
 
         counter=0
         #On fait une moyenne par position
-        print self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary
+        
         for keys in self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary:
-            time.sleep(0.1)
             Navigate.UnTag_All_Traces(ProgressDisplay=False)
             for i in self.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]:
                 Requete.tag["Selection"][self.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[i]][0]=1 #Keys = ids , Values = Sweepnumber

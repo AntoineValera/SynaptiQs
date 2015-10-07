@@ -178,14 +178,11 @@ class Navigate(object):
             it allows a more homogeneous processing of the signal
             However, for backward compatibility, if len=1 a normal array is resataured in the end of the script
             '''
-            if Requete.NumberofChannels == 1:
-                Analogisgnal_id_to_Load=[int(Analogisgnal_id_to_Load)] # otherwise the number is of long type, and not iterable
-            else:
-                Analogisgnal_id_to_Load=list(Analogisgnal_id_to_Load)
+
+            Analogisgnal_id_to_Load=list(Analogisgnal_id_to_Load)
             self.si=[]
             self.Filtered_Signal=[]
             for i in Analogisgnal_id_to_Load:
-                print i
                 self.sig = AnalogSignal().load(i,session=Requete.Global_Session)
                 #Resampling to the lowest sampling rate in the selection. It doesn't change anything if there is only one sampling rate
                 self.si.append(scipy.signal.resample(self.sig.signal,(Requete.BypassedSamplingRate)*(len(self.sig.signal)/self.sig.sampling_rate)))

@@ -118,15 +118,15 @@ class Requete(object):
 
    
     def Convert(self):
-        print 'before', self.tag["Selection"]
-        selection=[[0]*self.NumberofChannels]*len(self.Analogsignal_ids)
+        new=[]
         for i in range(len(self.Analogsignal_ids)):
+            new.append([0]*int(self.NumberofChannels))
             for j in range(self.NumberofChannels):
-                    selection[i][j]=int(self.tag["Selection"][i*self.NumberofChannels+j]) 
-        self.tag["Selection"]=selection 
-        print 'after', self.tag["Selection"]                      
-              
-       
+                    new[i][j]=int(self.tag["Selection"][i*self.NumberofChannels+j]) 
+                    
+                    
+        self.tag["Selection"]=new 
+
     def Final_Request(self):
         """
         This function call the final request.
@@ -196,7 +196,13 @@ class Requete(object):
             Mapping.Load_User_Defined_Parameters(0,True)
     
 
-
+    def copythis(self,indexes,new):
+        from copy import deepcopy
+        temp=deepcopy(indexes)
+        for i in range(len(indexes)):#aka segments
+            for j in range(len(indexes[i])): #aka individual analogsignals or spiketrains
+                temp[i][j]=new[indexes[i][j]]
+        return temp
 
              
     def Datacall(self): #Fait la requete SQL et affiche la premiere trace
@@ -322,32 +328,76 @@ class Requete(object):
                         pass
       
         Mapping.Reset_Mapping_Variables() #here so it can know if there are some spiketrains to use or not        
-      
         
-        if (len(list(set(self.Analogsignal_name))) or len(list(set(self.Spiketrain_Neuid)))) > 1:
-            self.NumberofChannels=len(list(set(self.Analogsignal_name)))
-            print 'There are ',self.NumberofChannels,' channels'
-            List=zip(list(self.Analogsignal_name),list(self.Analogsignal_ids))
-            listofarrays=[]
-            for i,j in enumerate(list(set(self.Analogsignal_name))):
-                setattr(self,j,[])
-                for k,l in enumerate(self.Analogsignal_ids):
-                    if str(List[k][0]) == str(j):
-                        eval('self.'+j).append(l)
-                listofarrays.append(eval('self.'+j))
-                print 'channel ',j,' ids are ',eval('self.'+j)
-            self.Analogsignal_ids=Infos.Zip(listofarrays)
-            print self.Analogsignal_ids
-            msgBox = QtGui.QMessageBox()
-            msgBox.setText("""<b>Caution</b>
-            <p>Multi-Channel display not fully supported yet. 
-            <p>You might experience some bugs
-            """)
-            msgBox.exec_()            
-        else:
-            self.NumberofChannels=1
+        #TODO : recheck all variables to be deleted here
+        RequeteArrays=["Requete.Block_ids",
+                       "Requete.Segment_ids",
+                       "Requete.Analogsignal_ids",
+                       "Requete.Block_date",
+                       "Requete.Analogsignal_name",
+                       "Requete.Analogsignal_channel",
+                       "Requete.Block_fileOrigin",
+                       "Requete.Block_Info"]
+                       
+        OtherRequeteArrays=["Requete.tag['Selection']",
+                            "Requete.Analogsignal_sampling_rate",
+                            "Requete.Analogsignal_signal_shape"]
+                
+        OtherArrays=["Navigate.si",
+                     "Navigate.timescale",
+                     "Requete.NumberofChannels"]
+        
+        Infos.Add_Array(Arrays=RequeteArrays+OtherRequeteArrays+OtherArrays)  
+        
+        self.NumberofChannels=len(list(set(self.Analogsignal_name)))
+        
+        print 'There are ',self.NumberofChannels,' channels'
+        
+        List=zip(list(self.Analogsignal_name),list(self.Analogsignal_ids))
+        
+        ListOfIndexesPerChannel=[]
+        #We split the channels using self.Analogsignal_name
+        #a list is created for each name : eg if the channel name is RecordA
+        #we create self.RecordA, which contains all the analogsiganl ids of this channel
+        for i,j in enumerate(list(set(self.Analogsignal_name))):
+            #we create one list per channel
+            setattr(self,j,[])
             
+            #We detect all ids form this channel
+            for k in range(len(self.Analogsignal_ids)):
+                if str(List[k][0]) == str(j):
+                    eval('self.'+j).append(k)
             
+            #we add the list to a list of list
+            ListOfIndexesPerChannel.append(eval('self.'+j))
+            print 'channel ',j,' ids are ',eval('self.'+j)
+        
+
+            
+        for i in RequeteArrays:
+            i=i.replace('Requete.','self.')
+            temp=self.copythis(ListOfIndexesPerChannel,eval(i))
+            i=i.replace('self.','')
+            setattr(self,i,Infos.Zip(temp))
+            print i
+#        msgBox = QtGui.QMessageBox()
+#        msgBox.setText("""<b>Caution</b>
+#        <p>Multi-Channel display not fully supported yet. 
+#        <p>You might experience some bugs
+#        """)
+#        msgBox.exec_()            
+        #else:
+        #    self.NumberofChannels=1
+         
+         
+         
+        print self.Analogsignal_ids 
+        print self.Block_ids
+        print self.Segment_ids
+        
+        
+        
+        
         self.Current_Sweep_Number=0
         self.st_currentid=0
     
@@ -396,9 +446,9 @@ class Requete(object):
         
         
         Main.MainFigure.canvas.fig.clear()
-        
-        for i in range(len(list(set(self.Analogsignal_name)))):
-            Main.MainFigure.canvas.fig.add_subplot(len(list(set(self.Analogsignal_name))),1,i+1)
+        flatlist=[item for sublist in self.Analogsignal_name for item in sublist]
+        for i in range(len(list(set(flatlist)))):
+            Main.MainFigure.canvas.fig.add_subplot(len(list(set(flatlist))),1,i+1)
             #TODO : set subplot title
         
         
@@ -455,23 +505,12 @@ class Requete(object):
         if NewSystem==False:
             self.Convert()
           
-       
+
+        
         self.Add_Dictionnary_Arrays()
         self.Record_User_Parameters()
 
-        Infos.Add_Array(Arrays=["Navigate.si",
-                   "Navigate.timescale",
-                   "Requete.tag['Selection']",
-                   "Requete.Block_ids",
-                   "Requete.Segment_ids",
-                   "Requete.Analogsignal_ids",
-                   "Requete.Block_date",
-                   "Requete.Analogsignal_name",
-                   "Requete.Analogsignal_channel",
-                   "Requete.Analogsignal_sampling_rate",
-                   "Requete.Block_fileOrigin",
-                   "Requete.Block_Info",
-                   "Requete.Analogsignal_signal_shape"])                                         
+                                       
 
     def Transform_a_String_in_Dictionnary(self,source=None):
         
@@ -531,6 +570,8 @@ class Requete(object):
         """
         If the AnalogSignal.Tag field is corrupted, it can be restored
         """
+        print 'this function is sensitive and was not checked yet'
+        return
         
         if Main.Reset_Check.checkState()==2:
             for i in self.Analogsignal_ids:
@@ -1198,7 +1239,7 @@ class Requete(object):
 
     
     def Save_Tags_To_Db(self):
-#        try:
+
         for i in range(len(self.Analogsignal_ids)):
             for n in range(self.NumberofChannels):
                 Main.progress.setMinimum(0)
@@ -1211,24 +1252,19 @@ class Requete(object):
                     del self.tag['None']  
                     
                 for keys in self.tag:
-                    Tag_Field_Dictionnary[keys]=self.tag[keys][i*self.NumberofChannels+n]
+                    try:
+                        Tag_Field_Dictionnary[keys]=self.tag[keys][i][n]
+                    except:
+                        Tag_Field_Dictionnary[keys]=self.tag[keys][i]
                   
                 dic=str(Tag_Field_Dictionnary).replace("'", '')
                 dic=dic.replace('"', '')
                 A.tag = dic
-                print "sweep # ",i," in channel ", n,"saved with : ",A.tag
+                print "sweep#",i,"tag (chan.", n," ; analogsignal",self.Analogsignal_ids[i][n],")saved as : ",A.tag
                 #TODO # Check why duplicate load
                 A.save()
                 A=AnalogSignal().load(self.Analogsignal_ids[i][n])
         print "-----------> Saving completed"
 
-#        except :
-#            msgBox = QtGui.QMessageBox()
-#            msgBox.setText(
-#            """
-#            <b>Exit Error</b>
-#            <p>Tags not saved
-#            <p>You can try to re-set "Find the Coord"
-#            """)     
-#            msgBox.exec_()
+
 

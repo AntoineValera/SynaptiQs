@@ -74,7 +74,6 @@ class Analysis(object):
         
         ##scipy.signal.decimate could accelerate the display
       
-        print 'in'    
         if List_of_Ids == None:
             List_of_Ids = Requete.Analogsignal_ids
             NumberofChannels=Requete.NumberofChannels
