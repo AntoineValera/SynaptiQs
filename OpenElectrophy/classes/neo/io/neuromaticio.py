@@ -109,6 +109,7 @@ class NeuromaticIO(BaseIO):
                 Var=i.uservar    
         
         ChannelNames=list(set(ChannelNames))
+        ChannelNames.sort()
         
        
         if Array == None and Var == None:
@@ -133,6 +134,13 @@ class NeuromaticIO(BaseIO):
         for i in AllWaveNames:
             if Filter in i: 
                 counter+=1
+        #Listing suffixes
+        Suffixes=list(AllWaveNames)
+        for i,j in enumerate(Suffixes):
+            for k in ChannelNames:
+                Suffixes[i]=Suffixes[i].replace(k,'')  
+        Suffixes = sorted(set(Suffixes), key=lambda x: Suffixes.index(x))
+        
         
         #Identify date of creation from filename
         #TODO, use variable instead
@@ -145,24 +153,25 @@ class NeuromaticIO(BaseIO):
         date = datetime.date(Year,Month,Day)
 
         blck.datetime=date
-
-        for i in AllWaveNames:
+        
+        for n in Suffixes:
             seg = Segment()
-            for k,j in enumerate(ChannelNames):
-                seg.name=j
-                if j in i:
-                    anaSig = AnalogSignal()
-                    #ADCMAX = header['ADCMAX']
-                    #VMax = analysisHeader['VMax'][c]                  
-                    #YG = float(header['YG%d'%c].replace(',','.'))
-                    anaSig.signal = Array[i] #[alph[c],data[:,header['YO%d'%c]].astype('f4')*Var['VMax']/Var['ADCMAX']/YG]
-                    #Waves.append(signal)
-                    anaSig.sampling_rate = 1000./Var["SampleInterval"]
-                    anaSig.t_start = 0.
-                    anaSig.name = j
-                    anaSig.channel = k
-                    #anaSig.unit = header['YU%d'%c]
-                    seg._analogsignals.append(anaSig)
+            for i in AllWaveNames:
+                for k,j in enumerate(ChannelNames):
+                    if i == j+n:
+                        seg.name=j
+                        anaSig = AnalogSignal()
+                        #ADCMAX = header['ADCMAX']
+                        #VMax = analysisHeader['VMax'][c]                  
+                        #YG = float(header['YG%d'%c].replace(',','.'))
+                        anaSig.signal = Array[i] #[alph[c],data[:,header['YO%d'%c]].astype('f4')*Var['VMax']/Var['ADCMAX']/YG]
+                        #Waves.append(signal)
+                        anaSig.sampling_rate = 1000./Var["SampleInterval"]
+                        anaSig.t_start = 0.
+                        anaSig.name = j
+                        anaSig.channel = k
+                        #anaSig.unit = header['YU%d'%c]
+                        seg._analogsignals.append(anaSig)
             blck._segments.append(seg)
                 
 
@@ -174,22 +183,8 @@ class NeuromaticIO(BaseIO):
         Return a neo.Block
         See read_block for detail.
         """
-        print 'in'
         return self.read_block( **kargs)
     
-
-#AnalysisDescription = [
-#('RecordStatus','8s'),
-#('RecordType','4s'),
-#('GroupNumber','f'),
-#('TimeRecorded','f'),
-#('SamplingInterval','f'),
-#('VMax','8f'),
-#]
-#
-#
-#  
-
 
 
 

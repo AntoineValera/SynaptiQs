@@ -99,9 +99,12 @@ class SpikeSorting(QMainWindow):
         self.setAnimated(False)
         
         self.Session = Session
-        self.session = Session
         
-#        self.session = Session()
+        #TODO : Not sure why, but it is different in mySQL and SQlite
+        try:
+            self.session = Session()
+        except TypeError:
+            self.session = Session   
         self.mode = mode
         
         # recording point in the same group

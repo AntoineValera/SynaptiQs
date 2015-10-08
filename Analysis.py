@@ -1137,6 +1137,9 @@ class Analysis(object):
         Source must be a list. If None, Source is Requete.Spiketrain_ids
         The function returns the figure
         """
+        
+        
+        NumberofChannels=len(Requete.Spiketrain_ids[0])
         if Source == None:
             Source = Requete.Spiketrain_ids
     
@@ -1144,11 +1147,13 @@ class Analysis(object):
             Bar_time=float(Main.Raster_Start.text())
             Bar_Width=float(Main.Raster_Duration.text())
 
-        self.Wid = MyMplWidget(title = 'Raster Plot')#, width=6, height=4)
+        self.Wid = MyMplWidget(title = 'Raster Plot',subplots=[NumberofChannels,1,1])#, width=6, height=4)
         concatenatedEvents=[]
-        
+
+
+       
         if Main.SQLTabWidget.currentIndex() == 0 or Main.SQLTabWidget.currentIndex() == 1:
-            sptr=SpikeTrain.load(Source[0],session=Requete.Global_Session)
+            sptr=SpikeTrain.load(Source[0][0],session=Requete.Global_Session)
             try:
                 h=[0,sptr.t_stop-sptr.t_start,-1,len(Source)+1]
             except AttributeError:
@@ -1161,20 +1166,21 @@ class Analysis(object):
                 msgBox.exec_()
                 return
                 h=[0,0,-1,len(Source)]
+                
+                
             self.Wid.canvas.axes.axis(h)
             counter=0
     
             if Source is Requete.Spiketrain_ids: 
                 for n in range(Requete.NumberofChannels):
+                    if n>0:
+                        self.Wid.canvas.axes = self.Wid.canvas.fig.add_subplot(NumberofChannels,1,n+1)
                     for i in range(len(Source)):
                         Main.progress.setMinimum(0)
                         Main.progress.setMaximum(len(Source)-1)
                         Main.progress.setValue(i)
-                        
-                        
                         if i >= int(Main.From.text()) and i <= int(Main.To.text()) and Requete.tag["Selection"][i][n] == 1:
-                            
-                            sptr=SpikeTrain.load(Source[i],session=Requete.Global_Session)
+                            sptr=SpikeTrain.load(Source[i][n],session=Requete.Global_Session)
                             try:
                                 for j in range(len(sptr._spike_times)):
                                     sptr._spike_times[j]-=sptr.t_start
@@ -1363,7 +1369,9 @@ class Analysis(object):
         Sealtest is the minimal value (on 1 point) between time and time +window (defaut is 10ms)
        
         """
-
+        print 'To be carefully checked first'
+        return
+            
         self.Seal_test=[numpy.NaN]*len(Requete.Analogsignal_ids)
         self.Leak=[numpy.NaN]*len(Requete.Analogsignal_ids)
         self.Noise_Level=[numpy.NaN]*len(Requete.Analogsignal_ids)
@@ -1478,21 +1486,36 @@ class Analysis(object):
         a='None'
         self.Tagged_Sweeps=0
         for n in range(Requete.NumberofChannels):
+            self.Tagged_Sweeps=0
             for i in range(len(Requete.Analogsignal_ids)):
                 if Requete.tag["Selection"][i][n]==1:
                     self.Tagged_Sweeps+=1
-        msgBox = QtGui.QMessageBox()
-        msgBox.setText(
-        """
-        <b>SQL Request</b>"""+
-        "<p>"+str(Requete.query)+
-        """<p><b>General Infos</b>"""+
-        """<p>Number of Loaded Blocks : """+str(len(set(Requete.Block_ids)))+
-        """<p>Number of Loaded Sweeps : """+str(len(Requete.Analogsignal_ids))+
-        """<p>Number of Tagged Sweeps : """+str(self.Tagged_Sweeps)+
-        """<p>Type of experiment : """+str(a)+
-        """<p>Sampling rate : """+str(Navigate.Points_by_ms)+ """ points by ms (""" +str(Navigate.Points_by_ms)+"""kHz) , or 1 point = """+str(1/Navigate.Points_by_ms)+ """ ms"""+
-        """<p><b>Mapping Infos (saved in the tag field)</b>"""
-        """<p>Have a nice analysis...""")      
-        msgBox.exec_()
+            
+             
+            msgBox = QtGui.QMessageBox()
+            msgBox.setText(
+                "<b>SQL Request</b>"+
+                "<p>"+
+                str(Requete.query)+
+                "<p><b>General Infos</b>"+
+                "<p>Channel number is "+
+                str(n)+
+                "<p>Number of Loaded Blocks : "+
+                str(len(set(numpy.array(Requete.Block_ids).flatten())))+
+                "<p>Number of Loaded Sweeps : "+
+                str(len(Requete.Analogsignal_ids))+
+                "<p>Number of Tagged Sweeps : "+
+                str(self.Tagged_Sweeps)+
+                "<p>Type of experiment : "+
+                str(a)+
+                "<p>Sampling rate : "+
+                str(Navigate.Points_by_ms)+
+                " points by ms (" +
+                str(Navigate.Points_by_ms)+
+                "kHz) , or 1 point = "+
+                str(1./Navigate.Points_by_ms)+
+                " ms"+
+                "<p><b>Mapping Infos (saved in the tag field)</b>"
+                "<p>Have a nice analysis...")      
+            msgBox.exec_()
 

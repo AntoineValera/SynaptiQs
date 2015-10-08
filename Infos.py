@@ -1142,11 +1142,14 @@ class Infos(object):
         
         if Main.SQLTabWidget.currentIndex() == 0 or Main.SQLTabWidget.currentIndex() == 1:
             from OpenElectrophy import sql,open_db,Session
-    #        try:
-            if len(list(set(Requete.Block_ids))) == 1 and  Requete.Block_ids[0] != None:
-                list_of_block="(%s)" % Requete.Block_ids[0]
+
+            bl=numpy.array(Requete.Block_ids).flatten()
+            ch=list(set(numpy.array(Requete.Analogsignal_channel).flatten()))
+            
+            if len(list(set(bl))) == 1 and  Requete.Block_ids[0] != None:
+                list_of_block="(%s)" % bl[0]
             else:
-                list_of_block=str(tuple(set(Requete.Block_ids)))
+                list_of_block=str(tuple(set(bl)))
                 msgBox = QtGui.QMessageBox()
                 msgBox.setText(
                 """
@@ -1154,17 +1157,23 @@ class Infos(object):
                 <p>Please Select only one block for SpikeSorting""")     
                 msgBox.exec_() 
                 return
-                
+            
+            channel= str(ch[0])
+            if len(ch) >1:
+                print 'More than one channel detected, only channel 1 was used'
                 
             list_of_block=list_of_block.replace("L","")
         
                
-                
+            
             query="""
             SELECT recordingpoint.id,recordingpoint.id_block
-            FROM recordingpoint
+            FROM recordingpoint,analogsignal
             WHERE recordingpoint.id_block in %s
-            ORDER BY recordingpoint.id""" % list_of_block
+            AND analogsignal.id_recordingpoint = recordingpoint.id
+            AND analogsignal.channel = %s
+            ORDER BY recordingpoint.id""" % (list_of_block,channel)
+            
             
             print "##################################"
             print "This is the RecordingPoint query:"
@@ -1174,9 +1183,12 @@ class Infos(object):
             try:
                 
                 rp,b =  sql(query)
+                print rp, b
                 if rp == []:
                     print 'No recording point here'
                     return
+                    
+                    
             #For LocalFiles
             except (sqlalchemy.exc.OperationalError,TypeError):
                 if Main.SQLTabWidget.currentIndex() == 2:

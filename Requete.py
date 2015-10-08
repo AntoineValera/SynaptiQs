@@ -123,13 +123,9 @@ class Requete(object):
             new.append([0]*int(self.NumberofChannels))
             for j in range(self.NumberofChannels):
                     new[i][j]=int(self.tag["Selection"][i*self.NumberofChannels+j]) 
+        
         self.tag["Selection"]=new 
-#        new2=[]
-#        for i in range(len(self.Analogsignal_ids)):
-#            new2.append([0]*int(self.NumberofChannels))
-#            for j in range(self.NumberofChannels):
-#                    new2[i][j]=int(self.tag["X_Coord"][i*self.NumberofChannels+j])
-#        self.tag["X_Coord"]=new2          
+   
                     
     def Final_Request(self):
         """
@@ -346,7 +342,13 @@ class Requete(object):
                        "Requete.Analogsignal_name",
                        "Requete.Analogsignal_channel",
                        "Requete.Block_fileOrigin",
-                       "Requete.Block_Info"]
+                       "Requete.Block_Info",
+                       "Requete.Spiketrain_ids",
+                       "Requete.Spiketrain_neuron_name",
+                       "Requete.Spiketrain_t_start",
+                       "Requete.Spiketrain_Neuid"]
+                       
+                       
                        
         OtherRequeteArrays=["Requete.tag['Selection']",
                             "Requete.Analogsignal_sampling_rate",
@@ -388,18 +390,8 @@ class Requete(object):
             temp=self.copythis(ListOfIndexesPerChannel,eval(i))
             i=i.replace('self.','')
             setattr(self,i,Infos.Zip(temp))
-
-#        msgBox = QtGui.QMessageBox()
-#        msgBox.setText("""<b>Caution</b>
-#        <p>Multi-Channel display not fully supported yet. 
-#        <p>You might experience some bugs
-#        """)
-#        msgBox.exec_()            
-        #else:
-        #    self.NumberofChannels=1
-         
-        
-        
+            
+       
         self.Current_Sweep_Number=0
         self.st_currentid=0
     
@@ -442,10 +434,11 @@ class Requete(object):
         print "-----------> Spiketrains Ids (if exist) are :",self.Spiketrain_ids
         
         self.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary={}
-        for i in range((len(self.Spiketrain_ids)/self.NumberofChannels)):
-            self.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary[self.Spiketrain_ids[i]]=self.Analogsignal_ids[i]
+        for n in range(self.NumberofChannels):
+            for i in range(len(self.Spiketrain_ids)):
+                self.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary[self.Spiketrain_ids[i][n]]=self.Analogsignal_ids[i][n]
 
-        
+        print self.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary
         
         Main.MainFigure.canvas.fig.clear()
         flatlist=[item for sublist in self.Analogsignal_name for item in sublist]
@@ -507,13 +500,13 @@ class Requete(object):
                         NewSystem=False
                         break
 
-
+        print self.tag
         #If the old tag system was used, we convert it here to the new system
         if NewSystem==False:
             print 'Old tag system detected'
             self.Convert()
           
-
+        print self.tag
         #Finally, we overwrite the whole self.tag except Selection
         for keys in self.tag:
             if keys != 'Selection':
@@ -757,6 +750,7 @@ class Requete(object):
             From_Core = """
             FROM analogsignal
             JOIN segment on analogsignal.id_segment = segment.id
+            JOIN neuron on neuron.id = spiketrain.id_neuron
             JOIN spiketrain on segment.id=spiketrain.id_segment 
             JOIN block on segment.id_block = block.id"""
             Where_Core="""
@@ -765,6 +759,8 @@ class Requete(object):
             AND (block.info %s
             AND (analogsignal.name %s 
             AND (analogsignal.channel %s
+            AND (neuron.id = spiketrain.id_neuron)
+            AND (segment.id=spiketrain.id_segment)
             AND (spiketrain.id_neuron %s"""
             Order_Core="""
             ORDER BY analogsignal.id
@@ -1263,13 +1259,13 @@ class Requete(object):
         This function call the spiketrain corresponding to a given analogsignal.id
         Then it creates an array containing the amplitude of the signal when a spikes occurs (for display purpose)
         """
-
+        channel=0
         try:
-            f = SpikeTrain().load(self.Spiketrain_ids[self.Current_Sweep_Number],session=self.Global_Session)
+            f = SpikeTrain().load(self.Spiketrain_ids[self.Current_Sweep_Number][channel],session=self.Global_Session)
             self.Current_Spike_Times=(f._spike_times-f.t_start)*1000
             self.Amplitude_At_Spike_Time=numpy.ones(len(self.Current_Spike_Times))
             for i in range(len(self.Current_Spike_Times)):
-                self.Amplitude_At_Spike_Time[i]=Navigate.si[self.Current_Spike_Times[i]/1000*self.Analogsignal_sampling_rate[self.Current_Sweep_Number]]    
+                self.Amplitude_At_Spike_Time[i]=Navigate.si[channel][self.Current_Spike_Times[i]/1000*self.Analogsignal_sampling_rate[self.Current_Sweep_Number]]    
         except (IndexError,TypeError):
             self.Current_Spike_Times=[]
             self.Amplitude_At_Spike_Time=[]
@@ -1286,22 +1282,23 @@ class Requete(object):
                 A=AnalogSignal().load(self.Analogsignal_ids[i][n])
                 Tag_Field_Dictionnary={}
                 
-                if 'None' in self.tag: #BUG; it sometimes happends I don't know why...
+                if 'None' in self.tag: #When some informations like Mapping were never set
                     del self.tag['None']  
                     
                 for keys in self.tag:
-                    try:
+                    if type(self.tag[keys][i]) == list:
                         Tag_Field_Dictionnary[keys]=self.tag[keys][i][n]
-                    except:
+                    else:
                         Tag_Field_Dictionnary[keys]=self.tag[keys][i]
-                  
+
                 dic=str(Tag_Field_Dictionnary).replace("'", '')
                 dic=dic.replace('"', '')
                 A.tag = dic
-                print "sweep#",i,"tag (chan.", n," ; analogsignal",self.Analogsignal_ids[i][n],")saved as : ",A.tag
+                print 'AS = ', i, dic
+                #print "sweep#",i,"tag (chan.", n," ; analogsignal",self.Analogsignal_ids[i][n],")saved as : ",A.tag
                 #TODO # Check why duplicate load
                 A.save()
-                A=AnalogSignal().load(self.Analogsignal_ids[i][n])
+                #A=AnalogSignal().load(self.Analogsignal_ids[i][n])
         print "-----------> Saving completed"
 
 
