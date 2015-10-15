@@ -124,7 +124,8 @@ class Mapping(object):
         self.CM.Scanning_Direction_Mode=None
         self.SuccessRate_Ready=False
         self.DB_Picture=False
-            
+        
+           
     def Tools(self):
   
         """
@@ -229,6 +230,12 @@ class Mapping(object):
         self.MappingID.setGeometry(150, 80, 120, 20)
         QtCore.QObject.connect(self.MappingID, QtCore.SIGNAL("activated(int)"),self.ImportMapping)
 
+        self.CurrentMapFocus = QtGui.QComboBox()
+        self.CurrentMapFocus.setGeometry(250, 80, 120, 20)
+        QtCore.QObject.connect(self.CurrentMapFocus, QtCore.SIGNAL("currentIndexChanged(int)"),self.ChangeCurrentChannel)
+
+
+
         self.ClearMappings = QtGui.QPushButton()
         self.ClearMappings.setGeometry(150, 80, 120, 20) #taille et position (X,Y,Xsize,Ysize)
         self.ClearMappings.setText( "Clear Maps")  
@@ -280,6 +287,7 @@ class Mapping(object):
         Grid.addWidget(self.Number_of_Turns,3,1)   
         Grid.addWidget(self.MappingID,3,2)
         Grid.addWidget(self.ClearMappings,3,3)
+        Grid.addWidget(self.CurrentMapFocus,3,4)
         Grid.addWidget(self.Define_Coordinates_Button,1,8,1,3)
         Grid.addWidget(self.User_Defined_Measurement_Parameters,2,8,1,3)
         Grid.addWidget(self.Add_User_Defined_Measurement_Parameters_Button,3,8)
@@ -559,7 +567,11 @@ class Mapping(object):
         
                 
         self.OptionWid.show()
-    
+        
+    def ChangeCurrentChannel(self):
+        print self.CurrentMapFocus.currentIndex()
+        self.CurrentChannel = int(self.CurrentMapFocus.currentIndex()) 
+        
     def EnableDisableOptions(self,Amplitude,Charge,Average,Measure,ThresholdInput,ChangeDisplay=False):
         self.CM.Amplitude=str(self.Amplitudes_Display_Mode.currentText())
         self.CM.Charge=str(self.Charges_Display_Mode.currentText())
@@ -1656,7 +1668,7 @@ class Mapping(object):
                 print "Average On ",len(self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys])," Sweeps"
                 print "Sweep # ",self.Currently_Used_Sweep_nb_for_Local_Average," were used"
     
-            Analysis.Measure_on_Average(Display_Superimposed_Traces=True,Position=keys) #list of ids could be List_of_Ids=self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]
+            Analysis.Measure_on_Average(Display_Superimposed_Traces=True,Position=keys,Channel=[self.CurrentChannel]) #list of ids could be List_of_Ids=self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary[keys]
 
 
 

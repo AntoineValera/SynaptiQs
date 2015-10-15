@@ -188,6 +188,11 @@ class Requete(object):
         
         Mapping.Autofill_Coordinates_Values_from_Tag_Field()
         
+        Mapping.CurrentMapFocus.clear()
+        for i in range(self.NumberofChannels):
+            Mapping.CurrentMapFocus.addItem(str(i))
+        
+        
         Navigate.Load_This_Sweep_Number(0)
 
         if firstload == True:
@@ -750,7 +755,6 @@ class Requete(object):
             From_Core = """
             FROM analogsignal
             JOIN segment on analogsignal.id_segment = segment.id
-            JOIN neuron on neuron.id = spiketrain.id_neuron
             JOIN spiketrain on segment.id=spiketrain.id_segment 
             JOIN block on segment.id_block = block.id"""
             Where_Core="""
@@ -759,8 +763,6 @@ class Requete(object):
             AND (block.info %s
             AND (analogsignal.name %s 
             AND (analogsignal.channel %s
-            AND (neuron.id = spiketrain.id_neuron)
-            AND (segment.id=spiketrain.id_segment)
             AND (spiketrain.id_neuron %s"""
             Order_Core="""
             ORDER BY analogsignal.id

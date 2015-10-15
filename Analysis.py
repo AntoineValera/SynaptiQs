@@ -150,7 +150,7 @@ class Analysis(object):
                 if type(Channel) == list:
                     Channels=Channel
                 else:
-                    print 'channel paramter must be a list'
+                    print 'channel parameter must be a list'
                     return
         
             
