@@ -648,6 +648,7 @@ class Main(QtGui.QWidget,object):#
         self.Display_Measures_Button = QtGui.QCheckBox(self.AnalysisWidget)
         self.Display_Measures_Button.setGeometry(5, 200, 80, 21)
         self.Display_Measures_Button.setText( "Measuring")
+        self.Display_Measures_Button.setObjectName("Display_Measures_Button")
         
         self.Analyze_Filtered_Traces_Button = QtGui.QCheckBox(self.AnalysisWidget)
         self.Analyze_Filtered_Traces_Button.setGeometry(5, 220, 120, 21)
@@ -660,7 +661,8 @@ class Main(QtGui.QWidget,object):#
         self.Remove_Leak_Button = QtGui.QCheckBox(self.AnalysisWidget)
         self.Remove_Leak_Button.setGeometry(130, 200, 120, 21)
         self.Remove_Leak_Button.setText( "Remove Leak") 
-
+        self.Remove_Leak_Button.setObjectName("Remove_Leak_Button")
+        
         self.Measure_From_Baseline1_Button = QtGui.QCheckBox(self.AnalysisWidget)
         self.Measure_From_Baseline1_Button.setGeometry(130, 220, 120, 21)
         self.Measure_From_Baseline1_Button.setText( "Measure from bsl1") 
@@ -668,6 +670,7 @@ class Main(QtGui.QWidget,object):#
         self.Measure_From_Zero_Button = QtGui.QCheckBox(self.AnalysisWidget)
         self.Measure_From_Zero_Button.setGeometry(130, 240, 120, 21)
         self.Measure_From_Zero_Button.setText( "Measure from 0") 
+        self.Measure_From_Zero_Button.setObjectName("Measure_From_Zero_Button")
     
         self.Display_Spikes_Button = QtGui.QCheckBox(self.SpikesWidget)
         self.Display_Spikes_Button.setGeometry(5, 45, 120, 21)
@@ -1083,8 +1086,7 @@ class Main(QtGui.QWidget,object):#
         try:
             Navigate.Load_This_Trace(Requete.Analogsignal_ids[Requete.Current_Sweep_Number])
             self.MainFigure.canvas.Update_Figure()
-           
-        except AttributeError:
+        except (AttributeError,IndexError):
             pass
 
        

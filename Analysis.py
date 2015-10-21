@@ -43,10 +43,9 @@ class Analysis(object):
         #SealTestStart=2500
         #SealTestStop=3600
         SealTestStart=2500
-        SealTestStop=2501    
-        if 'Measurement_Interval' in locals() == False:
-            self.Display_Measures_Button.setCheckState(2)
-            self.Measure_On_Off_Activated()
+        SealTestStop=2501   
+        if hasattr(Main, 'Measurement_Interval') == False:
+            Main.Display_Measures_Button.setCheckState(2)
         StimStart=self.Measurement_Interval[2]
     
     
@@ -158,7 +157,7 @@ class Analysis(object):
         self.Currently_Used_Sweep_nb_for_Local_Average=[]#[[numpy.NaN]*Requete.NumberofChannels]*len(List_of_Ids)
         NumberofChannels=len(Channels)      
         
-        for n in Channels:
+        for idx,n in enumerate(Channels):
             self.Check_Measuring_Parameters_Validity()
                 
         #        if Main.SQLTabWidget.currentIndex() == 0 or Main.SQLTabWidget.currentIndex() == 1:
@@ -301,22 +300,29 @@ class Analysis(object):
                 self.Peak3 = numpy.ones(self.Measurement_Interval[5])*self.Ampvalues[5]
                 self.Peak3_coord = numpy.array(range(len(self.Peak3)))+self.left[5]
           
-    #            if Main.Measure_From_Baseline1_Button.checkState() == 2 or Measure_All_from_Baseline1 == True:
-    #                self.Base1-=self.Ampvalues[0]
-    #                self.Peak1-=self.Ampvalues[0]
-    #                self.Base2-=self.Ampvalues[0]
-    #                self.Peak2-=self.Ampvalues[0]
-    #                self.Base3-=self.Ampvalues[0]
-    #                self.Peak3-=self.Ampvalues[0]
-    
+#                if Main.Measure_From_Zero_Button.checkState() == 2 or All_from_Zero == True:
+#                    self.Base1-=self.Ampvalues[0]
+#                    self.Peak1-=self.Ampvalues[0]
+#                    self.Base2-=self.Ampvalues[0]
+#                    self.Peak2-=self.Ampvalues[0]
+#                    self.Base3-=self.Ampvalues[0]
+#                    self.Peak3-=self.Ampvalues[0]
+#                elif Main.Measure_From_Baseline1_Button.checkState() == 2 or Measure_All_from_Baseline1 == True:
+#                    self.Base1-=self.Ampvalues[0]
+#                    self.Peak1-=self.Ampvalues[0]
+#                    self.Base2-=self.Ampvalues[2]
+#                    self.Peak2-=self.Ampvalues[2]
+#                    self.Base3-=self.Ampvalues[4]
+#                    self.Peak3-=self.Ampvalues[4]    
                 #Only Once
                 if QtCore.QObject().sender().__class__.__name__ == 'QCheckBox':
-                    if n == 0:
+                    if idx == 0:
                         self.Wid.canvas.axes.clear()    
                 else:
-                    if n == 0:
+                    if idx == 0:
                         #For the first trace, we create the widget
-                        self.Wid = MyMplWidget(title = 'Averaged Trace',subplots=[NumberofChannels,1,n+1])
+                        
+                        self.Wid = MyMplWidget(title = 'Averaged Trace',subplots=[NumberofChannels,1,idx+1])
                     
                         
                         self.Wid.canvas.Superimpose_Used_Traces_Button = QtGui.QCheckBox()
@@ -330,9 +336,8 @@ class Analysis(object):
                         self.Wid.toolbar.addWidget(self.Wid.canvas.Superimpose_Used_Traces_Button)
                         QtCore.QObject.connect(self.Wid.canvas.Superimpose_Used_Traces_Button,QtCore.SIGNAL('stateChanged(int)'),self.Wid.canvas.Update_Superimpose)            
                     else:
-                        
                         #For the next ones we do just add subplots
-                        self.Wid.canvas.axes = self.Wid.canvas.fig.add_subplot(NumberofChannels,1,n+1)
+                        self.Wid.canvas.axes = self.Wid.canvas.fig.add_subplot(NumberofChannels,1,idx+1)
     
     
                 #This can be optimized

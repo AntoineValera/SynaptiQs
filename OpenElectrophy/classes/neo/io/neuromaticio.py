@@ -148,10 +148,9 @@ class NeuromaticIO(BaseIO):
         blck=Block()
         convertiontable=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
         Day=int(filename[2:4])
-        Month=int(convertiontable.index(filename[4:7]))
+        Month=int(convertiontable.index(filename[4:7]))+1
         Year=int(filename[7:11])
         date = datetime.date(Year,Month,Day)
-
         blck.datetime=date
         
         for n in Suffixes:

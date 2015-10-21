@@ -9,7 +9,7 @@ import sys, os
 from PyQt4 import QtGui, QtCore
 from matplotlib import numpy
 from sys import maxint
-import re
+import re, string
 from SynaptiQs import *
 
 
@@ -251,70 +251,68 @@ class MyWindow(QtGui.QWidget,object):
                 Array,Var=self.IgorLoad(filePath)
                 if Array == None and Var == None:
                     return
-                #if isinstance(Array, dict):
-                Filter,ok = QtGui.QInputDialog.getText(Main.FilteringWidget, 'To filter names, add text here', 
-                "",QtGui.QLineEdit.Normal,"RecordA")
                 
-                Filter=str(Filter) 
-                templist1=[]
-                templist2=[]
+                Filter,ok = QtGui.QInputDialog.getText(Main.FilteringWidget, 'To filter names, add text here', 
+                "",QtGui.QLineEdit.Normal,"Record")
+                
+                if ';' in Filter:
+                    Filter.split(';')
+                else:
+                    Filter=[str(Filter)]
+                #Filter=str(Filter) 
+                OriginalSweepNames=[]
+                FormatedSweepNames=[]
                 tempkeys=[]
                 for i in Array:
                     tempkeys.append(i)
-                #tempkeys=self.SortComplicated(tempkeys)
+
                 tempkeys=sorted(tempkeys, key=self.splitgroups)
-                
-                counter=0
-                for i in tempkeys:
-                    
-                    if Filter in i:
-                        i2=i
-                        Main.LoadedList.append(i)
-                        
-                        if "RecordA" in i:
+                #First we detect the number of channel necessary
+                NewFilterList=[]
+                for s in tempkeys:
+                    for f in Filter:
+                        if f in s:
+                            NewFilterList.append(''.join([i for i in s if not i.isdigit()]))
                             
-                            shortname=i[i.index('dA')+2:]
-                            shortname=shortname.zfill(4)
-                            i2="RecordA"+shortname
-                            self.FileType="Neuromatic"
+                NewFilterList=[x for x in NewFilterList if "C_Record" not in x] 
+                
+                Requete.NumberofChannels = len(list(set(NewFilterList)))
+                
+                for Filter in list(set(NewFilterList)):
+                    counter=0
+                    for originalName in tempkeys:
+                        if Filter in originalName:
+                            if len(Navigate.ArrayList) <= counter:
+                                Navigate.ArrayList.append([])
+                                
+                            formatedName=originalName
+                            Main.LoadedList.append(originalName)
                             
-                        if "RecordB" in i:
-                            shortname=i[i.index('dB')+2:]
-                            shortname=shortname.zfill(4)
-                            i2="RecordA"+shortname    
-                            self.FileType="Neuromatic"
-
-                        if "sweepA" in i:
-                            shortname=i[i.index('pA')+2:]
-                            shortname=shortname.zfill(4)
-                            self.FileType="Synaptics"
-                            i2="sweepA"+shortname   
-
-                        if "sweepB" in i:
-                            shortname=i[i.index('pB')+2:]
-                            shortname=shortname.zfill(4)
-                            i2="sweepB"+shortname   
-                            self.FileType="Synaptics"
-
-                        if Filter == "A":
-                            shortname=i[i.index('A')+1:]
-                            shortname=shortname.zfill(4)
-                            i2="A"+shortname
-                            self.FileType="WinWCP"                            
-                        if Filter == "B":
-                            shortname=i[i.index('B')+1:]
-                            shortname=shortname.zfill(4)
-                            i2="B"+shortname
-                            self.FileType="WinWCP"
+                            if "Record" in Filter:
+                                shortname=originalName[originalName.index('d')+2:]
+                                shortname=shortname.zfill(4)
+                                formatedName=Filter+shortname
+                                self.FileType="Neuromatic"
+        
+                            if "sweep" in Filter:
+                                shortname=originalName[originalName.index('p')+2:]
+                                shortname=shortname.zfill(4)
+                                formatedName=Filter+shortname   
+                                self.FileType="Synaptics"
                             
-                        templist1.append(i)    
-                        templist2.append(i2)
-                        counter+=1    
-                        exec("Analysis."+i2+"= Array[i]")
-                        Navigate.ArrayList.append(eval("Analysis."+i2))
-                
-                
-                
+                            for letter in list(string.ascii_uppercase):
+                                if Filter == letter:
+                                    shortname=originalName[originalName.index(letter)+1:]
+                                    shortname=shortname.zfill(4)
+                                    formatedName=letter+shortname
+                                    self.FileType="WinWCP"                            
+                                
+                            OriginalSweepNames.append(originalName)    
+                            FormatedSweepNames.append(formatedName)
+                            exec("Analysis."+formatedName+"= Array[originalName]")
+                            Navigate.ArrayList[counter].append(list(eval("Analysis."+formatedName)))
+                            counter+=1 
+
                 if Var != None:
                     for i in Var:
                         exec("Analysis."+i+"= Var[i]")
@@ -324,7 +322,28 @@ class MyWindow(QtGui.QWidget,object):
                 Main.AnalysisWidget.setEnabled(True)
                 Main.NavigationWidget.setEnabled(True)
                 Main.MappingWidget.setEnabled(True)
-                print Navigate.ArrayList
+                Reslice = False
+                    
+                if len(Navigate.ArrayList[0][0]) >= 100000 or Reslice == True:
+                    print 'more than 100 000 points per sweep, original trace was auto-resliced'
+                    if Navigate.VarList.has_key("sampling_rate") == True:
+                        sr = int(1000.*Navigate.VarList["sampling_rate"])
+                    elif Navigate.VarList.has_key("SampleInterval") == True:
+                        sr = int(1000./Navigate.VarList["SampleInterval"])
+                    else:
+                        sr = 50000
+                    counter=0
+                    temp=[None]*int(len(Navigate.ArrayList[0][0])/sr)
+                    for Slice in range(len(temp)):
+                        temp[Slice]=[None]*Requete.NumberofChannels
+                        print 'reslicing slice ',Slice
+                        for n in range(Requete.NumberofChannels):
+                            temp[Slice][n]=numpy.array(Navigate.ArrayList[0][n][0:sr])
+                            del Navigate.ArrayList[0][n][0:sr]
+
+                    Navigate.ArrayList=temp
+                    del temp
+
                 self.Update_Navigate()
                 Requete.Add_Dictionnary_Arrays()
                 Infos.Actualize()
@@ -332,8 +351,9 @@ class MyWindow(QtGui.QWidget,object):
                 #QtGui.QListWidgetItem(filePath+" added as self."+filePath.split("/")[-1][:-4], self.listWidgetFiles)
                 QtGui.QListWidgetItem(filePath+" opened", self.listWidgetFiles)
                  
-                for i in range(len(templist1)):
-                    QtGui.QListWidgetItem("         Igor Wave "+templist1[i]+" loaded as Analysis."+templist2[i], self.listWidgetFiles)
+                for i in range(len(OriginalSweepNames)):
+                    QtGui.QListWidgetItem("         Igor Wave "+OriginalSweepNames[i]+" loaded as Analysis."+FormatedSweepNames[i], self.listWidgetFiles)
+
 
     def ClearLocal(self):
         for i in Main.LoadedList:
@@ -343,7 +363,6 @@ class MyWindow(QtGui.QWidget,object):
                 pass
         self.listWidgetFiles.clear()
         Infos.Actualize()
-        self.Update_Navigate()
         del Navigate.ArrayList[0]
         del Requete.Current_Signal
         del Requete.timescale
@@ -361,7 +380,7 @@ class MyWindow(QtGui.QWidget,object):
         Requete.Block_Info=[None]
         Requete.Analogsignal_signal_shape=[None]
         Requete.BypassedSamplingRate=[None]
-        Requete.Shortest_Sweep_Length=1#Navigate.VarList["SamplesPerWave"]*Navigate.VarList["SampleInterval"]
+        Requete.Shortest_Sweep_Length=1.0#Navigate.VarList["SamplesPerWave"]*Navigate.VarList["SampleInterval"]
         Main.slider.setRange(0, 0) #definit le range du slider sweepnb
         Requete.Spiketrain_ids=[None]
         Requete.Spiketrain_neuron_name=[None]
@@ -382,7 +401,9 @@ class MyWindow(QtGui.QWidget,object):
         except KeyError:
             pass             
         Navigate.ArrayList=[]
-        Main.MainFigure.canvas.Compute_Initial_Figure()
+        Main.MainFigure.canvas.fig.clf()
+        Main.Show_Main_Figure()
+        #Main.MainFigure.canvas.Compute_Initial_Figure()
         Navigate.Check_From_To()
                 
     def Update_Navigate(self):
@@ -408,20 +429,20 @@ class MyWindow(QtGui.QWidget,object):
         #    Navigate.VarList["SampleInterval"]=Navigate.VarList["sampling_rate"]
         try:    
             if self.FileType == "Neuromatic":#Navigate.VarList.has_key("SampleInterval") == True:
-                Requete.timescale=(Navigate.VarList["SampleInterval"])*numpy.array(range(len(RecordA0)))
+                Requete.timescale=(Navigate.VarList["SampleInterval"])*numpy.array(range(len(RecordA0[0])))
                 Requete.Analogsignal_sampling_rate=list([1000./Navigate.VarList["SampleInterval"]]*len(Navigate.ArrayList))
             elif self.FileType=="Synaptics":#Navigate.VarList.has_key("sampling_rate") == True:
-                Requete.timescale=(1./Navigate.VarList["sampling_rate"])*numpy.array(range(len(RecordA0)))
+                Requete.timescale=(1./Navigate.VarList["sampling_rate"])*numpy.array(range(len(RecordA0[0])))
                 Requete.Analogsignal_sampling_rate=list([1000.*Navigate.VarList["sampling_rate"]]*len(Navigate.ArrayList))
             elif self.FileType=="WinWCP":#Navigate.VarList.has_key("sampling_rate") == True:
-                Requete.timescale=(1000./Navigate.VarList["sampling_rate"])*numpy.array(range(len(RecordA0)))
+                Requete.timescale=(1000./Navigate.VarList["sampling_rate"])*numpy.array(range(len(RecordA0[0])))
                 Requete.Analogsignal_sampling_rate=list([Navigate.VarList["sampling_rate"]]*len(Navigate.ArrayList))
         except KeyError:
             val, ok = QtGui.QInputDialog.getText(self,'Sampling rate not found', 
                 'Please enter sampling rate')
             val=float(val)                
             Navigate.VarList["SampleInterval"] = val
-            Requete.timescale = val*numpy.array(range(len(RecordA0)))
+            Requete.timescale = val*numpy.array(range(len(RecordA0[0])))
             Requete.Analogsignal_sampling_rate=list([len(Requete.Current_Signal)]*len(Navigate.ArrayList)) 
             msgBox = QtGui.QMessageBox()
             msgBox.setText(
@@ -447,16 +468,16 @@ class MyWindow(QtGui.QWidget,object):
             Requete.BypassedSamplingRate=1000./Navigate.VarList["SampleInterval"]
         
         Requete.Current_Sweep_Number=0
-        Requete.Block_ids=list([None]*len(Navigate.ArrayList))
-        Requete.Block_date=list([None]*len(Navigate.ArrayList))
-        Requete.Segment_ids=list([None]*len(Navigate.ArrayList))
-        Requete.Analogsignal_ids=range(len(Navigate.ArrayList))#list([None]*len(Navigate.ArrayList))
+        Requete.Block_ids=list([[0]*Requete.NumberofChannels]*len(Navigate.ArrayList))
+        Requete.Block_date=list([[None]*Requete.NumberofChannels]*len(Navigate.ArrayList))
+        Requete.Segment_ids=[[x]*Requete.NumberofChannels for x in range(len(Navigate.ArrayList))]
+        Requete.Analogsignal_ids=[[x]*Requete.NumberofChannels for x in range(len(Navigate.ArrayList))]#range(len(Navigate.ArrayList))
         Requete.Analogsignal_name=list([None]*len(Navigate.ArrayList))
         Requete.tag={}
-        Requete.tag["Selection"]=[0]*len(Requete.Analogsignal_ids)
-        Requete.Analogsignal_channel=list([None]*len(Navigate.ArrayList))
+        Requete.tag["Selection"]=[[0]*Requete.NumberofChannels]*len(Requete.Analogsignal_ids)
+        Requete.Analogsignal_channel=list([range(Requete.NumberofChannels)]*len(Navigate.ArrayList))
         Requete.Block_fileOrigin=list([None]*len(Navigate.ArrayList))
-        Requete.Block_Info=list([None]*len(Navigate.ArrayList))
+        Requete.Block_Info=list([[None]*Requete.NumberofChannels]*len(Navigate.ArrayList))
         if Navigate.VarList.has_key("SamplesPerWave") == True:
             Requete.Analogsignal_signal_shape=list([int(Navigate.VarList["SamplesPerWave"])]*len(Navigate.ArrayList))
         else:
@@ -480,6 +501,7 @@ class MyWindow(QtGui.QWidget,object):
         
         Main.To.setText(str(len(Requete.Analogsignal_ids)-1))
         Navigate.Check_From_To()
+        Main.MainFigure.canvas.fig.clf()
         Navigate.Display_First_Trace()
 
 

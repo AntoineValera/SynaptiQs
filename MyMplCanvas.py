@@ -272,7 +272,7 @@ class MyMplCanvas(FigureCanvasQTAgg):
                 
                 #this is very slow if there are a lot of superimposed traces
                 for i in q:
-    
+                    
                     Navigate.Load_This_Trace(Requete.Analogsignal_ids[i][n])
 #                    if Main.Analyze_Filtered_Traces_Button.checkState() == 0:
                     si = Navigate.si[n]
@@ -306,6 +306,8 @@ class MyMplCanvas(FigureCanvasQTAgg):
               
             except AttributeError:
                 print "You must superpose data to select a trace"
+            except IndexError:
+                print "selection error, retry? (buggy part here in the code)"
 
         else:
             print "already clicked"
@@ -341,6 +343,60 @@ class MyMplCanvas(FigureCanvasQTAgg):
         self.axes.set_ylabel("Amplitude")
         
         #self.show()
+    def VerifyCheckingPossiblities(self,signal):
+        
+        ##First detect problematic unchecking, and adjust comboboxes accordingly
+        if QtCore.QObject().sender().objectName() == "Display_Measures_Button":
+            if Main.Display_Measures_Button.checkState() == 0:
+                Main.Remove_Leak_Button.setCheckState(0)
+                Main.Measure_From_Baseline1_Button.setCheckState(0)
+                Main.Measure_From_Zero_Button.setCheckState(0)
+                Main.Display_Charge_Button.setCheckState(0) 
+                return True
+            
+                
+        elif QtCore.QObject().sender().objectName() == "Measure_From_Zero_Button":
+            if Main.Measure_From_Zero_Button.checkState() == 2:
+                if Main.Measure_From_Baseline1_Button.checkState() == 2:
+                    Main.Measure_From_Baseline1_Button.setCheckState(0)
+                    Main.Remove_Leak_Button.setCheckState(2)
+                    return True
+                
+        elif QtCore.QObject().sender().objectName() == "Remove_Leak_Button":
+            if Main.Remove_Leak_Button.checkState() == 0:
+                Main.Measure_From_Zero_Button.setCheckState(0)
+                return True              
+        
+        ##Second, adjust checking combination to prevent bugs        
+        if Main.Measure_From_Baseline1_Button.checkState() == 2:
+            if Main.Measure_From_Zero_Button.checkState() == 2:
+                Main.Measure_From_Zero_Button.setCheckState(0) 
+                return True
+            if Main.Display_Measures_Button.checkState() == 0:
+                Main.Display_Measures_Button.setCheckState(2)
+                return True
+  
+        if Main.Measure_From_Zero_Button.checkState() == 2:
+            if Main.Remove_Leak_Button.checkState() == 0:
+                Main.Remove_Leak_Button.setCheckState(2)
+                return True
+            if Main.Display_Measures_Button.checkState() == 0:
+                Main.Display_Measures_Button.setCheckState(2) 
+                return True
+            if Main.Measure_From_Baseline1_Button.checkState() == 2:
+                Main.Measure_From_Baseline1_Button.setCheckState(0)
+                
+        if Main.Remove_Leak_Button.checkState() == 2: #display a dotted line at 0
+            if Main.Display_Measures_Button.checkState() == 0:
+                Main.Display_Measures_Button.setCheckState(2) 
+                return True
+
+        if Main.Display_Charge_Button.checkState() == 2:
+            if Main.Display_Measures_Button.checkState() == 0: 
+                Main.Display_Measures_Button.setCheckState(2)
+                return True
+                
+        return False
 
     def Update_Figure(self):
         """
@@ -351,6 +407,18 @@ class MyMplCanvas(FigureCanvasQTAgg):
         Color_of_Filtered_Traces=Navigate.Color_of_Filtered_Traces
         Main.MainFigure.canvas.Object_Selection_Mode = None #just in case there is a bug somewhere
         
+        ##First detect problematic unchecking, and adjust comboboxes accordingly
+        ##Second, adjust checking combination to prevent bugs 
+        try:
+            correction = self.VerifyCheckingPossiblities(QtCore.QObject().sender().objectName())
+            if correction == True:
+                return
+        except AttributeError:
+            #TODO : this occurs when sent form Local filefile import, and return 
+                #if QtCore.QObject().sender().objectName() != None:
+                #AttributeError: 'NoneType' object has no attribute 'objectName'
+            pass
+        #Third, Measure and plot
         for n in range(Requete.NumberofChannels):
             self.axes = Main.MainFigure.canvas.fig.add_subplot(Requete.NumberofChannels,1,n+1)
 
@@ -359,21 +427,17 @@ class MyMplCanvas(FigureCanvasQTAgg):
             self.LowY=self.axes.get_ybound()[0]
             self.HighY=self.axes.get_ybound()[1]
                 
-              
             if Main.Superimposetraces.checkState() == 0:
                 self.axes.clear()
-                
-                
-            if Main.Measure_From_Zero_Button.checkState() == 2:
-                Main.Remove_Leak_Button.setCheckState(2) 
-                
-            if Main.Remove_Leak_Button.checkState() == 2: #it's a line at 0
+   
+            if Main.Remove_Leak_Button.checkState() == 2: #display a dotted line at 0
                 self.axes.plot(Requete.timescale,numpy.zeros(int(len(Requete.timescale))),'r--',picker=0)
                     
             if Main.RAW_Display.checkState() == 2:
                 try:
                     self.axes.plot(Requete.timescale,Navigate.si[n],Color_of_Standard_Trace,picker=1)
                 except ValueError:
+                    #TODO : this should be programatically prevented
                     print len(Requete.timescale),len(Navigate.si[n])
                     print "Requete.timescale and Navigate.si do not have the same number of points, loading skipped"
                     return
@@ -385,6 +449,7 @@ class MyMplCanvas(FigureCanvasQTAgg):
                 try:
                     self.axes.plot(Requete.timescale,Navigate.si[n],Color_of_Standard_Trace,picker=1)
                 except ValueError:
+                    #TODO : this should be programatically prevented
                     print len(Requete.timescale),len(Navigate.si[n])
                     print "Caution, the timescale is causing some issues..."
                 except AttributeError:
@@ -393,9 +458,7 @@ class MyMplCanvas(FigureCanvasQTAgg):
             self.axes.set_xlabel("Time (ms)")
             self.axes.set_ylabel("Amplitude (pA)")
     
-            if Main.Display_Charge_Button.checkState() == 2 and Main.Display_Measures_Button.checkState() == 0:
-               Main.Display_Measures_Button.setCheckState(2)
-               
+      
             if Main.Display_Measures_Button.checkState() == 2:
                 Analysis.Measure_On_Off(n)
                 self.axes.plot(Analysis.Base1_coord/Navigate.Points_by_ms,Analysis.Base1,'r',linewidth=3)
@@ -411,20 +474,27 @@ class MyMplCanvas(FigureCanvasQTAgg):
                         self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,0.,where=0.>Analysis.Charge_trace,alpha=0.3)
                     elif Mapping.CM.Types_of_Events_to_Measure == 'Positive':
                         self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,0.,where=0.<Analysis.Charge_trace,alpha=0.3)                    
+#                elif Main.Measure_From_Baseline1_Button.checkState() == 2:
+#                    if Mapping.CM.Types_of_Events_to_Measure == 'Negative':
+#                        self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,Analysis.Base1[0],where=Analysis.Base1[0]>Analysis.Charge_trace,alpha=0.3)
+#                    elif Mapping.CM.Types_of_Events_to_Measure == 'Positive':
+#                        self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,Analysis.Base1[0],where=Analysis.Base1[0]<Analysis.Charge_trace,alpha=0.3)
                 else:
                     if Mapping.CM.Types_of_Events_to_Measure == 'Negative':
                         self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,Analysis.Base1[0],where=Analysis.Base1[0]>Analysis.Charge_trace,alpha=0.3)
                     elif Mapping.CM.Types_of_Events_to_Measure == 'Positive':
-                        self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,Analysis.Base1[0],where=Analysis.Base1[0]<Analysis.Charge_trace,alpha=0.3)
+                        self.axes.fill_between(Requete.timescale,Analysis.Charge_trace,Analysis.Base1[0],where=Analysis.Base1[0]<Analysis.Charge_trace,alpha=0.3)                    
+                    
+                    
         
             if Main.Display_Spikes_Button.checkState() == 2:
                 try:
-                    #print Requete.Current_Spike_Times
-                    #print Requete.Amplitude_At_Spike_Time
                     self.axes.plot(Requete.Current_Spike_Times,Requete.Amplitude_At_Spike_Time,'ro',linewidth=10)
                 except:
+                    #TODO : Catch the good error here
                     Requete.Current_Spike_Times=[]
                     print "No spikes to plot here"
+                    
             elif Main.Display_Spikes_Button.checkState() == 0:
                 Requete.Current_Spike_Times=[]
             else:

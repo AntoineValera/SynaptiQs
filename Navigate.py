@@ -22,6 +22,7 @@ class Navigate(object):
         self.highvalue=5000
         self.Color_of_Standard_Trace='g'
         self.SpikeTrainEdited = False
+        self.Color_of_Filtered_Traces = 'r'
         #self.Weired=False #testing... for a second filtering if needed
     
     def _all(self,All=False):
@@ -177,6 +178,7 @@ class Navigate(object):
               
         elif Main.SQLTabWidget.currentIndex() == 2:#For local Files
             #TODO:Implement multichannel
+            
             self.si = self.ArrayList[Requete.Current_Sweep_Number]
             self.Filtered_Signal = self.ArrayList[Requete.Current_Sweep_Number]
             try:
@@ -188,9 +190,9 @@ class Navigate(object):
                 
         #Cropping of the signal to the shortest duration of the selection. It doesn't change anything if there is only one sampling rate
         for i,j in enumerate(self.si):
-            self.si[i] = self.si[i][0:Requete.BypassedSamplingRate*Requete.Shortest_Sweep_Length+1]
+            self.si[i] = self.si[i][0:int(Requete.BypassedSamplingRate*Requete.Shortest_Sweep_Length)+1]
         for i,j in enumerate(self.Filtered_Signal):   
-            self.Filtered_Signal[i] = self.Filtered_Signal[i][0:Requete.BypassedSamplingRate*Requete.Shortest_Sweep_Length]
+            self.Filtered_Signal[i] = self.Filtered_Signal[i][0:int(Requete.BypassedSamplingRate*Requete.Shortest_Sweep_Length)+1]
 
         
         Analysis.Measure_On_Off()

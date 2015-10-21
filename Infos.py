@@ -1158,9 +1158,9 @@ class Infos(object):
                 msgBox.exec_() 
                 return
             
-            channel= str(ch[0])
+            channel= str(ch[int(Mapping.CurrentChannel)])
             if len(ch) >1:
-                print 'More than one channel detected, only channel 1 was used'
+                print 'More than one channel detected, only channel %s was used' %(Mapping.CurrentChannel)
                 
             list_of_block=list_of_block.replace("L","")
         
@@ -1181,14 +1181,11 @@ class Infos(object):
             
             #For SQLite and mySQL database
             try:
-                
                 rp,b =  sql(query)
-                print rp, b
                 if rp == []:
                     print 'No recording point here'
                     return
-                    
-                    
+  
             #For LocalFiles
             except (sqlalchemy.exc.OperationalError,TypeError):
                 if Main.SQLTabWidget.currentIndex() == 2:
