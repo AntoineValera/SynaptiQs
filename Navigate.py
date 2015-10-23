@@ -101,7 +101,7 @@ class Navigate(object):
     
             if Main.Display_Spikes_Button.checkState() == 2:
                 if Main.SQLTabWidget.currentIndex() == 2:
-                    print "No spiketrain here, under developpement"
+                    print "Only one channel displayed at the time for now. Change the channel in Menu>MappingOption>CurrentChannel"
                     pass
                 else:
                     Requete.Call_Spikes()            
@@ -177,13 +177,14 @@ class Navigate(object):
                 self.Filtered_Signal.append(scipy.signal.resample(self.sig.signal,(Requete.BypassedSamplingRate)*(len(self.sig.signal)/self.sig.sampling_rate)))            
               
         elif Main.SQLTabWidget.currentIndex() == 2:#For local Files
-            #TODO:Implement multichannel
+            #TODO:Implement multichannel on spikes
             
             self.si = self.ArrayList[Requete.Current_Sweep_Number]
             self.Filtered_Signal = self.ArrayList[Requete.Current_Sweep_Number]
+            n=Mapping.CurrentChannel
             try:
-                Requete.Current_Spike_Times=Requete.SpikeTrainfromLocal[str(Requete.Current_Sweep_Number)]
-                Requete.Amplitude_At_Spike_Time=Requete.AmpSpikeTrainfromLocal[str(Requete.Current_Sweep_Number)]
+                Requete.Current_Spike_Times=Requete.SpikeTrainfromLocal[str(Requete.Current_Sweep_Number)+'_'+str(n)]
+                Requete.Amplitude_At_Spike_Time=Requete.AmpSpikeTrainfromLocal[str(Requete.Current_Sweep_Number)+'_'+str(n)]
             except :
                 Requete.Current_Spike_Times=[]
                 Requete.Amplitude_At_Spike_Time=[]

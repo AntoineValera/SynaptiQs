@@ -420,7 +420,7 @@ class Mapping(object):
         QtCore.QObject.connect(self.Activate_Map, QtCore.SIGNAL("clicked()"),self.Display_Mapping_Results)
 
         self.ColorMap = QtGui.QComboBox()
-        self.ColorMap.setGeometry(300, 145, 60, 25)
+        self.ColorMap.setGeometry(300, 145, 120, 25)
         self.ColorMap.addItems(['hot',
                                 "bwr",
                                 'autumn',
@@ -432,13 +432,21 @@ class Mapping(object):
                                 'Greens',
                                 'Blues',
                                 'Reds',
-                                'Grays']) #others at http://www.loria.fr/~rougier/teaching/matplotlib/
+                                'Grays',
+                                'Oranges_r',
+                                'Greens_r',
+                                'Blues_r',
+                                'Reds_r',
+                                'Grays_r',
+                                'Oranges_r']) #others at http://www.loria.fr/~rougier/teaching/matplotlib/
         
         hbox6=QtGui.QHBoxLayout()
         hbox6.addWidget(self.Objective)
         hbox6.addWidget(self.Select_Experiment_Picture_Button)
-        hbox6.addWidget(self.Stim_Resolution_Label)  
+        hbox6.addWidget(self.Stim_Resolution_Label)
+        hbox6.addWidget(self.Stim_Resolution)
         hbox6.addWidget(self.Transparency_Label)
+        
         hbox6.addWidget(self.Transparency)
         hbox6.addWidget(self.Activate_Map)           
         hbox6.addWidget(self.ColorMap)          
@@ -2414,9 +2422,9 @@ class Mapping(object):
         
         """
         self.NormalizeSurfaceAndColors()
-        
-        self.CM.ScaleAxis()#float(self.Stim_Resolution.text()))
         self.CM.Scaling_Factor=float(self.Stim_Resolution.text())
+        self.CM.ScaleAxis()#float(self.Stim_Resolution.text()))
+        
         #If "success rate" is set, sucess rate is in color (instead of amplitude), charge in surface
         if self.Thresholding_Mode.currentIndex() == 4:
             self.CM.Local_Amplitude=self.CM.Local_Success
@@ -2470,9 +2478,11 @@ class Mapping(object):
     def Clear_Mappings(self):       
         self.Mapping_ID=0
         for i in self.StoredMaps:
-            exec ('del '+i)
-            print i, ' deleted'
-
+            try:
+                exec ('del '+i)
+                print i, ' deleted'
+            except AttributeError:
+                pass        
         self.StoredMaps=[]
         self.MappingID.clear()
               

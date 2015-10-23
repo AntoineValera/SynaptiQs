@@ -52,11 +52,11 @@ class Analysis(object):
         mask=numpy.zeros(len(Signal))
         mask[SealTestStart:SealTestStop]=1
         mask[StimStart:]=1
-        mx = numpy.ma.masked_array(Signal, mask)
+        Max = numpy.ma.masked_array(Signal, mask)
         if Mapping.CM.Types_of_Events_to_Measure == 'Negative':
-            self.Current_Leak=scipy.stats.scoreatpercentile(mx, 85)
+            self.Current_Leak=scipy.stats.scoreatpercentile(Max, 85)
         elif Mapping.CM.Types_of_Events_to_Measure == 'Positive':
-            self.Current_Leak=scipy.stats.scoreatpercentile(mx, 15)            
+            self.Current_Leak=scipy.stats.scoreatpercentile(Max, 15)            
             
         #self.Current_Leak=numpy.median(Signal[Leak_Removing_Interval_Start:Leak_Removing_Interval_End]) Median Filtering
         #self.Current_Leak=scipy.stats.scoreatpercentile(Signal, 75)
@@ -470,24 +470,34 @@ class Analysis(object):
 
 
 
-    def PeakDetection(self,v, delta, x = None):
-        
+    def PeakDetection(self,Signal , delta, x = None):
+        '''
+        from http://baccuslab.github.io/pyret/_modules/spiketools.html        
+        '''
+
+
         maxtab = []
         mintab = []
+        
 
+            
         if x is None:
-            x = numpy.arange(len(v))
-        
-        v = numpy.asarray(v)
-        
+            x = numpy.arange(len(Signal))
+
+   
+        Signal = numpy.asarray(Signal)
+        if delta<0:
+            Signal*=-1
+            delta*=-1
     
-        mn, mx = numpy.Inf, numpy.Inf*-1
+        mn, mx = numpy.Inf, -numpy.Inf
         mnpos, mxpos = numpy.NaN, numpy.NaN
         
+
         lookformax = True
-        
-        for i in numpy.arange(len(v)):
-            this = v[i]
+    
+        for i in numpy.arange(len(Signal)):
+            this = Signal[i]
             if this > mx:
                 mx = this
                 mxpos = x[i]
@@ -496,49 +506,58 @@ class Analysis(object):
                 mnpos = x[i]
             
             if lookformax:
-                if this < mx-delta:
+                if this < mx - delta:
                     maxtab.append((mxpos, mx))
                     mn = this
                     mnpos = x[i]
                     lookformax = False
             else:
-                if this > mn+delta:
+                if this > mn + delta:
                     mintab.append((mnpos, mn))
                     mx = this
                     mxpos = x[i]
                     lookformax = True
-    
-        return numpy.array(maxtab), numpy.array(mintab)  
+
+        if delta<0:
+            Signal*=-1  
+       
+        return numpy.array(maxtab), numpy.array(mintab) 
 
     def DetectSpikesOnLocalFile(self,Thr):
 
         Source = Requete.Analogsignal_ids
-        Requete.Spiketrain_ids=numpy.copy(Requete.Analogsignal_ids)
-        Requete.SpikeTrainfromLocal={}
-        Requete.AmpSpikeTrainfromLocal={}
         
         counter=0
-        for n in range(Requete.NumberofChannels):
-            for i in range(len(Source)):
-                Main.progress.setMinimum(0)
-                Main.progress.setMaximum(len(Source)-1)
-                Main.progress.setValue(i)
-                Requete.Current_Sweep_Number=i            
-                Navigate.Load_This_Trace(i)     
-                
-                
-                if i >= int(Main.From.text()) and i <= int(Main.To.text()) and Requete.tag["Selection"][i][n] == 1:
-    
-                    Max,Min=self.PeakDetection(Navigate.si, Thr, x = Navigate.timescale) 
-                    Current_Spike_Times=[]
-                    Amplitude_At_Spike_Time=[]
-                    for event in Min:
+        #for n in range(Requete.NumberofChannels):
+        n=int(Mapping.CurrentChannel)
+        for i in range(len(Source)):
+            Main.progress.setMinimum(0)
+            Main.progress.setMaximum(len(Source)-1)
+            Main.progress.setValue(i)
+            Requete.Current_Sweep_Number=i            
+            Navigate.Load_This_Trace(i)    
+            
+            
+            if i >= int(Main.From.text()) and i <= int(Main.To.text()) and Requete.tag["Selection"][i][n] == 1:
+                 
+
+                Max,Min=self.PeakDetection(Navigate.si[n], Thr, x = Navigate.timescale) 
+                Current_Spike_Times=[]
+                Amplitude_At_Spike_Time=[]
+                if Thr>0:
+                    for event in Max:
                         Current_Spike_Times.append(event[0])
-                        Amplitude_At_Spike_Time.append(event[1])
-                        
-                    Requete.SpikeTrainfromLocal[str(i)]=Current_Spike_Times
-                    Requete.AmpSpikeTrainfromLocal[str(i)]=Amplitude_At_Spike_Time
-                    counter+=1
+                        Amplitude_At_Spike_Time.append(event[1]) 
+                else:        
+                    for event in Max:
+                        Current_Spike_Times.append(event[0])
+                        Amplitude_At_Spike_Time.append(event[1]*-1)
+                
+                   
+                    
+                Requete.SpikeTrainfromLocal[str(i)+'_'+str(n)]=Current_Spike_Times
+                Requete.AmpSpikeTrainfromLocal[str(i)+'_'+str(n)]=Amplitude_At_Spike_Time
+                counter+=1
         return        
         
 
@@ -1213,6 +1232,8 @@ class Analysis(object):
             self.Wid.canvas.axes.axis(h)
             counter=0
             for n in range(Requete.NumberofChannels):
+                if n>0:
+                    self.Wid.canvas.axes = self.Wid.canvas.fig.add_subplot(Requete.NumberofChannels,1,n+1)                
                 for i in range(len(Source)):
                     Main.progress.setMinimum(0)
                     Main.progress.setMaximum(len(Source)-1)
@@ -1220,7 +1241,7 @@ class Analysis(object):
                     
                     if i >= int(Main.From.text()) and i <= int(Main.To.text()) and Requete.tag["Selection"][i][n] == 1:
                         try:
-                            sptr=Requete.SpikeTrainfromLocal[str(i)]
+                            sptr=Requete.SpikeTrainfromLocal[str(i)+'_'+str(n)]
                             #for j in range(len(sptr)):
                             y=i*numpy.ones(len(sptr)) 
                             self.Wid.canvas.axes.plot(sptr,y, 'k|')
@@ -1229,13 +1250,13 @@ class Analysis(object):
                             print "ID ",Source[i]," passed"
                         counter+=1              
                 
-            self.Wid.canvas.axes.set_xlabel("Time")
-            self.Wid.canvas.axes.set_ylabel("Sweep Number")
-            self.Wid.canvas.axes.invert_yaxis()
-            self.Wid.canvas.axes.axvspan(Bar_time,Bar_time+Bar_Width,facecolor='b', alpha=0.3)
-            self.Wid.canvas.axes.set_xbound(0.,1000.)
-            self.Wid.canvas.axes.set_ybound(-1.,len(Source)+2.)
-            self.Wid.canvas.axes.hist(concatenatedEvents, bins=100, range=(0.,1000.),histtype="stepfilled",alpha=0.6, normed=False)
+                self.Wid.canvas.axes.set_xlabel("Time")
+                self.Wid.canvas.axes.set_ylabel("Sweep Number")
+                self.Wid.canvas.axes.invert_yaxis()
+                self.Wid.canvas.axes.axvspan(Bar_time,Bar_time+Bar_Width,facecolor='b', alpha=0.3)
+                self.Wid.canvas.axes.set_xbound(0.,1000.)
+                self.Wid.canvas.axes.set_ybound(-1.,len(Source)+2.)
+                self.Wid.canvas.axes.hist(concatenatedEvents, bins=100, range=(0.,1000.),histtype="stepfilled",alpha=0.6, normed=False)
 
             
         if Rendering == True:

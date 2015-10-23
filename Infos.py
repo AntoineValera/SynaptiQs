@@ -1291,7 +1291,7 @@ class Infos(object):
             if not ok:
                 return
             
-            Thr=abs(float(Value)) # Can be improved
+            Thr=float(Value) 
             Analysis.DetectSpikesOnLocalFile(Thr)
 
            

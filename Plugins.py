@@ -426,13 +426,13 @@ class Plugins(object):
         
         name="self."+name.replace("$", "")
         
-
-        
-        eval(name).setMinimumSize(800,600)
-        eval(name).setWindowTitle(self.Current_Script_Name)
-        eval(name).setAccessibleName(self.Current_Script_Name)
-        eval(name).editor=self.Script_Editor(self.Current_Script_Adress,name)
-
+        try:
+            eval(name).setMinimumSize(800,600)
+            eval(name).setWindowTitle(self.Current_Script_Name)
+            eval(name).setAccessibleName(self.Current_Script_Name)
+            eval(name).editor=self.Script_Editor(self.Current_Script_Adress,name)
+        except SyntaxError:
+            print 'Problem with window name, and probably with function name'
         
 
         self.Ok_script = QtGui.QPushButton(eval(name))

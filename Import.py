@@ -241,7 +241,25 @@ class MyWindow(QtGui.QWidget,object):
             
     @QtCore.pyqtSlot(list)
 
-   
+    def Suggest(self,Array):
+        '''
+        Detect character chanis which are not numbers and that are repeated more than once
+        '''
+        tempkeys=[]
+        for j in Array:
+            j = ''.join([i for i in j if not i.isdigit()])
+            tempkeys.append(j)
+        
+        tempkeys=sorted(tempkeys, key=self.splitgroups)  
+        Suggestion=''
+        for i in list(tempkeys):
+            if len(tempkeys)>1: #if only one trace, we dontt care
+                if ((tempkeys.count(i) > 2) and (i not in Suggestion)):
+                    Suggestion+=i+';'
+        
+        return Suggestion[:-1]
+        
+        
     def on_listWidgetFiles_dropped(self, filePaths):
         self.FileType=None
         #TODO : Add wcp and igor SweepA
@@ -252,32 +270,37 @@ class MyWindow(QtGui.QWidget,object):
                 if Array == None and Var == None:
                     return
                 
-                Filter,ok = QtGui.QInputDialog.getText(Main.FilteringWidget, 'To filter names, add text here', 
-                "",QtGui.QLineEdit.Normal,"Record")
+                Suggestion=self.Suggest(Array) #Find the most likely suggestion for filter
                 
+                
+                Filter,ok = QtGui.QInputDialog.getText(Main.FilteringWidget, 'To filter names, add text here', 
+                "",QtGui.QLineEdit.Normal,Suggestion)
+                
+                
+                #Split Filter if multiple inputs detected
                 if ';' in Filter:
-                    Filter.split(';')
+                    Filter = Filter.split(';')
                 else:
                     Filter=[str(Filter)]
-                #Filter=str(Filter) 
-                OriginalSweepNames=[]
-                FormatedSweepNames=[]
+                
+                #Split Filter if multiple inputs detected
                 tempkeys=[]
                 for i in Array:
                     tempkeys.append(i)
-
                 tempkeys=sorted(tempkeys, key=self.splitgroups)
-                #First we detect the number of channel necessary
+                
+                #Detect the number of channels
                 NewFilterList=[]
                 for s in tempkeys:
-                    for f in Filter:
-                        if f in s:
-                            NewFilterList.append(''.join([i for i in s if not i.isdigit()]))
+                    #for f in Filter: #if f in s:
+                    if s.startswith(tuple(Filter)):
+                        NewFilterList.append(''.join([i for i in s if not i.isdigit()]))
                             
-                NewFilterList=[x for x in NewFilterList if "C_Record" not in x] 
-                
+                #NewFilterList=[x for x in NewFilterList if "C_Record" not in x] 
                 Requete.NumberofChannels = len(list(set(NewFilterList)))
-                
+
+                OriginalSweepNames=[]
+                FormatedSweepNames=[]                
                 for Filter in list(set(NewFilterList)):
                     counter=0
                     for originalName in tempkeys:
@@ -294,18 +317,25 @@ class MyWindow(QtGui.QWidget,object):
                                 formatedName=Filter+shortname
                                 self.FileType="Neuromatic"
         
-                            if "sweep" in Filter:
+                            elif "sweep" in Filter:
                                 shortname=originalName[originalName.index('p')+2:]
                                 shortname=shortname.zfill(4)
                                 formatedName=Filter+shortname   
                                 self.FileType="Synaptics"
                             
-                            for letter in list(string.ascii_uppercase):
-                                if Filter == letter:
-                                    shortname=originalName[originalName.index(letter)+1:]
-                                    shortname=shortname.zfill(4)
-                                    formatedName=letter+shortname
-                                    self.FileType="WinWCP"                            
+                            else:
+                                wcp=False
+                                for letter in list(string.ascii_uppercase):
+                                    if Filter == letter:
+                                        wcp=True
+                                        shortname=originalName[originalName.index(letter)+1:]
+                                        shortname=shortname.zfill(4)
+                                        formatedName=letter+shortname
+                                        self.FileType="WinWCP"  
+                                if wcp == False:
+                                    print 'Filetype not supported yet or not tested'
+                                    return
+                                        
                                 
                             OriginalSweepNames.append(originalName)    
                             FormatedSweepNames.append(formatedName)
@@ -322,27 +352,33 @@ class MyWindow(QtGui.QWidget,object):
                 Main.AnalysisWidget.setEnabled(True)
                 Main.NavigationWidget.setEnabled(True)
                 Main.MappingWidget.setEnabled(True)
-                Reslice = False
-                    
-                if len(Navigate.ArrayList[0][0]) >= 100000 or Reslice == True:
-                    print 'more than 100 000 points per sweep, original trace was auto-resliced'
-                    if Navigate.VarList.has_key("sampling_rate") == True:
-                        sr = int(1000.*Navigate.VarList["sampling_rate"])
-                    elif Navigate.VarList.has_key("SampleInterval") == True:
-                        sr = int(1000./Navigate.VarList["SampleInterval"])
-                    else:
-                        sr = 50000
-                    counter=0
-                    temp=[None]*int(len(Navigate.ArrayList[0][0])/sr)
-                    for Slice in range(len(temp)):
-                        temp[Slice]=[None]*Requete.NumberofChannels
-                        print 'reslicing slice ',Slice
-                        for n in range(Requete.NumberofChannels):
-                            temp[Slice][n]=numpy.array(Navigate.ArrayList[0][n][0:sr])
-                            del Navigate.ArrayList[0][n][0:sr]
-
-                    Navigate.ArrayList=temp
-                    del temp
+                
+                
+                
+                if len(Navigate.ArrayList[0][0]) > 200000:
+                    savename, ok = QtGui.QInputDialog.getText(QtCore.QObject().sender().parent(), 'Long file',''' 
+                        The signal looks very long and could be
+                        a concatenated signal or a continuous recording.
+                        Do you want to reslice it?''') 
+                    if ok:
+                        print 'more than 200 000 points per sweep, original trace was auto-resliced'
+                        if Navigate.VarList.has_key("sampling_rate") == True:
+                            sr = int(1000.*Navigate.VarList["sampling_rate"])
+                        elif Navigate.VarList.has_key("SampleInterval") == True:
+                            sr = int(1000./Navigate.VarList["SampleInterval"])
+                        else:
+                            sr = 50000
+                        counter=0
+                        temp=[None]*int(len(Navigate.ArrayList[0][0])/sr)
+                        for Slice in range(len(temp)):
+                            temp[Slice]=[None]*Requete.NumberofChannels
+                            print 'reslicing slice ',Slice
+                            for n in range(Requete.NumberofChannels):
+                                temp[Slice][n]=numpy.array(Navigate.ArrayList[0][n][0:sr])
+                                del Navigate.ArrayList[0][n][0:sr]
+    
+                        Navigate.ArrayList=temp
+                        del temp
 
                 self.Update_Navigate()
                 Requete.Add_Dictionnary_Arrays()
@@ -353,7 +389,10 @@ class MyWindow(QtGui.QWidget,object):
                  
                 for i in range(len(OriginalSweepNames)):
                     QtGui.QListWidgetItem("         Igor Wave "+OriginalSweepNames[i]+" loaded as Analysis."+FormatedSweepNames[i], self.listWidgetFiles)
-
+        
+        Requete.SpikeTrainfromLocal={}
+        Requete.AmpSpikeTrainfromLocal={} 
+        Requete.Spiketrain_ids=numpy.copy(Requete.Analogsignal_ids)  
 
     def ClearLocal(self):
         for i in Main.LoadedList:
@@ -388,6 +427,8 @@ class MyWindow(QtGui.QWidget,object):
         Requete.Spiketrain_Neuid=[None]
         Main.To.setText('0')
         Main.LoadedList=[]
+        Requete.SpikeTrainfromLocal={}
+        Requete.AmpSpikeTrainfromLocal={} 
         try:
             del Navigate.VarList["SampleInterval"]
         except KeyError:

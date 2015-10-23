@@ -78,6 +78,9 @@ class Requete(object):
     def Adjust_Authorized_Functions(self):
         if Main.SQLTabWidget.currentIndex() == 2:
             Main.SpikesWidget.setEnabled(True)
+            self.SpikeTrainfromLocal={}
+            self.AmpSpikeTrainfromLocal={} 
+            self.Spiketrain_ids=numpy.copy(Requete.Analogsignal_ids)            
         else:
             pass
 
@@ -439,11 +442,12 @@ class Requete(object):
         print "-----------> Spiketrains Ids (if exist) are :",self.Spiketrain_ids
         
         self.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary={}
+ 
+        
         for n in range(self.NumberofChannels):
             for i in range(len(self.Spiketrain_ids)):
                 self.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary[self.Spiketrain_ids[i][n]]=self.Analogsignal_ids[i][n]
-
-        print self.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary
+ 
         
         Main.MainFigure.canvas.fig.clear()
         flatlist=[item for sublist in self.Analogsignal_name for item in sublist]
@@ -505,13 +509,11 @@ class Requete(object):
                         NewSystem=False
                         break
 
-        print self.tag
         #If the old tag system was used, we convert it here to the new system
         if NewSystem==False:
             print 'Old tag system detected'
             self.Convert()
           
-        print self.tag
         #Finally, we overwrite the whole self.tag except Selection
         for keys in self.tag:
             if keys != 'Selection':
