@@ -472,7 +472,7 @@ class Plugins(object):
      
      
         editor = Qsci.QsciScintilla(eval(name))
-        editor.setEolVisibility(True)
+        
         ## define the font to use
         font = QtGui.QFont()
         font.setFamily("Courier")
@@ -490,6 +490,7 @@ class Plugins(object):
         #TODO : Adjust based on operating system
         editor.convertEols(Qsci.QsciScintilla.EolUnix)
         editor.setEolMode(Qsci.QsciScintilla.EolUnix) # Was EolUnix
+        #editor.setEolVisibility(True)
         
         ## Line numbers
         # conventionnaly, margin 0 is for line numbers

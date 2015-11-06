@@ -193,9 +193,9 @@ class Navigate(object):
                 
         #Cropping of the signal to the shortest duration of the selection. It doesn't change anything if there is only one sampling rate
         for i,j in enumerate(self.si):
-            self.si[i] = self.si[i][0:int(Requete.BypassedSamplingRate*Requete.Shortest_Sweep_Length)+1]
+            self.si[i] = self.si[i][0:int(Requete.BypassedSamplingRate*Requete.Shortest_Sweep_Length)] #+1
         for i,j in enumerate(self.Filtered_Signal):   
-            self.Filtered_Signal[i] = self.Filtered_Signal[i][0:int(Requete.BypassedSamplingRate*Requete.Shortest_Sweep_Length)+1]
+            self.Filtered_Signal[i] = self.Filtered_Signal[i][0:int(Requete.BypassedSamplingRate*Requete.Shortest_Sweep_Length)] #+1
 
         
         Analysis.Measure_On_Off()
@@ -244,7 +244,7 @@ class Navigate(object):
          
         #self.Filtered_Signal=Analysis.Remove_a_Leak(self.Filtered_Signal,Leak_Removing_Interval_Start=0*self.Points_by_ms,Leak_Removing_Interval_End=200*self.Points_by_ms)                    
   
-        #OBSOLETE, A corriger  
+        #TODO : OBSOLETE, A corriger  
         self.Signal_Length_in_Points=len(self.si[0]) #durée du signal en pnts
         self.signal_length_in_ms=len(self.si[0])/(Requete.Analogsignal_sampling_rate[Requete.Current_Sweep_Number]) #durée du signal en ms
         

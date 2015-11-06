@@ -515,7 +515,19 @@ class Requete(object):
                     except TypeError:
                         NewSystem=False
                         break
-
+                    except IndexError:
+                        msgBox = QtGui.QMessageBox()
+                        msgBox.setText(
+                        """
+                        <b>Warning</b>
+                        <p>One of the file in the query use the old tag system
+                        blocks are %s
+                        please load each block
+                        """ %(list(set(self.Block_ids))))                    
+                        msgBox.exec_()
+                        #self.Convert()
+                        return
+                        
         #If the old tag system was used, we convert it here to the new system
         if NewSystem==False:
             print 'Old tag system detected'
