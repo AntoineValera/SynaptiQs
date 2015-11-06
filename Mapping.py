@@ -41,7 +41,7 @@ class Mapping(object):
         self.DB_Picture=False
         self.XPositions=numpy.array([None]*10)
         self.YPositions=numpy.array([None]*10)
-        self.Max_Valid_Dist=50
+        self.Max_Valid_Dist=250
         self.Use_Number_of_Turns=True
         self.Image_ColorMap='Greys'
         self.NormalizeMappingMode='Charge' #controls the measurement type you can use for map normalization
@@ -49,6 +49,7 @@ class Mapping(object):
         self.Mapping_ID = 0
         self.StoredMaps=[]
         self.AllowToAddaMapping=False
+        self.NumberOfLevels = 20
         
     def _all(self,All=False):
         List=[]
@@ -561,7 +562,8 @@ class Mapping(object):
                    self.__name__+'.CurrentChannel',
                    self.__name__+'.Image_ColorMap',
                    self.__name__+'.Analysis_mode',
-                   self.__name__+'.Transparency']
+                   self.__name__+'.Transparency',
+                   self.__name__+'.NumberOfLevels']
         for i in ListofVar:
             Option_Label=QtGui.QLabel(i)
             Option=QtGui.QLineEdit()
@@ -1173,24 +1175,27 @@ class Mapping(object):
         """
         warning_displayed = False
         for i in range(len(Requete.Analogsignal_ids)):
-            #try:                
+            try:                
                 Requete.tag["X_coord"][i]=self.CM.Sorted_X_Coordinates_Full[i]
                 Requete.tag["Y_coord"][i]=self.CM.Sorted_Y_Coordinates_Full[i]
-#            except IndexError: 
-#                if warning_displayed == False:
-#                    msg="""
-#                    <b>Error</b>
-#                    <p>Did you set the grid boundaries correctly?
-#                    Was each mapping complete, or was your mapping interrupted?
-#                    The total number of sweeps must be EXACTLY #points in a grid X #turns
-#                    If the mapping is irregular you might consider a user defined mapping
-#                    """
-#                    Infos.Error(msg)
-#                    warning_displayed = True
-#
-#                print "Index error for sweep ", i
-#                Requete.tag["X_coord"][i]=None
-#                Requete.tag["Y_coord"][i]=None
+            except IndexError: 
+                #TODO :
+                #Add an autocorrection for number of turns
+                if warning_displayed == False:
+                    msg="""
+                    <b>Error</b>
+                    <p>Did you set the grid boundaries correctly?
+                    is the number of turns right?
+                    Was each mapping complete, or was your mapping interrupted?
+                    The total number of sweeps must be EXACTLY #points in a grid X #turns
+                    If the mapping is irregular you might consider a user defined mapping
+                    """
+                    Infos.Error(msg)
+                    warning_displayed = True
+
+                print "Index error for sweep ", i
+                Requete.tag["X_coord"][i]=None
+                Requete.tag["Y_coord"][i]=None
 
 
         Requete.tag["XSteps"]=['']*len(Requete.Analogsignal_ids)
@@ -1227,7 +1232,16 @@ class Mapping(object):
         for i,j in enumerate(Requete.Analogsignal_ids):
             self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary[j[self.CurrentChannel]]=i
             if Requete.tag["Selection"][i][self.CurrentChannel] != 0:
-                self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[j[self.CurrentChannel]]=(int(Requete.tag["X_coord"][i]),int(Requete.tag["Y_coord"][i]))
+                try:
+                    self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[j[self.CurrentChannel]]=(int(Requete.tag["X_coord"][i]),int(Requete.tag["Y_coord"][i]))
+                except TypeError:
+                    msg="""
+                    <b>Error</b>
+                    <p>Coordinates or number of turns are wrong
+                    please correct and re-Define Coordinates
+                    """
+                    Infos.Error(msg)    
+                    return
             else:
                 self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary[j[self.CurrentChannel]]=None
         
@@ -1325,9 +1339,8 @@ class Mapping(object):
 
         
         Navigate.Tag_All_Traces(ProgressDisplay=False)
-        print self.CM.Initially_Excluded_AnalogSignal_Ids 
+        #print self.CM.Initially_Excluded_AnalogSignal_Ids 
         for i in self.CM.Initially_Excluded_AnalogSignal_Ids: #pour chaque key de la Initially_Excluded_AnalogSignal_Ids (= les sweepnumber)
-            print i
             Requete.tag["Selection"][i][self.CurrentChannel]=0
 
         
@@ -1351,8 +1364,8 @@ class Mapping(object):
             Min=numpy.nanmin(AllC1values)
             Max=numpy.nanmax(AllC1values)
         elif self.NormalizeMappingMode == 'Amplitude':
-            Min=numpy.nanmin(AllC1values)
-            Max=numpy.nanmax(AllC1values)
+            Min=numpy.nanmin(AllA1values)
+            Max=numpy.nanmax(AllA1values)
 
         if self.CM.Types_of_Events_to_Measure == 'Negative':
             #because when events are negative, they are inverted in the analysis
@@ -1362,11 +1375,13 @@ class Mapping(object):
             self.Manual_Max_Field.setText(str(Min))            
         else:            
             self.Manual_Min_Field.setText(str(Min))
-            self.Manual_Max_Field.setText(str(Max))        
+            self.Manual_Max_Field.setText(str(Max))         
 
-            
-        #self.Manual_Min_Field.setText(str(Min))
-        #self.Manual_Max_Field.setText(str(Max))
+        pyplot.figure()
+        pyplot.plot(AllC1values)
+        pyplot.plot(AllA1values)
+        pyplot.show()
+
         self.Activate_Map.setEnabled(True)
         self.SuccessRate_Ready=False
         self.AllowToAddaMapping=True
@@ -1572,7 +1587,6 @@ class Mapping(object):
             self.Manual_Min_Field.setText(str(Max))
             self.Manual_Max_Field.setText(str(Min))            
         else:            
-            
             self.Manual_Min_Field.setText(str(Min))
             self.Manual_Max_Field.setText(str(Max))        
 
@@ -1735,15 +1749,19 @@ class Mapping(object):
         
     def ModeSpecificProcessing(self,Mode,Local_Amplitude,Local_Surface,Local_Success):
         #In this condition, no threshold is applied, and all view are possible, because Amplitudes and charges were measured correctly
+        
+        
         if Mode == 0:
             print "Classic Normalized view"
+        
         elif Mode == 1 or Mode == 2:
             if Mode == 1: var=Local_Amplitude
             if Mode == 2: var=Local_Surface   
-            print "Amplitude Thresholded view"   
+            print "Amplitude/Charge Thresholded view"   
             try:
                 thr=float(self.Thresholding_Mode_Input_Field.text())
                 for i,j in enumerate(var):
+                    print Local_Amplitude[i], Local_Surface[i]
                     if self.CM.Types_of_Events_to_Measure == 'Negative':
                         if j<thr:
                             Local_Amplitude[i]=-0.75
@@ -1851,7 +1869,7 @@ class Mapping(object):
                             if self.CM.Types_of_Events_to_Measure == 'Negative': Local_to_use[i]=-0.55
                             elif self.CM.Types_of_Events_to_Measure == 'Positive':Local_to_use[i]=0.55                                 
                         else:
-                            if self.Types_of_Events_to_Measure == 'Negative': Local_to_use[i]=-0.95
+                            if self.CM.Types_of_Events_to_Measure == 'Negative': Local_to_use[i]=-0.95
                             elif self.CM.Types_of_Events_to_Measure == 'Positive':Local_to_use[i]=0.95   
                             print 'Position not validated, success rate under '+self.Thresholding_Mode_Input_Field.text()+" %"
                                 
@@ -1989,7 +2007,7 @@ class Mapping(object):
         for i,j in enumerate(Local_Amplitude):
             if numpy.math.isnan(j) == True :
                 Local_Amplitude[i]=float(0.0)
-                
+           
         self.CM.Local_Amplitude,self.CM.Local_Surface,self.CM.Local_Success=self.ModeSpecificProcessing(self.Thresholding_Mode.currentIndex(),
                                                                                                Local_Amplitude,
                                                                                                Local_Surface,
@@ -2115,7 +2133,7 @@ class Mapping(object):
             mesh.set_xlim([minRange, maxRange])
             mesh.set_ylim([minRange, maxRange])
             cbar = p.colorbar(n)
-            cbar.set_clim(Min,Max)
+            #cbar.set_clim(Min,Max)
             p.show()
       
 
@@ -2128,12 +2146,14 @@ class Mapping(object):
                 contour.imshow(pic,extent=(self.CCDlimit[0],self.CCDlimit[1],self.CCDlimit[2],self.CCDlimit[3]))
                 #pyplot.imshow(self.pic,extent=(-320,320,-260,252),cmap=self.Image_ColorMap)
             except:
-                pass        
-            n=contour.contourf(XI, YI, ZI,10,vmin=Min,vmax=Max,alpha=alpha,cmap=cmap)
+                pass   
+            NewNumberOfLevels=(numpy.nanmax(ZI)-numpy.nanmin(ZI))/((Max-Min)/self.NumberOfLevels)
+            
+            n2=contour.contourf(XI, YI, ZI, int(NewNumberOfLevels) ,vmin=Min,vmax=Max,alpha=alpha,cmap=cmap)
             contour.set_xlim([minRange, maxRange])
             contour.set_ylim([minRange, maxRange]) 
-            cbar2 = p2.colorbar(n)
-            cbar2.set_clim(Min,Max)
+            cbar2 = p2.colorbar(n2)
+            #cbar2.set_clim(Min,Max)
             p2.show()
             
         return p,p2 #mesh,contour
@@ -2199,135 +2219,7 @@ class Mapping(object):
                     param[1]=numpy.array([1E-30]*len(param[2]))                  
                 surface=list(param[1])
                 
-                
-    #        for i,j in enumerate(surface):
-    #            if j == 0.0:
-    #                surface[i]=numpy.nan
-    #        for i,j in enumerate(color):
-    #            if j == 0.0:
-    #                surface[i]=numpy.nan 
-        return color,surface
-        
-
-        self.Table = SpreadSheet(Source=[XYTuple,self.Normalized_Surface,self.Local_Surface,self.Normalized_Amplitude,self.Local_Amplitude],Labels=["XY","Normalized C1","C1","Normalized A1","A1"])
-        self.Table.show()
-
-
-##############################################
-
-        def pointValue(x,y,power,smoothing,xv,yv,values):
-            nominator=0
-            denominator=0
-            for i in range(0,len(values)):
-                dist = sqrt((x-xv[i])*(x-xv[i])+(y-yv[i])*(y-yv[i])+smoothing*smoothing);
-                #If the point is really close to one of the data points, return the data point value to avoid singularities
-                if(dist<1E-30):
-                    return values[i]
-                nominator=nominator+(values[i]/pow(dist,power))
-                denominator=denominator+(1/pow(dist,power))
-            #Return NODATA if the denominator is zero
-            if denominator > 0.:
-                value = nominator/denominator
-            else:
-                value = -9999.
-            return value
-        
-        def invDist(xv,yv,values,xsize=100,ysize=100,power=2,smoothing=0,subsampling=1,minRange=0):
-            #TODO : Scientifically not clear, but visually nice
-            valuesGrid = numpy.zeros((ysize,xsize))
-            for x in range(0,int(xsize)):
-                for y in range(0,int(ysize)):
-                    valuesGrid[y][x] = pointValue(x*subsampling+minRange,y*subsampling+minRange,power,smoothing,xv,yv,values)
-            return valuesGrid
-        
-        
-        def SmoothMap(X,
-                      Y,
-                      Val,
-                      power=3.,
-                      smoothing=10.,
-                      subsampling=10.,
-                      cmap='gnuplot',
-                      Manual_Min_Field=None,
-                      Manual_Max_Field=None,
-                      Max_Valid_Dist=None):
-            
-            #TODO : Normalize map if necessary
-            
-            power=power
-            smoothing=smoothing
-            subsampling=subsampling
-            
-            xv = X
-            yv = Y
-            values = Val
-        
-            minRange=min(min(xv),min(yv)) #it's the negative value of x-axis AND y-axis
-            maxRange=max(max(xv),max(yv))
-            TotRange=maxRange-minRange
-            print 'maximal extent is', TotRange
-            print 'point resolution is', subsampling 
-            print float(TotRange)/subsampling, "should be an integer. If it's not, check code"
-            
-            #Creating the output grid (100x100, in the example)
-            ti = numpy.linspace(minRange,maxRange,TotRange/subsampling)
-            XI, YI = numpy.meshgrid(ti, ti)
-            #Creating the interpolation function and populating the output matrix value
-            ZI = invDist(xv,yv,values,TotRange/subsampling,TotRange/subsampling,power,smoothing,subsampling,minRange)
-            
-            points=zip(X.ravel(), Y.ravel())
-            refpoints=zip(XI.ravel(), YI.ravel())
-            tree = scipy.spatial.cKDTree(points)
-            z=ZI.ravel()
-            
-            for j,i in enumerate(refpoints):
-                if len(tree.query_ball_point((i[0],i[1]), float(Max_Valid_Dist))) == 0:
-                    z[j]=0.0
-
-   
-            #n = pyplot.normalize(0.0, 100.0)
-            if self.Manual_Min_Field.text() != "":
-                Min=float(self.Manual_Min_Field.text())
-            elif Manual_Min_Field!= None:
-                Min=float(Manual_Min_Field)
-            else:
-                Min=float(numpy.min(ZI))
-                
-            if self.Manual_Max_Field.text() != "":
-                Max=float(self.Manual_Max_Field.text())
-            elif Manual_Max_Field!= None:
-                Max=float(Manual_Max_Field)                
-            else:
-                Max=float(numpy.max(ZI))  
-                
-            pyplot.figure()   
-            pyplot.subplot(1, 1, 1)
-            pyplot.pcolor(XI, YI, ZI,cmap=cmap,vmin=Min,vmax=Max)
-            pyplot.title('Inv dist interpolation - power: ' + str(power) + ' smoothing: ' + str(smoothing))
-            pyplot.xlim(minRange, maxRange)
-            pyplot.ylim(minRange, maxRange)
-            pyplot.colorbar()
-
-            pyplot.figure()
-            
-            pyplot.contour(XI, YI, ZI, 10)
-            pyplot.xlim(minRange, maxRange)
-            pyplot.ylim(minRange, maxRange) 
-            
-            try:
-                self.pic = image.imread(str(self.Current_Picture_for_the_Map))
-                pyplot.imshow(self.pic,extent=(-320,320,-260,252),cmap=self.Image_ColorMap)
-            except:
-                pass
-            pyplot.show()
-    
-        print self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:],self.Local_Surface
-        if self.Charge=='Surface':
-            SmoothMap(self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:],self.Local_Surface,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
-        else:
-            SmoothMap(self.Sorted_X_Coordinates_Scaled[:], self.Sorted_Y_Coordinates_Scaled[:],self.Local_Amplitude,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist)
-            
-
+        return color,surface         
 
     def CreateInteractiveGrid(self,colorbar,xlim=(-320, 320),ylim=(-260, 252),ColorBar=True,Labels=False,Title='',NoWarning=False):
         if ColorBar==True:
@@ -2438,7 +2330,7 @@ class Mapping(object):
                 
                 
         cmap=str(self.ColorMap.currentText())  
-        
+
         n=self.Wid.canvas.axes.scatter(self.CM.Sorted_X_Coordinates_Scaled[:], self.CM.Sorted_Y_Coordinates_Scaled[:], c=color,s=surface, vmin=0, vmax=1, alpha=0.75,picker=1 , cmap=cmap, marker = Marker)
         
         XYTuple=[]

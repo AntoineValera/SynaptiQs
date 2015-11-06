@@ -51,7 +51,7 @@ from matplotlib import *
 if __name__ == "__main__": #Executé si l'application est en StandAlone
 
         #sys.path.append('C:\Users\Antoine\WinPython-64bit-2.7.10.1\scripts\SynaptiQs')
-    #with pyplot.xkcd():
+        #with pyplot.xkcd():
         app = QtGui.QApplication(sys.argv) #Starts a new window application. First step to be done
     
         

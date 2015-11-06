@@ -163,12 +163,8 @@ class Requete(object):
         
         self.Current_Signal = self.analogsignal_zero.signal #First Signal is created
         
-        for i in range(len(self.Analogsignal_signal_shape)):
-            self.Analogsignal_signal_shape[i]=float(self.Analogsignal_signal_shape[i].replace('L',''))
 
-
-        self.Signal_Length=self.Analogsignal_signal_shape/self.Analogsignal_sampling_rate
-         
+        
         if len(set(self.Signal_Length))>1:
             msgBox = QtGui.QMessageBox()
             msgBox.setText(
@@ -182,7 +178,7 @@ class Requete(object):
             
             
         
-        self.Shortest_Sweep_Length=min(self.Signal_Length)
+        
             
         self.timescale=numpy.array(range(int(self.BypassedSamplingRate*self.Shortest_Sweep_Length)))*1000/self.BypassedSamplingRate #This is a one second timescale with the highest sampling rate
         Main.slider.setRange(0, len(self.Analogsignal_ids)-1)#/self.NumberofChannels-1) #definit le range du slider sweepnb
@@ -380,7 +376,12 @@ class Requete(object):
         #we create self.RecordA, which contains all the analogsiganl ids of this channel
         for i,j in enumerate(list(set(self.Analogsignal_name))):
             #we create one list per channel
-            setattr(self,j,[])
+            try:
+                setattr(self,j,[])
+            except TypeError:
+                j='noname'
+                setattr(self,j,[])
+                
             
             #We detect all ids form this channel
             for k in range(len(self.Analogsignal_ids)):
@@ -422,6 +423,13 @@ class Requete(object):
         #The wavelength issue is solved by croping all waves to fit the shortest one
         self.BypassedSamplingRate=min(self.Analogsignal_sampling_rate)
         
+        for i in range(len(self.Analogsignal_signal_shape)):
+            self.Analogsignal_signal_shape[i]=float(self.Analogsignal_signal_shape[i].replace('L',''))
+
+
+        self.Signal_Length=self.Analogsignal_signal_shape/self.Analogsignal_sampling_rate
+        self.Shortest_Sweep_Length=min(self.Signal_Length)  
+        
         if len(list(set(self.Analogsignal_sampling_rate)))>1: 
             msgBox = QtGui.QMessageBox()
             msgBox.setText(
@@ -454,9 +462,7 @@ class Requete(object):
         for i in range(len(list(set(flatlist)))):
             Main.MainFigure.canvas.fig.add_subplot(len(list(set(flatlist))),1,i+1)
             #TODO : set subplot title
-        
-        
-        
+
         try:
             self.analogsignal_zero = AnalogSignal().load(self.Analogsignal_ids[0][0],session=self.Global_Session)
                 
@@ -465,8 +471,9 @@ class Requete(object):
             msgBox.setText(
             """
             <b>Request Error</b>
-            <p>This may be due to an incorrect request or an error in the UserPref file
-            <p>If it persists, you can try to delete the UserPref.txt file (in home/$USER$/.SynaptiQs/Core/)
+            <p>This may be due to an incorrect request or an error in the UserPref file,
+            <p>or a error while initially importing the file in the database
+            <p>If the error persists, you can try to delete the UserPref.txt file (in home/$USER$/.SynaptiQs/Core/)
             """)                  
             msgBox.exec_()
 

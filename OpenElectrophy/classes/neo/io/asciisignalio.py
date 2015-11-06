@@ -184,6 +184,7 @@ class AsciiSignalIO(BaseIO):
                                                     sampling_rate = samplerate,
                                                     t_start = t_start)
             analogSig.channel = i
+            analogSig.name = 'SynaptiQsImport'
             seg._analogsignals.append( analogSig )
         
         return seg

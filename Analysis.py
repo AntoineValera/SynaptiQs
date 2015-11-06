@@ -461,39 +461,23 @@ class Analysis(object):
         Info_Message="It's a superposition of "+str(Number_of_Superimposed_Traces)+" sweeps"
         Main.status_text.setText(Info_Message) 
 
-
-
-
-
-
-
-
-
-
     def PeakDetection(self,Signal , delta, x = None):
         '''
         from http://baccuslab.github.io/pyret/_modules/spiketools.html        
         '''
-
-
         maxtab = []
         mintab = []
-        
-
-            
+  
         if x is None:
             x = numpy.arange(len(Signal))
 
-   
         Signal = numpy.asarray(Signal)
         if delta<0:
             Signal*=-1
             delta*=-1
-    
+
         mn, mx = numpy.Inf, -numpy.Inf
         mnpos, mxpos = numpy.NaN, numpy.NaN
-        
-
         lookformax = True
     
         for i in numpy.arange(len(Signal)):
@@ -522,6 +506,17 @@ class Analysis(object):
             Signal*=-1  
        
         return numpy.array(maxtab), numpy.array(mintab) 
+
+    def FastPeakDetection(self,Signal , delta, x = None):
+
+        if x is None:
+            x = numpy.arange(len(Signal))
+
+        scipy.signal.argrelextrema(Signal, numpy.greater)
+        # for local minima
+        argrelextrema(Signal, numpy.less)
+        
+        return 
 
     def DetectSpikesOnLocalFile(self,Thr):
 
@@ -662,7 +657,7 @@ class Analysis(object):
         return self.Events,self.Events,self.Events,self.Maximale_Frequency,self.Maximale_Frequency,self.Maximale_Frequency   
         
         
-    def Measure(self,Rendering=True,Measure_Filtered=False,Measure_All_from_Baseline1=False,Silent=False,All_from_Zero=False):
+    def Measure(self,Rendering=True,Measure_Filtered=False,Measure_All_from_Baseline1=False,Silent=False,All_from_Zero=False,Channel=None):
         
         """
         Mesure les amplitudes et la charge entre 
@@ -707,7 +702,14 @@ class Analysis(object):
             si = Navigate.Filtered_Signal  
             
         FullPopupList=[]    
-        for n in range(Requete.NumberofChannels):    
+        if Channel == None:
+            Channel=range(Requete.NumberofChannels)
+        else:
+            if type(Channel) == int or type(Channel) == float:
+                Channel = [Channel]
+            
+            
+        for n in Channel:    
             #On importe le signal
             self.Check_Measuring_Parameters_Validity()
             Ampvalues = range(6)

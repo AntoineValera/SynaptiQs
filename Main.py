@@ -44,9 +44,7 @@ class Main(QtGui.QWidget,object):#
         or create a new one if it doesn't exist.
         It also copy these values in self.user_parameters
         """
-        
-        
-        
+
         self.userpath=os.getenv("HOME")
 
         if self.userpath == None: #Happens when started as executable, out of Winpython
@@ -60,12 +58,12 @@ class Main(QtGui.QWidget,object):#
 
         
         self.Script_Path=os.path.dirname(os.path.realpath(__file__))
-        if self.userpath == None:
-            self.userpath='C:\\Users\\Downstairs-PC\\WinPython-32bit-2.7.10.2\\settings'
+        #if self.userpath == None:
+        #    self.userpath='C:\\Users\\Downstairs-PC\\WinPython-32bit-2.7.10.2\\settings'
         self.path = self.userpath+"/.SynaptiQs/Core/Userpref.txt" #Adresse du Fichier de parametres. Penser a laisser les droits d'ecriture
         self.Analysis_Preferences_Path=self.userpath+"/.SynaptiQs/Core/Analysis_Pref.txt"
         self.Mapping_Preferences_Path=self.userpath+"/.SynaptiQs/Core/Mapping_Pref.txt"
-        if os.path.isfile(self.path) == True: #Si le fichier Userpref existe:
+        if os.path.isfile(self.path) and  os.path.isfile(self.Analysis_Preferences_Path) and  os.path.isfile(self.Mapping_Preferences_Path): #Si le fichier Userpref existe:
             print "########### SynaptiQs Started ############"
             print "-----------> Loading Preference Files"
             print "-----------> Userpref.txt Loaded correctly"
@@ -119,8 +117,6 @@ class Main(QtGui.QWidget,object):#
             if self.user_parameters[0]=='\n' or '': #S'il n'y a pas de base de données SQLlite
                 self.user_parameters[0] = self.userpath+"/Core/.SynaptiQs/empty.db"
 
-
-
             rescuelist=[198.0,200.0,202.0,215.0,218.0,220.0,222.0,235.0,238.0,240.0,242.0,255.0,1.0,1.0,1.0,1.0,1.0,1.0, 'Min', 'Min', 'Min', 'Min', 'Min', 'Min']   #les points par defaut, pour la mesure d'un triplet à 50Hz commençant 200ms après le départ          
             for i in range(10,34):
                 if self.user_parameters[i]=='': #S'il n'y a pas paramètres de mesure
@@ -132,14 +128,25 @@ class Main(QtGui.QWidget,object):#
             self.desktop=self.param_inf[6]
             parameters.close() #on ferme le fichier
             
-            
-            
+    
         #Dans le pire des cas, le fichier a été supprimé    
         else : #Si le fichier de parametres n'existe pas, on le crée, mais il faut les droits d'ecriture dans le dossier
+            if not os.path.isdir(self.userpath+"/.SynaptiQs/"):
+                os.makedirs(self.userpath+"/.SynaptiQs/")
+            if not os.path.isdir(self.userpath+"/.SynaptiQs/Core/"):
+                os.makedirs(self.userpath+"/.SynaptiQs/Core/")
+                
             print "error, Userpref.txt does not exist, file created"
             try:
                 parameters = open(self.path,'w')
-                self.param_inf=['']*30
+                self.user_parameters=parameters.readlines()
+                if len(self.user_parameters) != 40: #S'il Ny a pas 10 lignes, on etend le fichier à 30 lignes
+                    self.user_parameters.extend(['']*(40-len(self.user_parameters)))
+                self.param_inf=['']*40 #On cree un liste des parametres                
+                #self.param_inf=['']*30
+                self.user_parameters[0] = self.userpath+"/Core/.SynaptiQs/empty.db"
+                for i in range(len(self.user_parameters)): 
+                    self.param_inf[i] = str(self.user_parameters[i].split('\n')[0])
                 parameters.close()
                 msgBox = QtGui.QMessageBox()
                 msgBox.setText(
@@ -165,7 +172,6 @@ class Main(QtGui.QWidget,object):#
                 sys.exit()
                 #sys.exit(app.exec_())  
                 
-
 
 
         #Then, we open the Analysis_Pref.txt file, which contains user defined parameters for measurments 
@@ -738,8 +744,13 @@ class Main(QtGui.QWidget,object):#
                 eval(compile("self."+Button_Names[i][j]+".setText(str(self.measurecoord[Button_Names[i][j]]))",'<string>','exec'))
                 eval(compile("self."+Button_Names[i][j]+".setPlaceholderText('in ms')",'<string>','exec'))
 
-        
+        self.PositiveOrNegativeMeasure = QtGui.QCheckBox(self.AnalysisWidget)
+        self.PositiveOrNegativeMeasure.setGeometry(90, 165, 105, 14)
+        self.PositiveOrNegativeMeasure.setText( "Negative Current")
+        self.PositiveOrNegativeMeasure.setCheckState(2)
+        Mapping.CM.Types_of_Events_to_Measure='Negative'
             #Affichage du sweep en cours
+        
         self.Sweep_Number_Label = QtGui.QLabel(self.NavigationWidget)
         self.Sweep_Number_Label.setGeometry(90, 20, 50, 22)
         self.Sweep_Number_Label.setText("Sweep")
@@ -874,6 +885,7 @@ class Main(QtGui.QWidget,object):#
         QtCore.QObject.connect(self.Baseline2_size, QtCore.SIGNAL('editingFinished ()'),Analysis.Check_Measuring_Parameters_Validity)
         QtCore.QObject.connect(self.Peak3_size, QtCore.SIGNAL('editingFinished ()'),Analysis.Check_Measuring_Parameters_Validity)
 
+        QtCore.QObject.connect(self.PositiveOrNegativeMeasure, QtCore.SIGNAL('stateChanged(int)'),self.UpdatePositiveOrNegative)
 
         QtCore.QObject.connect(self.User_Defined_Measurement_Parameters, QtCore.SIGNAL('activated(int)'),Analysis.Load_User_Defined_Parameters)
         QtCore.QObject.connect(self.Add_User_Defined_Measurement_Parameters_Button, QtCore.SIGNAL("clicked()"),Analysis.Add_User_Defined_Measurement_Parameters)
@@ -1000,15 +1012,22 @@ class Main(QtGui.QWidget,object):#
                    ("Baseline3_begin","Baseline3_end","Baseline3_size"),
                    ("Peak3_begin","Peak3_end","Peak3_size")]        
 
+
+    def UpdatePositiveOrNegative(self):
+        if self.PositiveOrNegativeMeasure.checkState() == 2:
+            Mapping.CM.Types_of_Events_to_Measure = 'Negative'
+        else:
+            Mapping.CM.Types_of_Events_to_Measure = 'Positive'
+            
     def Update_Menu_Options(self):
         if QtCore.QObject().sender().text()==  "Sort Block by File Name"  :
             self.Sort_Blocks_by_FileName= not self.Sort_Blocks_by_FileName
-        elif QtCore.QObject().sender().text()==  "Mapping on Negative currents"  :
-            QtCore.QObject().sender().setText("Mapping on Positive currents")
-            Mapping.Types_of_Events_to_Measure = 'Positive'
-        elif QtCore.QObject().sender().text()==  "Mapping on Positive currents"  :
-            QtCore.QObject().sender().setText("Mapping on Negative currents")
-            Mapping.Types_of_Events_to_Measure = 'Negative'
+#        elif QtCore.QObject().sender().text()==  "Mapping on Negative currents"  :
+#            QtCore.QObject().sender().setText("Mapping on Positive currents")
+#            Mapping.CM.Types_of_Events_to_Measure = 'Positive'
+#        elif QtCore.QObject().sender().text()==  "Mapping on Positive currents"  :
+#            QtCore.QObject().sender().setText("Mapping on Negative currents")
+#            Mapping.CM.Types_of_Events_to_Measure = 'Negative'
 
     def Saving_Directory(self):
         """

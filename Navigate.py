@@ -173,9 +173,11 @@ class Navigate(object):
             for i in Analogisgnal_id_to_Load:
                 self.sig = AnalogSignal().load(i,session=Requete.Global_Session)
                 #Resampling to the lowest sampling rate in the selection. It doesn't change anything if there is only one sampling rate
+                #if 
                 self.si.append(scipy.signal.resample(self.sig.signal,(Requete.BypassedSamplingRate)*(len(self.sig.signal)/self.sig.sampling_rate)))
                 self.Filtered_Signal.append(scipy.signal.resample(self.sig.signal,(Requete.BypassedSamplingRate)*(len(self.sig.signal)/self.sig.sampling_rate)))            
               
+                  
         elif Main.SQLTabWidget.currentIndex() == 2:#For local Files
             #TODO:Implement multichannel on spikes
             
