@@ -45,6 +45,8 @@ class Plugins(object):
 
            
         self.Plugin_List=[]
+        
+
         for plugin in dirList:
             if plugin.find('$') == -1 and plugin.find('#') == -1 and plugin.find('__') == -1: #not checked
                 try:
@@ -302,12 +304,12 @@ class Plugins(object):
 
         if warning == 4194304:#QtGui.QMessageBox.NoButton:
             fichier = open(str(Main.userpath)+'/.SynaptiQs/'+'$'+savename+'.py', "w")
-            fichier = open(str(Main.userpath)+'/.SynaptiQs/'+'$'+savename+'.py', "w")
+            #fichier = open(str(Main.userpath)+'/.SynaptiQs/'+'$'+savename+'.py', "w")
             fichier.write(eval(clicked_widget.replace("$","")).editor.text())            
             fichier.close()            
         else:
             fichier = open(str(Main.userpath)+'/.SynaptiQs/'+savename+'.py', "w")   
-            fichier = open(str(Main.userpath)+'/.SynaptiQs/'+savename+'.py', "w")
+            #fichier = open(str(Main.userpath)+'/.SynaptiQs/'+savename+'.py', "w")
             fichier.write(eval(clicked_widget.replace("$","")).editor.text())            
             fichier.close()    
             QtCore.QObject().sender().parent().close()
@@ -375,13 +377,13 @@ class Plugins(object):
                             
                     if warning == 4194304: #QtGui.QMessageBox.NoButton:
                         fichier = open(str(Main.userpath)+'/.SynaptiQs/'+'$'+savename+'.py', "w")
-                        fichier = open(str(Main.userpath)+'/.SynaptiQs/'+'$'+savename+'.py', "w")
-                        fichier.write(eval(clicked_widget.replace("$","")).editor.text())            
+                        #fichier = open(str(Main.userpath)+'/.SynaptiQs/'+'$'+savename+'.py', "w")
+                        fichier.write(eval(clicked_widget.replace("$","")).editor.text().replace('\r\n','\n'))            
                         fichier.close()            
                     else:
                         fichier = open(str(Main.userpath)+'/.SynaptiQs/'+savename+'.py', "w")   
-                        fichier = open(str(Main.userpath)+'/.SynaptiQs/'+savename+'.py', "w")
-                        fichier.write(eval(clicked_widget.replace("$","")).editor.text())            
+                        #fichier = open(str(Main.userpath)+'/.SynaptiQs/'+savename+'.py', "w")
+                        fichier.write(eval(clicked_widget.replace("$","")).editor.text().replace('\r\n','\n'))            
                         fichier.close()    
                         QtCore.QObject().sender().parent().close()
                         self.Write_Script_Plugin(str(Main.userpath)+'/.SynaptiQs/'+savename+'.py')
@@ -391,7 +393,7 @@ class Plugins(object):
                 else:
        
                     fichier = open(str(self.Current_Script_Adress), "w")
-                    fichier.write(eval(clicked_widget).editor.text())
+                    fichier.write(eval(clicked_widget).editor.text().replace('\r\n','\n'))
                     fichier.close()                    
     
             else:
@@ -470,6 +472,7 @@ class Plugins(object):
      
      
         editor = Qsci.QsciScintilla(eval(name))
+        editor.setEolVisibility(True)
         ## define the font to use
         font = QtGui.QFont()
         font.setFamily("Courier")
@@ -484,17 +487,21 @@ class Plugins(object):
         ## and take the same font for line numbers
         editor.setFont(font)
         editor.setMarginsFont(font)
-        editor.setEolMode(Qsci.QsciScintilla.EolUnix)
+        #TODO : Adjust based on operating system
+        editor.convertEols(Qsci.QsciScintilla.EolUnix)
+        editor.setEolMode(Qsci.QsciScintilla.EolUnix) # Was EolUnix
+        
         ## Line numbers
         # conventionnaly, margin 0 is for line numbers
-        editor.setMarginWidth(0, fm.width( "00000" ) + 5)
+        editor.setMarginWidth(0, fm.width( "00000" ))
         editor.setMarginLineNumbers(0, True)
         
         ## Edge Mode shows a red vetical bar at 80 chars
         editor.setEdgeMode(Qsci.QsciScintilla.EdgeLine)
         editor.setEdgeColumn(80)
+        editor.setTabIndents(False)
         editor.setEdgeColor(QtGui.QColor("#FF0000"))
-        editor.setTabWidth(8)
+        editor.setTabWidth(4)
         
         ## Folding visual : we will use boxes
         editor.setFolding(Qsci.QsciScintilla.BoxedTreeFoldStyle)
@@ -518,8 +525,12 @@ class Plugins(object):
         lexer = Qsci.QsciLexerPython()
         lexer.setDefaultFont(font)
         editor.setLexer(lexer)
+        #editor.SendScintilla(Qsci.QsciScintilla.SCI_STYLESETFONT, 1, 'Courier')
+        
         
         text="""print '///////////////Script Execution Started//////////////////////'\n# Write Your Script here\n\n\n\n\n\n\n\n\n\n\n\n# Uncomment this and add variable to display the figure\n#from matplotlib import pyplot\n#fig=pyplot.figure()\n#pyplot.plot(variable)\n#pyplot.show()\nprint '///////////////Script Execution Ended//////////////////////'"""
+    
+        
         #encapsulated search function
         def Search(text=text,search_text=None):
             print 'searching :', search_text

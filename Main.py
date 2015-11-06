@@ -245,7 +245,7 @@ class Main(QtGui.QWidget,object):#
         self.File_Menu.addAction("Exit",QtCore.QCoreApplication.instance().quit,"CTRL+Q")
         
         self.Mapping_Options_Menu.addAction("Load Mapping Coordinate File",Mapping.Load_Coordinates)
-        self.Mapping_Options_Menu.addAction("Mapping on Negative currents",self.Update_Menu_Options)
+        #self.Mapping_Options_Menu.addAction("Mapping on Negative currents",self.Update_Menu_Options)
         self.Mapping_Options_Menu.addAction("More Options",Mapping.More_Options)
         
 
