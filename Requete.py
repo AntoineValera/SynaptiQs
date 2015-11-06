@@ -172,7 +172,8 @@ class Requete(object):
             <b>WARNING</b>
             <p>Caution, the total length of the sweeps vary.
             Only the shortest common duration is used.
-            SOME TRACES MIGHT BE CROPPED
+            i.e. """ +str(self.Shortest_Sweep_Length*1000.)+ """ ms.            
+            SOME TRACES WILL BE CROPPED COMPARED TO THE ORIGINAL ONES
             """)    
             msgBox.exec_()            
             
@@ -436,9 +437,8 @@ class Requete(object):
             """
             <b>Warning</b>
             <p>You have different sampling rate in your request. 
-            <p>All files are resampled at ("""+str(self.BypassedSamplingRate)+""" points per second 
-            <p>All sweeps will also be truncated at a legnth of """ +str(self.Shortest_Sweep_Length/self.BypassedSamplingRate)+ """ seconds.
-            <p>Caution, some Bugs could remain...
+            <p>All files are downsampled to the lowest sampling rate
+            i.e. """+str(int(self.BypassedSamplingRate)/1000)+""" points per ms 
             """)                  
             msgBox.exec_()
 

@@ -1537,9 +1537,9 @@ class Analysis(object):
                 "<p>Type of experiment : "+
                 str(a)+
                 "<p>Sampling rate : "+
-                str(Navigate.Points_by_ms)+
+                str(int(Navigate.Points_by_ms))+
                 " points by ms (" +
-                str(Navigate.Points_by_ms)+
+                str(int(Navigate.Points_by_ms))+
                 "kHz) , or 1 point = "+
                 str(1./Navigate.Points_by_ms)+
                 " ms"+
