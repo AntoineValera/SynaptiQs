@@ -537,7 +537,7 @@ class Plugins(object):
             if text == None:
                 return
             #editor.setIndicatorOutlineColor(QtGui.QColor("#FFE11F"))
-            editor.findFirst(search_text,False,False,False,True)
+            editor.findFirst(search_text,False,True,False,True)
             
         def Search_next():
             #editor.setIndicatorOutlineColor(QtGui.QColor("#FFE11F"))
@@ -548,7 +548,39 @@ class Plugins(object):
             value, ok = QtGui.QInputDialog.getText(editor, 'Search', 
                 'Text to search')
             Search(text=text,search_text=str(value))
+            
+        def Open_Replace(text=text):
+            def ShowFirstOccurence():
+                editor.findFirst(inline.text(),False,True,False,True)
+            def OK():
+                Replace('text',search_text=inline.text(),newtext=outline.text())
+            def Cancel():
+                self.wid.close()
+                
+            self.wid = QtGui.QWidget()
+            Vert=QtGui.QVBoxLayout(self.wid)
+            inline= QtGui.QLineEdit()
+            outline= QtGui.QLineEdit()
+            
+            Vert.addWidget(inline)
+            Vert.addWidget(outline)
+            Hor=QtGui.QHBoxLayout()
+            ok = QtGui.QPushButton('OK')
+            cancel = QtGui.QPushButton('Cancel')
+            Hor.addWidget(ok)
+            Hor.addWidget(cancel)
+            Vert.addLayout(Hor)    
+            
+            self.wid.show()
+            QtCore.QObject.connect(inline, QtCore.SIGNAL('textEdited(QString)'), ShowFirstOccurence)
+            QtCore.QObject.connect(ok, QtCore.SIGNAL("clicked()"), OK)
+            QtCore.QObject.connect(cancel, QtCore.SIGNAL("clicked()"), Cancel)
+        
 
+        def Replace(text=text,search_text=None,newtext=None):
+            editor.findFirst(search_text,False,True,False,True)
+            editor.replace(newtext)
+           
             
         shcut1 = QtGui.QShortcut(editor)
         shcut1.setKey("CTRL+F")
@@ -557,7 +589,10 @@ class Plugins(object):
         shcut1 = QtGui.QShortcut(editor)
         shcut1.setKey("CTRL+G")
         QtCore.QObject.connect(shcut1, QtCore.SIGNAL("activated()"), Search_next)
-     
+  
+        shcut1 = QtGui.QShortcut(editor)
+        shcut1.setKey("CTRL+H")
+        QtCore.QObject.connect(shcut1, QtCore.SIGNAL("activated()"), Open_Replace)   
         
         try:
             text=str(open(self.Current_Script_Adress).read())
