@@ -706,7 +706,7 @@ class Infos(object):
                     QtGui.QMessageBox.Ok ,QtGui.QMessageBox.Cancel  | QtGui.QMessageBox.Default  | QtGui.QMessageBox.Escape,
                     QtGui.QMessageBox.NoButton)  
             if warning == QtGui.QMessageBox.Cancel : return    
-            else : value=int(Requete.Segment_ids[Requete.Current_Sweep_Number])
+            else : value=int(Requete.Segment_ids[Requete.Current_Sweep_Number][0])
     
             ok = QtGui.QMessageBox.warning(Main.NavigationWidget,'delete',"Are you sure you want to delete the Segment.id #"+str(value),#(None,self.tr('delete'),self.tr("Sure?"), 
                     QtGui.QMessageBox.Ok ,QtGui.QMessageBox.Cancel  | QtGui.QMessageBox.Default  | QtGui.QMessageBox.Escape,
