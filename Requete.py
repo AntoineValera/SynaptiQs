@@ -74,13 +74,15 @@ class Requete(object):
             else:
                 List.append(i+'.'+j)
         for i in List:
-            print i        
+            print i 
+            
     def Adjust_Authorized_Functions(self):
         if Main.SQLTabWidget.currentIndex() == 2:
             Main.SpikesWidget.setEnabled(True)
             self.SpikeTrainfromLocal={}
             self.AmpSpikeTrainfromLocal={} 
-            self.Spiketrain_ids=numpy.copy(Requete.Analogsignal_ids)            
+            if hasattr(Requete, 'Analogsignal_ids'):
+                self.Spiketrain_ids=numpy.copy(Requete.Analogsignal_ids)            
         else:
             pass
 

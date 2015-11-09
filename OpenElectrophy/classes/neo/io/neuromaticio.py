@@ -4,13 +4,12 @@
 Class for fake reading/writing data from WinWCP, a software tool written by
 John Dempster.
 
-WinWCP is free:
-http://spider.science.strath.ac.uk/sipbs/software.htm
+Neuromatic is an Igor plugin developped by Jason Rothman
 
 
 Supported : Read
 
-@author : sgarcia
+@author : antoine valera
 
 """
 
@@ -32,7 +31,7 @@ class NeuromaticIO(BaseIO):
     Class for reading/writing from a WinWCP file.
     **Example**
         #read a file
-        io = WinWcpIO(filename = 'myfile.wcp')
+        io = NeuromaticIO(filename = 'myfile.pxp')
         blck = io.read() # read the entire file    
     """
     

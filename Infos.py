@@ -1379,3 +1379,109 @@ class Infos(object):
         #s=computing.spikesorting.spikesorter.SpikeSorter(mode='from_full_band_signal',session=Requete.Global_Session,recordingPointList=[1])
         self.a=gui.spikesortingwidgets.FullBandSignal()#,Session=RSession)
         self.a.show()
+        
+    def SendToSQl(self):
+        
+        from os.path import expanduser
+        
+        TempFolder =  expanduser("~") +"\\out.csv"
+        
+        self.SaveCSV(TempFolder)
+        
+        self.LoadCSVTOSQLite(TempFolder)
+        
+        
+    def SaveCSV(self,File):
+    
+        import csv
+        from matplotlib import numpy
+        out = open(File, 'w')
+    
+        Segments=len(Navigate.ArrayList)
+        Channels=len(Navigate.ArrayList[0])
+        Points = len(Navigate.ArrayList[0][0])
+    
+        #with out as test_file:
+        file_writer = csv.writer(out)
+        print File, ' temporaryly saved on hard drive'
+        for point in range(Points):
+        	out.write('%s;' % str(Navigate.timescale[point]/1000.))
+        	for segment in range(Segments):
+        		for channel in range(Channels):
+        			out.write('%s;' % str(Navigate.ArrayList[segment][channel][point]))
+        	out.write('\n')
+        
+        out.close()
+    
+    
+    def LoadCSVTOSQLite(self,File):
+        
+        
+        from OpenElectrophy import *
+        from OpenElectrophy.io.io import all_format
+        import os
+
+        ##Loading SQlite
+        Requete.url = "sqlite:///"+str(Main.SQLite_path.text()) 
+        Requete.Global_Meta=open_db( url = Requete.url)
+        Requete.Global_Session=Session()
+    
+        ##Initializing import parameters
+        importmodule=gui.importdata.ImportData(metadata=Requete.Global_Meta,session=Requete.Global_Session)
+        possibleInput = [ ]
+        dict_format = { }
+        for name,format in all_format :
+            possibleInput.append(name)
+            dict_format[name] = format
+    
+        ##File to import
+        fileType="ascii signal"
+        importmodule.changeType(fileType)
+        a=importmodule.inputOptions.get_dict()
+    
+        a= {'delimiter' :';',
+        	'usecols':None, #[1,2,3]
+        	'skiprows':0,
+        	'timecolumn':0,
+        	'samplerate':50000.,
+        	't_start':0.0,
+        	'method':'homemade'}
+    
+        input = dict_format[ fileType ]['class'](filename = File  )
+    
+        ob = input.read(**a)
+        
+        ob.fileOrigin = 'internal import'#os.path.basename(name)
+        ob.name='test'
+
+        if type(ob) is Block: #it is by design for now
+            importmodule.session.add(ob)
+            importmodule.session.commit()
+            print File, ' sent to Sqlite'
+#        elif type(ob) is Segment :
+#            if not self.generalOptions['group_segment'] or bl is None:
+#                bl = Block()
+#                #~ bl._segments.append( ob )
+#                bl.add_one_segment( ob )
+#                self.session.add(bl)
+#            else :
+#                #~ bl._segments.append( ob )
+#                bl.add_one_segment( ob )
+    
+        #bl = Block()
+        
+        #bl.add_one_segment( ob )
+    
+
+    
+        Requete.url=""
+        Requete.query=""
+        Requete.Global_Meta=None
+        Requete.Global_Session=None
+        os.remove(File)
+        print File, ' deleted from hard rive'
+
+
+
+        
+        

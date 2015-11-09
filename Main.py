@@ -404,6 +404,10 @@ class Main(QtGui.QWidget,object):#
         self.ShellButton.setGeometry(0, 80, 83, 23) #taille et position (X,Y,Xsize,Ysize)
         self.ShellButton.setText( "IPython Shell") 
         self.ShellButton.setEnabled(1)
+
+        self.SendToSQl = QtGui.QPushButton(self.IOTools) #creation du bouton
+        self.SendToSQl.setGeometry(0, 100, 83, 23) #taille et position (X,Y,Xsize,Ysize)
+        self.SendToSQl.setText( "Send to SQLite") 
      
         self.Menu_with_List_of_Positive_Steps = QtGui.QMenu()
         self.Menu_with_List_of_Negative_Steps = QtGui.QMenu()
@@ -859,6 +863,7 @@ class Main(QtGui.QWidget,object):#
         QtCore.QObject.connect(self.inf, QtCore.SIGNAL("clicked()"),Analysis.Display_Infos)
         QtCore.QObject.connect(self.Tagging_Tools, QtCore.SIGNAL("clicked()"),Infos.Retag)
         QtCore.QObject.connect(self.ShellButton, QtCore.SIGNAL("clicked()"),self.EmbeddedIpython)
+        QtCore.QObject.connect(self.SendToSQl, QtCore.SIGNAL("clicked()"),Infos.SendToSQl)
         
        
 

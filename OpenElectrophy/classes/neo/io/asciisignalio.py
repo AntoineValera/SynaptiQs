@@ -170,8 +170,13 @@ class AsciiSignalIO(BaseIO):
             samplerate = 1./mean(diff(sig[:,timecolumn]))
             t_start = sig[0,timecolumn]
         
-        seg = Segment()
+        
+        #TODO : 
+        #Add channel support here
+        
+        blck=Block()
         for i in xrange(sig.shape[1]) :
+            seg = Segment()
             if usecols is not None :
                 if timecolumn == usecols[i] :
                     # time comlumn not a signal
@@ -186,8 +191,10 @@ class AsciiSignalIO(BaseIO):
             analogSig.channel = i
             analogSig.name = 'SynaptiQsImport'
             seg._analogsignals.append( analogSig )
+            blck._segments.append(seg)
         
-        return seg
+        return blck
+
 
 
     def write(self , *args , **kargs):

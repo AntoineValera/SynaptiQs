@@ -101,7 +101,7 @@ class ImportData(QDialog) :
         
         cl = dict_format[formatname]['class']
         param = cl.read_params[cl.readable_objects[0]]
-        print param
+        #print param
         self.inputOptions = ParamWidget( param )
         self.widgetInput.layout().addWidget( self.inputOptions )
         

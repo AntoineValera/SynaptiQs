@@ -175,15 +175,6 @@ class MyWindow(QtGui.QWidget,object):
         return Waves,Var
 
 
-
-
-
-
-
-
-
-
-
     def IgorLoad(self,Source):
         from igor import binarywave,igorpy
         Waves={}
