@@ -506,7 +506,17 @@ class MyWindow(QtGui.QWidget,object):
         Requete.Analogsignal_ids=[[x]*Requete.NumberofChannels for x in range(len(Navigate.ArrayList))]#range(len(Navigate.ArrayList))
         Requete.Analogsignal_name=list([None]*len(Navigate.ArrayList))
         Requete.tag={}
-        Requete.tag["Selection"]=[[0]*Requete.NumberofChannels]*len(Requete.Analogsignal_ids)
+        
+        new=[]
+        for i in range(len(Requete.Analogsignal_ids)):
+            new.append([0]*int(Requete.NumberofChannels))            
+        Requete.tag["Selection"]=new
+        for i in range(len(Requete.Analogsignal_ids)):
+            for j in range(Requete.NumberofChannels):
+                Requete.tag["Selection"][i][j]=0
+        
+        #Requete.tag["Selection"]=[[0]*int(Requete.NumberofChannels)]*len(Requete.Analogsignal_ids)
+        
         Requete.Analogsignal_channel=list([range(Requete.NumberofChannels)]*len(Navigate.ArrayList))
         Requete.Block_fileOrigin=list([None]*len(Navigate.ArrayList))
         Requete.Block_Info=list([[None]*Requete.NumberofChannels]*len(Navigate.ArrayList))
