@@ -1391,30 +1391,42 @@ class Infos(object):
         self.LoadCSVTOSQLite(TempFolder)
         
         
-    def SaveCSV(self,File):
+    def SaveCSV(self,File,TimeScale=True,Segments=None):
+        '''
+        Save the whole file as a csv (first column is)
+        Segments is a list of columns
+        '''
     
         import csv
         from matplotlib import numpy
         out = open(File, 'w')
     
-        Segments=len(Navigate.ArrayList)
+        if Segments == None:
+            Segments=range(len(Navigate.ArrayList))
+            
+        
+        #else:
+            #if type(Segments) is not 'list':
+                #raise TypeError('Segments must be a list')
         Channels=len(Navigate.ArrayList[0])
         Points = len(Navigate.ArrayList[0][0])
     
         #with out as test_file:
         file_writer = csv.writer(out)
-        print File, ' temporaryly saved on hard drive'
-        for point in range(Points):
-        	out.write('%s;' % str(Navigate.timescale[point]/1000.))
-        	for segment in range(Segments):
-        		for channel in range(Channels):
-        			out.write('%s;' % str(Navigate.ArrayList[segment][channel][point]))
-        	out.write('\n')
         
+        for point in range(Points):
+            if TimeScale == True:
+                out.write('%s;' % str(Navigate.timescale[point]/1000.))
+            for segment in Segments:
+                for channel in range(Channels):
+                    out.write('%s;' % str(Navigate.ArrayList[segment][channel][point]))
+            out.write('\n')
+         
+        print File, ' temporarily saved on hard drive'
         out.close()
     
     
-    def LoadCSVTOSQLite(self,File):
+    def LoadCSVTOSQLite(self,File,Delete=True):
         
         
         from OpenElectrophy import *
@@ -1456,6 +1468,10 @@ class Infos(object):
 
         if type(ob) is Block: #it is by design for now
             importmodule.session.add(ob)
+            
+            
+            
+            
             importmodule.session.commit()
             print File, ' sent to Sqlite'
 #        elif type(ob) is Segment :
@@ -1471,15 +1487,16 @@ class Infos(object):
         #bl = Block()
         
         #bl.add_one_segment( ob )
-    
+        
 
     
         Requete.url=""
         Requete.query=""
         Requete.Global_Meta=None
         Requete.Global_Session=None
-        os.remove(File)
-        print File, ' deleted from hard rive'
+        if Delete == True:
+            os.remove(File)
+            print File, ' deleted from hard drive'
 
 
 

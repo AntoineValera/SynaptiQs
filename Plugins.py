@@ -74,8 +74,11 @@ class Plugins(object):
                     <p>This script was not loaded, and set as inactive ($)
                     <p>You can use 'Force Load' function to correct the error                    
                     """ %(plugin)) 
-                    os.rename(str(Main.userpath)+"/.SynaptiQs/"+"%s.py" %(plugin),str(Main.userpath)+"/.SynaptiQs/"+"$"+"%s.py" %(plugin))
-                    msgBox.exec_()   
+                    msgBox.exec_()
+                    try:
+                        os.rename(str(Main.userpath)+"/.SynaptiQs/"+"%s.py" %(plugin),str(Main.userpath)+"/.SynaptiQs/"+"$"+"%s.py" %(plugin))
+                    except WindowsError:
+                        os.rename(str(Main.userpath)+"/.SynaptiQs/"+"%s.py" %(plugin),str(Main.userpath)+"/.SynaptiQs/"+"$$"+"%s.py" %(plugin))
                     pass
                 except:
                     msgBox = QtGui.QMessageBox()
@@ -225,7 +228,7 @@ class Plugins(object):
             """)                
             msgBox.exec_()
             fichier = open(str(Main.userpath)+'/.SynaptiQs/__temp.py', "w")
-            fichier.write(str(open(str(Main.userpath)+'/.SynaptiQs/__temp.py').read()).replace('    ','\t'))
+            fichier.write(str(open(str(Main.userpath)+'/.SynaptiQs/__temp.py').read()).replace('    ','	')) #4 spaces replaced by tab
             fichier.close()            
             print '2nd trial'
             
@@ -596,8 +599,8 @@ class Plugins(object):
         QtCore.QObject.connect(shcut1, QtCore.SIGNAL("activated()"), Open_Replace)   
         
         try:
-            text=str(open(self.Current_Script_Adress).read())
-            #text=str(open(self.Current_Script_Adress).read()).replace('    ','   ')
+            #text=str(open(self.Current_Script_Adress).read())
+            text=str(open(self.Current_Script_Adress).read()).replace('    ','	') #4 spaces replaced by tab
             editor.setText(text)
             return editor
         except TypeError:
