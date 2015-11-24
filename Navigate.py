@@ -406,6 +406,32 @@ class Navigate(object):
         except:# ValueError:
             Main.From.setText(str(0))
             Main.To.setText(str(len(Requete.Analogsignal_ids)-1))
+
+    def Concatenate(self,Start=None,Stop=None,Channels=None,Rendering=False):
+        
+        
+        if Channels==None:
+            self.Concatenated=[[]*Requete.NumberofChannels]
+            Channels=range(Requete.NumberofChannels)
+        else:
+            if type(Channel) is not 'list':
+                print 'Channel must be a list of valid channels'
+                return
+            self.Concatenated=[[]*len(Channels)]
+
+        for n,m in enumerate(Channels):
+            for i in Requete.Analogsignal_ids:
+                a=AnalogSignal.load(i[m])
+                self.Concatenated[n].extend(a.signal)
+            if Rendering == True:
+                pyplot.plot(self.Concatenated[n])
+        
+        if Rendering == True:
+            pyplot.show()
+        
+        
+                
+        
             
 
            

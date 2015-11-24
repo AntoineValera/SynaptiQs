@@ -205,62 +205,62 @@ class Plugins(object):
         
         clicked_widget="self."+str(QtCore.QObject().sender().parent().accessibleName()+"_Window")
 
-        try:
-            self.Save_Script(clicked_widget,name='temp') #so when excuting, the Original File is not overwritten
+        #try:
+        self.Save_Script(clicked_widget,name='temp') #so when excuting, the Original File is not overwritten
 
-            for plugin in self.Plugin_List:
-                try:
-                    reload(eval('sys.modules[__name__].'+plugin))
-                    setattr(__builtin__,plugin,eval('sys.modules[__name__].'+plugin))
-                except: #BUG When a immediately excutable script is created, saved, and you start a separate new script, reload doesn't work (until next restart)
-                    pass
-                
-            execfile(str(Main.userpath)+'/.SynaptiQs/__temp.py')
-
-
-        except IndentationError:
-            msgBox = QtGui.QMessageBox()
-            msgBox.setText(
-            """
-            While trying to execute the plugin, an IndentationError error occured
-            <p>This is usually due to Tabulations and Whitespaces co-existance in the script.
-            Please use only Tab OR Space (1 Tab ~ 4 Whitespaces)
-            """)                
-            msgBox.exec_()
-            fichier = open(str(Main.userpath)+'/.SynaptiQs/__temp.py', "w")
-            fichier.write(str(open(str(Main.userpath)+'/.SynaptiQs/__temp.py').read()).replace('    ','	')) #4 spaces replaced by tab
-            fichier.close()            
-            print '2nd trial'
-            
-            self.Save_Script(clicked_widget,name='temp') #so execution doesn't need saving
-            
-            for plugin in self.Plugin_List:
+        for plugin in self.Plugin_List:
+            try:
                 reload(eval('sys.modules[__name__].'+plugin))
                 setattr(__builtin__,plugin,eval('sys.modules[__name__].'+plugin))
-              
-            try:
-                execfile(str(Main.userpath)+'/.SynaptiQs/__temp.py')
-            except IndentationError:
-                message=traceback.format_exc()
-                msgBox = QtGui.QMessageBox()
-                msgBox.setText(message)                
-                msgBox.exec_()                
-                
-                msgBox = QtGui.QMessageBox()
-                msgBox.setText(
-                """
-                While trying to execute the plugin, an IndentationError error occured
-                <p>This is usually due to Tabulations and Whitespaces co-existance in the script.
-                Please use only Tab OR Space (1 Tab ~ 4 Whitespaces)
-                It might also be due to an empty block (try; for; while; if; function etc...)
-                """)                   
+            except: #BUG When a immediately excutable script is created, saved, and you start a separate new script, reload doesn't work (until next restart)
+                pass
+            
+        execfile(str(Main.userpath)+'/.SynaptiQs/__temp.py')
+
+
+#        except IndentationError:
+#            msgBox = QtGui.QMessageBox()
+#            msgBox.setText(
+#            """
+#            While trying to execute the plugin, an IndentationError error occured
+#            <p>This is usually due to Tabulations and Whitespaces co-existance in the script.
+#            Please use only Tab OR Space (1 Tab ~ 4 Whitespaces)
+#            """)                
+#            msgBox.exec_()
+#            fichier = open(str(Main.userpath)+'/.SynaptiQs/__temp.py', "w")
+#            fichier.write(str(open(str(Main.userpath)+'/.SynaptiQs/__temp.py').read()).replace('    ','	')) #4 spaces replaced by tab
+#            fichier.close()            
+#            print '2nd trial'
+#            
+#            self.Save_Script(clicked_widget,name='temp') #so execution doesn't need saving
+#            
+#            for plugin in self.Plugin_List:
+#                reload(eval('sys.modules[__name__].'+plugin))
+#                setattr(__builtin__,plugin,eval('sys.modules[__name__].'+plugin))
+#              
+#            try:
+#                execfile(str(Main.userpath)+'/.SynaptiQs/__temp.py')
+#            except IndentationError:
+#                message=traceback.format_exc()
+#                msgBox = QtGui.QMessageBox()
+#                msgBox.setText(message)                
+#                msgBox.exec_()                
+#                
+#                msgBox = QtGui.QMessageBox()
+#                msgBox.setText(
+#                """
+#                While trying to execute the plugin, an IndentationError error occured
+#                <p>This is usually due to Tabulations and Whitespaces co-existance in the script.
+#                Please use only Tab OR Space (1 Tab ~ 4 Whitespaces)
+#                It might also be due to an empty block (try; for; while; if; function etc...)
+#                """)                   
 
             #execfile(str(Main.userpath)+'/.SynaptiQs/__temp.py')
-        except:
-            message=traceback.format_exc()
-            msgBox = QtGui.QMessageBox()
-            msgBox.setText(message)                
-            msgBox.exec_()
+#        except:
+#            message=traceback.format_exc()
+#            msgBox = QtGui.QMessageBox()
+#            msgBox.setText(message)                
+#            msgBox.exec_()
             
     def Save_As_Script(self):
         """

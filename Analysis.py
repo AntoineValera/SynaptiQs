@@ -28,6 +28,7 @@ class Analysis(object):
         self.__name__="Analysis"
         self.UseUserDefinedColorset = False
         self.Color = 'k'
+        self.SuperimposedOnAverage = True
     def _all(self,All=False):
         List=[]
         i=self.__name__
@@ -174,7 +175,7 @@ class Analysis(object):
                 Color=[Color]*len(List_of_Ids)
     
     
-            self.Check_Measuring_Parameters_Validity()
+            #self.Check_Measuring_Parameters_Validity()
             
             self.mean = numpy.zeros(len(Navigate.si[n]))
             counter=0
@@ -202,18 +203,26 @@ class Analysis(object):
             Main.status_text.setText(Info_Message) 
             
             self.mean/=counter
-            if Main.Measure_From_Zero_Button.checkState() == 2:
-                All_from_Zero == True
-    
-            if All_from_Zero == True:
-                Main.Remove_Leak_Button.setCheckState(2) 
-                Measure_All_from_Baseline1 = False
-            if Main.Remove_Leak_Button.checkState() == 2:
-                if All_from_Zero == False:
-                    Main.Remove_Leak_Button.setCheckState(0)
-                leaktemporaryremoved=True
+            
+            # if all form zero is true, we need to substract leak, so the checkbox must be ticked
+            LeakSubstractionIgnored=False
+            if All_from_Zero == True or Main.Measure_From_Zero_Button.checkState() == 2:
+                All_from_Zero = True
+                Measure_All_from_Baseline1 = False #cant be True at the same time
+                if Main.Remove_Leak_Button.checkState() == 0:
+                    Main.Remove_Leak_Button.setCheckState(2) 
             else:
-                leaktemporaryremoved=False  
+                if Main.Remove_Leak_Button.checkState() == 2:
+                    Main.Remove_Leak_Button.setCheckState(0)                 
+                    LeakSubstractionIgnored=True
+                    
+            # If we have to 
+           # if Main.Remove_Leak_Button.checkState() == 2:
+                #if All_from_Zero == False and Main.Remove_Leak_Button.checkState() == 2:
+                #    Main.Remove_Leak_Button.setCheckState(0)
+                #leaktemporaryremoved=True
+            #else:
+                #leaktemporaryremoved=False  
     
     
             self.Ampvalues = range(6)
@@ -275,10 +284,9 @@ class Analysis(object):
     
     
             
-            if leaktemporaryremoved == True and All_from_Zero == False:
+            if LeakSubstractionIgnored == True:
                 Main.Remove_Leak_Button.setCheckState(2)
-    
-    
+
     
             if Rendering == True: #Still some pb if called from outside
                 print 'rendering On'
@@ -341,7 +349,7 @@ class Analysis(object):
     
     
                 #This can be optimized
-                if Main.Superimpose_Used_Traces == True or Display_Superimposed_Traces == True :
+                if Main.Superimpose_Used_Traces == True or Display_Superimposed_Traces == True and self.SuperimposedOnAverage == True:
                         self.Wid.canvas.Object_Selection_Mode = 'Trace'
                         for i,j in enumerate(List_of_Ids):
                             if ((List_of_Ids is Requete.Analogsignal_ids) and (i >= int(Main.From.text())) and (i <= int(Main.To.text())) and (Requete.tag["Selection"][i][n] == 1)) or (List_of_Ids is not Requete.Analogsignal_ids):
@@ -1546,4 +1554,32 @@ class Analysis(object):
                 "<p><b>Mapping Infos (saved in the tag field)</b>"
                 "<p>Have a nice analysis...")      
             msgBox.exec_()
+
+    def Scalogram(self,Source=None,Type='RAW',Sampling_Rate=None, Channel=0, **kargs):
+        
+        from OpenElectrophy import AnalogSignal
+
+        if Source == None:
+            Source=Navigate.si
+ 
+        if Sampling_Rate == None:
+            Sampling_Rate=Requete.BypassedSamplingRate
+
+        A=[]
+        for i in Source:
+            if Type == 'RAW':
+                A.append(list(i))
+            elif Type == 'Id':
+                A.append(list(AnalogSignal.load(i[Channel]).signal))
+                
+        A=numpy.array([numpy.array(xi) for xi in A])
+        
+        Average=numpy.average(A,axis=0)
+    
+        B=AnalogSignal()
+        B.signal=Average
+        B.sampling_rate=Sampling_Rate
+        B.plot_scalogram(**kargs)
+
+        pyplot.show()
 

@@ -56,7 +56,8 @@ if __name__ == "__main__": #Executé si l'application est en StandAlone
     
         
         import __builtin__
-        __all__ = [ os.path.basename(f)[:-3] for f in glob.glob(os.path.dirname(__file__)+"/*.py")]
+        __all__ = [ os.path.basename(f)[:-3] for 
+        f in glob.glob(os.path.dirname(__file__)+"/*.py")]
         for i in __all__:
             setattr(sys.modules[__name__],i,__import__(i))
         
@@ -71,6 +72,8 @@ if __name__ == "__main__": #Executé si l'application est en StandAlone
         Fitting=Fitting.Fitting()
         Mapping = Mapping.Mapping()
         Histogram=Histogram.Histogram()
+
+
         SpreadSheet=SpreadSheet.SpreadSheet
         
         
