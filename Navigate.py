@@ -408,7 +408,10 @@ class Navigate(object):
             Main.To.setText(str(len(Requete.Analogsignal_ids)-1))
 
     def Concatenate(self,Start=None,Stop=None,Channels=None,Rendering=False):
+        '''
         
+        
+        '''
         
         if Channels==None:
             self.Concatenated=[[]*Requete.NumberofChannels]
@@ -421,8 +424,11 @@ class Navigate(object):
 
         for n,m in enumerate(Channels):
             for i in Requete.Analogsignal_ids:
-                a=AnalogSignal.load(i[m])
-                self.Concatenated[n].extend(a.signal)
+                try:
+                    a=AnalogSignal.load(i[m]).signal
+                except TypeError:#when it's a local file
+                    a=self.ArrayList[i[n]][0]
+                self.Concatenated[n].extend(a)
             if Rendering == True:
                 pyplot.plot(self.Concatenated[n])
         

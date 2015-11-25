@@ -331,7 +331,7 @@ class MyWindow(QtGui.QWidget,object):
                             OriginalSweepNames.append(originalName)    
                             FormatedSweepNames.append(formatedName)
                             exec("Analysis."+formatedName+"= Array[originalName]")
-                            Navigate.ArrayList[counter].append(list(eval("Analysis."+formatedName)))
+                            Navigate.ArrayList[counter].append(numpy.array(eval("Analysis."+formatedName),dtype=float64))
                             counter+=1 
 
                 if Var != None:

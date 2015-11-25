@@ -28,7 +28,9 @@ class Analysis(object):
         self.__name__="Analysis"
         self.UseUserDefinedColorset = False
         self.Color = 'k'
-        self.SuperimposedOnAverage = True
+        self.SuperimposedOnAverage = True #if False, default Average button will not show superimposed traces
+        
+        
     def _all(self,All=False):
         List=[]
         i=self.__name__
@@ -564,17 +566,72 @@ class Analysis(object):
         return        
         
 
-                
-
-    def Count_All_Events(self):#,Rendering=True,Range=None,Silent=False):
-        
-
-
+    def MeasureNoise(self):
+        Bsl_bgn=float(Main.Baseline1_begin.text())/1000
+        Bsl_end=float(Main.Baseline1_end.text())/1000
+        Mes_bgn=float(Main.Peak1_begin.text())/1000
+        Mes_end=float(Main.Peak1_end.text())/1000                              
 
         Source = Requete.Spiketrain_ids
         
+        Maximal_Frequency=[numpy.NaN]*len(Requete.Spiketrain_ids)
+        Events=[numpy.NaN]*len(Requete.Spiketrain_ids)
+        
+        n=0 #temporary channel
+        
+        counter=0
+
+        for i in range(len(Source)):
+
+            Main.progress.setMinimum(0)
+            Main.progress.setMaximum(len(Source)-1)
+            Main.progress.setValue(i)
+            
+            if Main.SQLTabWidget.currentIndex() == 2: # if Local file only
+                Requete.Current_Sweep_Number=i            
+            
+            if i >= int(Main.From.text()) and i <= int(Main.To.text()) and Requete.tag["Selection"][i][n] == 1:
+
+                if Main.SQLTabWidget.currentIndex() != 2:
+                    sptr=SpikeTrain.load(Source[i][n],session=Requete.Global_Session)
+                    #first we could calculate the baseline number of events, not done
+                    subspikes=[]
+                    #Second, we count the evnts in measurement range
+                    for j in sptr._spike_times-sptr.t_start:
+                        if j >Mes_bgn and j <Mes_end:
+                            subspikes.append(j)
+
+                elif Main.SQLTabWidget.currentIndex() == 2:
+                    sptr=Requete.SpikeTrainfromLocal[str(i)]
+                    #first we could calculate the baseline number of events, not done
+                    subspikes=[]
+                    #Second, we count the evnts in measurement range
+                    for j in sptr:
+                        if j/1000. >Mes_bgn and j/1000. <Mes_end:
+                            subspikes.append(j) 
+                
+                Events[i]=len(subspikes)
+
+                temp=[]
+                if len(subspikes)>1:
+                    for i in range(len(subspikes)-1):
+                        if subspikes[i+1]-subspikes[i]!=0: #Usually due to a bug with duplicate point
+                            temp.append(subspikes[i+1]-subspikes[i])
+                    Maximal_Frequency[i]=1/numpy.min(temp)
+                elif len(subspikes) == 1:
+                    Maximal_Frequency[i]=0
+                elif len(subspikes) == 0:
+                    Maximal_Frequency[i]=numpy.NaN
+
+                counter+=1
+
+        return numpy.nanmean(Events),numpy.nanstd(Events)               
+
+    def Count_All_Events(self):#,Rendering=True,Range=None,Silent=False):
+        Source = Requete.Spiketrain_ids
+        
         self.Events=[numpy.NaN]*len(Requete.Spiketrain_ids)
-        self.Maximale_Frequency=[numpy.NaN]*len(Requete.Spiketrain_ids)
+        self.Maximal_Frequency=[numpy.NaN]*len(Requete.Spiketrain_ids)
 
         
         counter=0
@@ -596,15 +653,15 @@ class Analysis(object):
                     for i in range(len(sptr._spike_times)-1):
                         if sptr._spike_times[i+1]-sptr._spike_times[i]!=0: #Usually due to a bug with duplicate point
                             temp.append(sptr._spike_times[i+1]-sptr._spike_times[i])
-                    self.Maximale_Frequency[i]=1/numpy.min(temp)
+                    self.Maximal_Frequency[i]=1/numpy.min(temp)
                 elif len(sptr._spike_times) == 1:
-                    self.Maximale_Frequency[i]=0
+                    self.Maximal_Frequency[i]=0
                 elif len(sptr._spike_times) == 0:
-                    self.Maximale_Frequency[i]=numpy.NaN
+                    self.Maximal_Frequency[i]=numpy.NaN
 
                     
                 counter+=1
-        return self.Events,self.Events,self.Events,self.Maximale_Frequency,self.Maximale_Frequency,self.Maximale_Frequency       
+        return self.Events,self.Events,self.Events,self.Maximal_Frequency,self.Maximal_Frequency,self.Maximal_Frequency       
         
     def Count_Events(self):#,Rendering=True,Range=None,Silent=False):
 
@@ -613,32 +670,35 @@ class Analysis(object):
         Mes_bgn=float(Main.Peak1_begin.text())/1000
         Mes_end=float(Main.Peak1_end.text())/1000                              
 
-
         Source = Requete.Spiketrain_ids
         
         self.Events=[numpy.NaN]*len(Requete.Spiketrain_ids)
-        self.Maximale_Frequency=[numpy.NaN]*len(Requete.Spiketrain_ids)
-
+        self.Maximal_Frequency=[numpy.NaN]*len(Requete.Spiketrain_ids)
+        
+        n=0 #temporary channel
         
         counter=0
 
         for i in range(len(Source)):
+
             Main.progress.setMinimum(0)
             Main.progress.setMaximum(len(Source)-1)
             Main.progress.setValue(i)
+            
             if Main.SQLTabWidget.currentIndex() == 2: # if Local file only
                 Requete.Current_Sweep_Number=i            
             
-            if i >= int(Main.From.text()) and i <= int(Main.To.text()) and Requete.tag["Selection"][i] == 1:
-                
+            if i >= int(Main.From.text()) and i <= int(Main.To.text()) and Requete.tag["Selection"][i][n] == 1:
+
                 if Main.SQLTabWidget.currentIndex() != 2:
-                    sptr=SpikeTrain.load(Source[i],session=Requete.Global_Session)
+                    sptr=SpikeTrain.load(Source[i][n],session=Requete.Global_Session)
                     #first we could calculate the baseline number of events, not done
                     subspikes=[]
                     #Second, we count the evnts in measurement range
                     for j in sptr._spike_times-sptr.t_start:
                         if j >Mes_bgn and j <Mes_end:
-                            subspikes.append(j) 
+                            subspikes.append(j)
+
                 elif Main.SQLTabWidget.currentIndex() == 2:
                     sptr=Requete.SpikeTrainfromLocal[str(i)]
                     #first we could calculate the baseline number of events, not done
@@ -646,7 +706,8 @@ class Analysis(object):
                     #Second, we count the evnts in measurement range
                     for j in sptr:
                         if j/1000. >Mes_bgn and j/1000. <Mes_end:
-                            subspikes.append(j)                     
+                            subspikes.append(j) 
+                
                 self.Events[i]=len(subspikes)
 
                 temp=[]
@@ -654,15 +715,14 @@ class Analysis(object):
                     for i in range(len(subspikes)-1):
                         if subspikes[i+1]-subspikes[i]!=0: #Usually due to a bug with duplicate point
                             temp.append(subspikes[i+1]-subspikes[i])
-                    self.Maximale_Frequency[i]=1/numpy.min(temp)
+                    self.Maximal_Frequency[i]=1/numpy.min(temp)
                 elif len(subspikes) == 1:
-                    self.Maximale_Frequency[i]=0
+                    self.Maximal_Frequency[i]=0
                 elif len(subspikes) == 0:
-                    self.Maximale_Frequency[i]=numpy.NaN
+                    self.Maximal_Frequency[i]=numpy.NaN
 
-                    
                 counter+=1
-        return self.Events,self.Events,self.Events,self.Maximale_Frequency,self.Maximale_Frequency,self.Maximale_Frequency   
+        return self.Events,self.Events,self.Events,self.Maximal_Frequency,self.Maximal_Frequency,self.Maximal_Frequency   
         
         
     def Measure(self,Rendering=True,Measure_Filtered=False,Measure_All_from_Baseline1=False,Silent=False,All_from_Zero=False,Channel=None):
@@ -899,7 +959,9 @@ class Analysis(object):
             """ % (name)) 
             msgBox.exec_() 
                      
-        
+    def Get_User_Parameters(self):
+        return str(Main.User_Defined_Measurement_Parameters.currentText())
+     
         
         
     def Set_User_Defined_Measurement_Parameters_to_Zero(self):
@@ -1165,11 +1227,12 @@ class Analysis(object):
             self.Peak3 = numpy.ones(self.Measurement_Interval[5])*Ampvalues[5]
             self.Peak3_coord = numpy.array(range(len(self.Peak3)))+self.left[5]
             
-    def Raster_Plot(self,Bar_time=0.2,Bar_Width=0.1,Rendering=True,Source=None): 
+    def Raster_Plot(self,Bar_time=0.2,Bar_Width=0.1,Length=None,Rendering=True,Source=None): 
         """
         This function display a Raster plot of all the spike times using "Source" list of spiketrain ids.
         Source must be a list. If None, Source is Requete.Spiketrain_ids
         The function returns the figure
+        Length is the sweep length is s.
         """
         
         
@@ -1180,6 +1243,7 @@ class Analysis(object):
         if QtCore.QObject().sender() == Main.Rasterplot:
             Bar_time=float(Main.Raster_Start.text())
             Bar_Width=float(Main.Raster_Duration.text())
+            Length=Requete.Shortest_Sweep_Length
 
         self.Wid = MyMplWidget(title = 'Raster Plot',subplots=[NumberofChannels,1,1])#, width=6, height=4)
         concatenatedEvents=[]
@@ -1210,6 +1274,7 @@ class Analysis(object):
                     if n>0:
                         self.Wid.canvas.axes = self.Wid.canvas.fig.add_subplot(NumberofChannels,1,n+1)
                     for i in range(len(Source)):
+                        
                         Main.progress.setMinimum(0)
                         Main.progress.setMaximum(len(Source)-1)
                         Main.progress.setValue(i)
@@ -1221,7 +1286,7 @@ class Analysis(object):
                                     #print sptr.t_start, sptr._spike_times 
                                     y=i*numpy.ones(len(sptr._spike_times))   
                                     self.Wid.canvas.axes.plot(sptr._spike_times,y, 'k|')
-                            
+                                    concatenatedEvents.extend(sptr._spike_times)
                             except ValueError:
                                 print "ID ",Source[i]," passed"
                             counter+=1    
@@ -1235,8 +1300,11 @@ class Analysis(object):
                         
                     y=i*numpy.ones(len(sptr._spike_times))   
                     self.Wid.canvas.axes.plot(sptr._spike_times,y, 'k|')
+                    concatenatedEvents.extend(sptr._spike_times)
                     counter+=1   
-                    
+        
+
+            
         elif Main.SQLTabWidget.currentIndex() == 2:
             h=[0,0,-1,len(Source)]
             self.Wid.canvas.axes.axis(h)
@@ -1260,16 +1328,18 @@ class Analysis(object):
                             print "ID ",Source[i]," passed"
                         counter+=1              
                 
-                self.Wid.canvas.axes.set_xlabel("Time")
-                self.Wid.canvas.axes.set_ylabel("Sweep Number")
-                self.Wid.canvas.axes.invert_yaxis()
-                self.Wid.canvas.axes.axvspan(Bar_time,Bar_time+Bar_Width,facecolor='b', alpha=0.3)
-                self.Wid.canvas.axes.set_xbound(0.,1000.)
-                self.Wid.canvas.axes.set_ybound(-1.,len(Source)+2.)
-                self.Wid.canvas.axes.hist(concatenatedEvents, bins=100, range=(0.,1000.),histtype="stepfilled",alpha=0.6, normed=False)
 
             
         if Rendering == True:
+            self.Wid.canvas.axes.set_xlabel("Time")
+            self.Wid.canvas.axes.set_ylabel("Sweep Number")
+            self.Wid.canvas.axes.invert_yaxis()
+            self.Wid.canvas.axes.axvspan(Bar_time,Bar_time+Bar_Width,facecolor='b', alpha=0.3)
+            self.Wid.canvas.axes.set_xbound(0.,Length)
+            self.Wid.canvas.axes.set_ybound(-1.,len(Source)+2.)
+          
+            self.Wid.canvas.axes.hist(concatenatedEvents, bins=100, range=(0.,Length),histtype="stepfilled",alpha=0.6, normed=True)
+           
             self.Wid.show()        
 
             Info_Message="It's a superposition of "+str(counter)+" sweeps"
@@ -1573,7 +1643,6 @@ class Analysis(object):
                 A.append(list(AnalogSignal.load(i[Channel]).signal))
                 
         A=numpy.array([numpy.array(xi) for xi in A])
-        
         Average=numpy.average(A,axis=0)
     
         B=AnalogSignal()

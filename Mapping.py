@@ -50,6 +50,7 @@ class Mapping(object):
         self.StoredMaps=[]
         self.AllowToAddaMapping=False
         self.NumberOfLevels = 20
+        self.ZScore=False
         
     def _all(self,All=False):
         List=[]
@@ -563,7 +564,8 @@ class Mapping(object):
                    self.__name__+'.Image_ColorMap',
                    self.__name__+'.Analysis_mode',
                    self.__name__+'.Transparency',
-                   self.__name__+'.NumberOfLevels']
+                   self.__name__+'.NumberOfLevels',
+                   self.__name__+'.ZScore']
         for i in ListofVar:
             Option_Label=QtGui.QLabel(i)
             Option=QtGui.QLineEdit()
@@ -1386,41 +1388,17 @@ class Mapping(object):
         self.SuccessRate_Ready=False
         self.AllowToAddaMapping=True
 
-    def Measure_Traces_By_Position(self,Measure_Filtered=False,Silent=False):
-        """
-        Cette fonction permet de faire les mesurese des traces points par points.
-        Les parametres utilisés sont de du menu Measure  .
-        On y créé des dictionnaires utiles:
-            self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary : {id:(X,Y)}
-            self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary : {(X,Y):[id1,id2,id3...]}
-            self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary : {id:sweep#}
-            self.CM.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary : {(X,Y): mean amp1 }
-            self.CM.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary : {(X,Y): mean surface}
-            self.CM.Coordinates_and_Corresponding_Success_Rate_Dictionnary : {(X,Y) : Success rate}
-            self.CM.Initially_Excluded_AnalogSignal_Ids : {excluded ids}
-        Et 2 array importants:
-            self.CM.Success_list
-            self.CM.Success_rate
-        """        
- 
-
-        abort=self.Create_Dictionnaries()  
-        AllC1values=[]
-        AllA1values=[]
-        AllV1values=[]
-        if abort == True:
-            return 
-            
-        if self.Thresholding_Mode.currentIndex() == 1: #seuil en pA
+    def DefineModeAndThreshold(self,Mode=1):
+        
+        if Mode == 1: #seuil en pA
             thr=float(self.Thresholding_Mode_Input_Field.text())
             self.Analysis_mode="Analysis.Amplitudes_1"
             
-        elif self.Thresholding_Mode.currentIndex() == 2: #seuil en pC
+        elif Mode == 2: #seuil en pC
             thr=float(self.Thresholding_Mode_Input_Field.text())  
             self.Analysis_mode="Analysis.Charges_1"
-         
             
-        elif self.Thresholding_Mode.currentIndex() == 5: #Combo regularité ET Seuil moyen
+        elif Mode == 5: #Combo regularité ET Seuil moyen
         
             choice, ok = QtGui.QInputDialog.getText(Main.FilteringWidget, 'Input Dialog', 
                 'Please Enter the desired Threshold and the Unit (pA or pC):')
@@ -1460,13 +1438,13 @@ class Mapping(object):
             else:
                 raise "Measure Cancelled"    
 
-        elif self.Thresholding_Mode.currentIndex() == 6: #Variance
+        elif Mode == 6: #Variance
             thr=float(self.Thresholding_Mode_Input_Field.text())  
             self.Analysis_mode="Analysis.Variance_1"            
 
-        elif self.Thresholding_Mode.currentIndex() == 7: #of events
-            self.Analysis_mode="Analysis.Events"
+        elif Mode == 7: #of events
             thr=float(self.Thresholding_Mode_Input_Field.text())
+            self.Analysis_mode="Analysis.Events_1"
        
         #If no threshold was set, detection threshold is automatically set at -2 pA and mean threshold at -1 pA       
         else: 
@@ -1475,23 +1453,70 @@ class Mapping(object):
             self.Thresholding_Mode.setCurrentIndex(1)
             self.Thresholding_Mode_Input_Field.setText("-2")       
             thr=float(self.Thresholding_Mode_Input_Field.text())
-            self.mean_threshold=-1
+            self.mean_threshold=-1        
+        
+        return thr
 
+    def Measure_Traces_By_Position(self,Measure_Filtered=False,Silent=False,ZScore=False):
+        """
+        Cette fonction permet de faire les mesurese des traces points par points.
+        Les parametres utilisés sont de du menu Measure  .
+        On y créé des dictionnaires utiles:
+            self.CM.AnalogSignal_Ids_and_Corresponding_Coordinates_Dictionnary : {id:(X,Y)}
+            self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary : {(X,Y):[id1,id2,id3...]}
+            self.CM.AnalogSignal_Ids_and_Corresponding_SweepNumber_Dictionnary : {id:sweep#}
+            self.CM.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary : {(X,Y): mean amp1 }
+            self.CM.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary : {(X,Y): mean surface}
+            self.CM.Coordinates_and_Corresponding_Success_Rate_Dictionnary : {(X,Y) : Success rate}
+            self.CM.Initially_Excluded_AnalogSignal_Ids : {excluded ids}
+        Et 2 array importants:
+            self.CM.Success_list
+            self.CM.Success_rate
+        """        
+ 
+        if self.ZScore=='True':
+            print '#################### WARINNG ####################'
+            print '###########DATA REPRESENTED AS ZSCORE############'
+            ZScore=True
+            
+        abort=self.Create_Dictionnaries()
+ 
+        if abort == True:
+            return     
+         
+        if ZScore==True:
+            currentparam=Analysis.Get_User_Parameters()
+            Analysis.Set_User_Parameters('Background_Noise')
+            Mean,SD=Analysis.MeasureNoise()
+            Analysis.Set_User_Parameters(currentparam)
 
-        if self.Thresholding_Mode.currentIndex() == 7:
+        AllC1values=[]
+        AllA1values=[]
+        AllV1values=[]
+        
+        #Acceptance threshold is specific of the type of measurement
+        thr=self.DefineModeAndThreshold(Mode=int(self.Thresholding_Mode.currentIndex()))
+
+        #Measurement trace by trace
+        if self.Thresholding_Mode.currentIndex() == 7: #Spikes
             self.CM.Types_of_Events_to_Measure = 'Positive'
-            A1,A2,A3,C1,C2,C3=Analysis.Count_Events()
+            A1,A2,A3,C1,C2,C3=Analysis.Count_Events() #Amplitude array is used for Evnts
+            
+            if ZScore==True:
+                A1-=Mean
+                A1/=SD
+                
             for i,j in enumerate(A1):
                 if j==0:
                    A1[i]=1E-30
                    C1[i]=1E-30          
-        else:
+        else: #All other type of measurement
             A1,A2,A3,C1,C2,C3 = Analysis.Measure(Rendering=False,Measure_Filtered=Measure_Filtered,Silent=Silent)
+            
 
         #For each point, the measure is done. Average of individual measures is stored in self.CM.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary and self.CM.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary
         #array of all measured values is stored in self.CM.Coordinates_and_Corresponding_Amplitudes1_Dictionnary and self.CM.Coordinates_and_Corresponding_Charges1_Dictionnary
         for keys in self.CM.Coordinates_and_Corresponding_AnalogSignal_Ids_Dictionnary:
-            
             accepted=0
             number_of_sweep_at_this_position=0
             currentIdsofInterest=[]
@@ -1520,8 +1545,8 @@ class Mapping(object):
                     C1loc.append(numpy.nan)  
                     V1loc.append(numpy.nan) 
             
-            if Silent == False:
-                print "on a total of "+str(number_of_sweep_at_this_position)+" ,"+str(accepted)+" were accepted"
+            #if Silent == False:
+                #print "on a total of "+str(number_of_sweep_at_this_position)+" ,"+str(accepted)+" were accepted"
             success_rate=float(accepted)/float(number_of_sweep_at_this_position)
 
             self.CM.Coordinates_and_Corresponding_Amplitudes1_Dictionnary[keys]=A1loc
@@ -1567,6 +1592,8 @@ class Mapping(object):
             self.Thresholding_Mode.setCurrentIndex(4) 
             self.Thresholding_Mode_Input_Field.setText('0.0')    
 
+
+
         if self.Analysis_mode=="Analysis.Amplitudes_1":
             Min=numpy.nanmin(AllA1values)
             Max=numpy.nanmax(AllA1values)
@@ -1578,6 +1605,11 @@ class Mapping(object):
         elif self.Analysis_mode=="Analysis.Variance_1":
             Min=numpy.nanmin(AllV1values)
             Max=numpy.nanmax(AllV1values)
+            
+        elif self.Analysis_mode=="Analysis.Events_1":
+            Min=numpy.nanmin(AllA1values)
+            Max=numpy.nanmax(AllA1values)        
+        
             
 
         if self.CM.Types_of_Events_to_Measure == 'Negative':
@@ -1749,8 +1781,6 @@ class Mapping(object):
         
     def ModeSpecificProcessing(self,Mode,Local_Amplitude,Local_Surface,Local_Success):
         #In this condition, no threshold is applied, and all view are possible, because Amplitudes and charges were measured correctly
-        
-        
         if Mode == 0:
             print "Classic Normalized view"
         
@@ -1914,7 +1944,7 @@ class Mapping(object):
         elif Mode == 7:
             print "Spike Counting Mode"   
 
-            thr=0.0
+            thr=-10
             for i,j in enumerate(Local_Amplitude):
                 if self.CM.Types_of_Events_to_Measure == 'Negative':
                     if j<thr:
@@ -1930,6 +1960,7 @@ class Mapping(object):
                     else:
                         Local_Amplitude[i]=0.0
                         Local_Surface[i]=0.0 
+            print Local_Amplitude
                         
         return Local_Amplitude,Local_Surface,Local_Success
                             
@@ -2007,8 +2038,8 @@ class Mapping(object):
         for i,j in enumerate(Local_Amplitude):
             if numpy.math.isnan(j) == True :
                 Local_Amplitude[i]=float(0.0)
-           
-        self.CM.Local_Amplitude,self.CM.Local_Surface,self.CM.Local_Success=self.ModeSpecificProcessing(self.Thresholding_Mode.currentIndex(),
+        
+        self.CM.Local_Amplitude,self.CM.Local_Surface,self.CM.Local_Success=self.ModeSpecificProcessing(int(self.Thresholding_Mode.currentIndex()),
                                                                                                Local_Amplitude,
                                                                                                Local_Surface,
                                                                                                Local_Success)        
@@ -2159,10 +2190,11 @@ class Mapping(object):
         return p,p2 #mesh,contour
             
 
-    def NormalizeSurfaceAndColors(self,):
+    def NormalizeSurfaceAndColors(self,NegativeAllowed=True):
         '''
         For the Final Map, the surface must be >0
         '''
+        
         #TODO : IMPORTANT, This should be improved
         #For display purpose, all value are set to positive, so negative currents are inverted    
         if self.CM.Types_of_Events_to_Measure == 'Negative':
@@ -2175,7 +2207,7 @@ class Mapping(object):
             print 'Your displaying both Positive and Negative currents'
             
         #TODO : IMPORTANT,0 should be replaced by Nan
-        if self.CM.Types_of_Events_to_Measure == 'Negative' or self.CM.Types_of_Events_to_Measure == 'Positive':
+        if self.CM.Types_of_Events_to_Measure == 'Negative' or self.CM.Types_of_Events_to_Measure == 'Positive' and NegativeAllowed == False:
             for i,j in enumerate(self.CM.Local_Amplitude):
                 if j<=float(0.0):
                     self.CM.Local_Amplitude[i]=0.0 
@@ -2307,13 +2339,17 @@ class Mapping(object):
                      Bypass_Measuring=False,
                      NoWarning=False,
                      MeshMap=True,
-                     ContourMap=True):
+                     ContourMap=True,
+                     NegativeAllowed=False):
         """
         This part of the script Normalize Data for display purpose
         Depending on if you want to display positive or negative or both currents, you can change
         
         """
-        self.NormalizeSurfaceAndColors()
+        if self.ZScore == 'True':
+            NegativeAllowed=True
+        
+        self.NormalizeSurfaceAndColors(NegativeAllowed)
         self.CM.Scaling_Factor=float(self.Stim_Resolution.text())
         self.CM.ScaleAxis()#float(self.Stim_Resolution.text()))
         
@@ -2328,7 +2364,7 @@ class Mapping(object):
         color,surface=self.CreateColorScaleAndSurfaceScale(Bypass_Measuring=Bypass_Measuring,NoWarning=NoWarning)    
 
                 
-                
+               
         cmap=str(self.ColorMap.currentText())  
 
         n=self.Wid.canvas.axes.scatter(self.CM.Sorted_X_Coordinates_Scaled[:], self.CM.Sorted_Y_Coordinates_Scaled[:], c=color,s=surface, vmin=0, vmax=1, alpha=0.75,picker=1 , cmap=cmap, marker = Marker)
@@ -2343,7 +2379,7 @@ class Mapping(object):
 
         ##############################################
 
-
+        
         if self.CM.Charge=='Surface':
             mesh,contour = self.SmoothMap(self.CM.Sorted_X_Coordinates_Scaled[:], self.CM.Sorted_Y_Coordinates_Scaled[:],self.CM.Local_Surface,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist,MeshMap=MeshMap,ContourMap=ContourMap)
         else:
