@@ -29,7 +29,7 @@ class Analysis(object):
         self.UseUserDefinedColorset = False
         self.Color = 'k'
         self.SuperimposedOnAverage = True #if False, default Average button will not show superimposed traces
-        
+        self.SuperImposeSpikesOnScalogram = False
         
     def _all(self,All=False):
         List=[]
@@ -1119,7 +1119,7 @@ class Analysis(object):
                 print "cursor position correction!"
                 namevalue=previous_value+1 #on corrige la valeur
                 previous_value = namevalue #on redefinit previous value pour la boucle suivante
-                convert=round(100*namevalue/Navigate.Points_by_ms)/100 #arrondi à 10µs près la valeur du point, pour la lisibilité
+                convert=round(100.*namevalue/Navigate.Points_by_ms)/100. #arrondi à 10µs près la valeur du point, pour la lisibilité
                 setnew = 'Main.'+str(a)+'.setText("'+str(convert)+'")'
                 setnew2='Main.measurecoord["'+str(a)+'"]=round(100*namevalue/Navigate.Points_by_ms)/100'
                 exec(setnew)
@@ -1625,30 +1625,121 @@ class Analysis(object):
                 "<p>Have a nice analysis...")      
             msgBox.exec_()
 
-    def Scalogram(self,Source=None,Type='RAW',Sampling_Rate=None, Channel=0, **kargs):
+
+
+    def Concat_Scalogram(self):
+        List=[]
+        Events=self.SuperImposeSpikesOnScalogram
+        #if we want to superimpose spikes
+        if Events == True:
+            Events=[]
+            Navigate.Display_First_Trace()
+        else:
+            Events = None
+            
+            
+        for i,j in enumerate(Requete.Analogsignal_ids):
+            if (i >= int(Main.From.text())) and (i <= int(Main.To.text())) and (Requete.tag["Selection"][i][0] == 1):
+                if Events != None: #Spikes
+                    Navigate.Display_Next_Trace()
+                    Events.extend(Requete.Current_Spike_Times/1000.+(i*Navigate.signal_length_in_ms))
+                List.append(j)
+        if Main.Scalogram_Min.text() not in ['None','none','NaN','nan','']:
+            Min=float(Main.Scalogram_Min.text())
+        else:
+            Min=None
+        if Main.Scalogram_Max.text() not in ['None','none','NaN','nan','']:
+            Max=float(Main.Scalogram_Max.text())
+        else:
+            Max=None
+            
+        Navigate.Concatenate(Source=List)
+        self.Scalogram(Source=Navigate.Concatenated,vmin=Min,vmax=Max,Events=Events)
+        
+    def EmbeddedScalogram(self):
+        if Main.Scalogram_Min.text() not in ['None','none','NaN','nan','']:
+            Min=float(Main.Scalogram_Min.text())
+        else:
+            Min=None
+        if Main.Scalogram_Max.text() not in ['None','none','NaN','nan','']:
+            Max=float(Main.Scalogram_Max.text())
+        else:
+            Max=None
+ 
+        self.Scalogram(vmin=Min,vmax=Max)
+        
+    def Average_Scalograms(self,**kargs):
+        '''
+
+        '''
+        orginal=self.Scalogram(Just_Data=True)
+        orginal.map[:,:]=numpy.nan
+        av=orginal.map[:,:,numpy.newaxis]
+        
+        
+        for i in range(len(Requete.Analogsignal_ids)-1):
+            
+            v=self.Scalogram(Just_Data=True).map
+            av=numpy.append(av,v[:,:,numpy.newaxis],axis=2)
+            Navigate.Display_Next_Trace()
+        
+        av=numpy.nanmean(av,axis=2)
+        pyplot.imshow(abs(av).transpose(),
+                                    interpolation='nearest', 
+                                    extent=(orginal.t_start, orginal.t_stop, orginal.f_start-orginal.deltafreq/2., orginal.f_stop-orginal.deltafreq/2.),
+                                    origin ='lower' ,
+                                    aspect = 'normal',
+                                    **kargs)
+        pyplot.show()
+        
+        
+        
+        
+    def Scalogram(self,Source=None,Type='RAW',Sampling_Rate=None, Channel=0, Filtered=False,Events=None,Just_Data=False, **kargs):
+        '''
+        Uses a slightly modified OpenElectrophy plot_scalogram()
+        Source is by default the current sweep but any other analogsignal.id OR 1D array can  be passed
+        
+        Display arguments from imshow can be passed as **kargs (ex: vmin, vmax, cmap)
+        '''
         
         from OpenElectrophy import AnalogSignal
-
+  
+        
         if Source == None:
-            Source=Navigate.si
+            if Filtered == True or Main.Analyze_Filtered_Traces_Button.checkState () == 2:
+                Source=Navigate.Filtered_Signal
+            else:
+                Source=Navigate.si
  
         if Sampling_Rate == None:
             Sampling_Rate=Requete.BypassedSamplingRate
 
         A=[]
         for i in Source:
+            #TODO Type could be autodetected
             if Type == 'RAW':
                 A.append(list(i))
             elif Type == 'Id':
                 A.append(list(AnalogSignal.load(i[Channel]).signal))
                 
         A=numpy.array([numpy.array(xi) for xi in A])
-        Average=numpy.average(A,axis=0)
-    
-        B=AnalogSignal()
-        B.signal=Average
-        B.sampling_rate=Sampling_Rate
-        B.plot_scalogram(**kargs)
+        print len(A), len(A[0])
+        for n,i in enumerate(A):
+            if type(i[0]) in [list,numpy.ndarray]:
+                Average=numpy.average(i,axis=0)
+            else:
+                Average=i
 
-        pyplot.show()
+            B=AnalogSignal()
+            B.signal=Average
+            B.sampling_rate=Sampling_Rate
+            
+            sc=B.plot_scalogram(just_data=Just_Data,**kargs)
+            if Just_Data == True:
+                return sc
+            if Events != None:
+                pyplot.plot(Events,numpy.ones(len(Events))*20,'wo',alpha=0.5)
+            pyplot.show()
+        
 

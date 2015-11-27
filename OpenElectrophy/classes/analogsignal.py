@@ -164,17 +164,21 @@ class AnalogSignal(neo.core.AnalogSignal , OEBase):
 
 
 
-    def plot_scalogram(self, colorbar = True, **kargs):
-        if 'ax'in kargs:
-            ax = kargs['ax']
-        else:
-            from matplotlib import pyplot
-            fig = pyplot.figure()
-            ax = fig.add_subplot(1,1,1)
+    def plot_scalogram(self, colorbar = True,just_data = False, **kargs):
+        if just_data == False:
+            if 'ax'in kargs:
+                ax = kargs['ax']
+            else:
+                from matplotlib import pyplot
+                fig = pyplot.figure()
+                ax = fig.add_subplot(1,1,1)
         
         from ..computing.timefrequency  import TimeFreq
         tf = TimeFreq(self, **kargs)
-        return tf.plotMap(ax, colorbar = colorbar)
+        
+        if just_data == True:
+            return tf
+        return tf.plotMap(ax, colorbar = colorbar, **kargs)
         
 
 

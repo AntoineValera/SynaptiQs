@@ -36,9 +36,9 @@ class TimeFreq():
     def __init__(self,
                         anaSig,
                         method = 'convolution_freq',
-                        f_start=5.,
-                        f_stop=100.,
-                        deltafreq = 1.,
+                        f_start=3.,
+                        f_stop=45.,
+                        deltafreq = 0.25,
                         sampling_rate = 200.,
                         t_start = -inf, 
                         t_stop = inf,
@@ -151,7 +151,8 @@ class TimeFreq():
                                     interpolation='nearest', 
                                     extent=(self.t_start, self.t_stop, self.f_start-self.deltafreq/2., self.f_stop-self.deltafreq/2.),
                                     origin ='lower' ,
-                                    aspect = 'normal')
+                                    aspect = 'normal',
+                                    **kargs)
 
         if colorbar:
             if cax is None:

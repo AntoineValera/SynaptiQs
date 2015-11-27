@@ -77,15 +77,15 @@ class Navigate(object):
             try:
                 self.Load_This_Trace(Requete.Analogsignal_ids[Requete.Current_Sweep_Number])
             except IndexError:
-                msgBox = QtGui.QMessageBox()
-                msgBox.setText(
-                """
+                
+                msg="""
                 <b>Loading Error</b>
                 <p>This Sweep Number doesn't Exist
                 <p> (or doesn't exist anymore if you changed your SQL mode)
                 <p>Check your SweepNumber, or your Filtering Parameters
-                """)                 
-                msgBox.exec_()
+                """                 
+                Infos.Error(msg)
+
        
             #This displays some ids information in the bottom bar of SynaptiQs
             try:
@@ -173,14 +173,12 @@ class Navigate(object):
             for i in Analogisgnal_id_to_Load:
                 self.sig = AnalogSignal().load(i,session=Requete.Global_Session)
                 #Resampling to the lowest sampling rate in the selection. It doesn't change anything if there is only one sampling rate
-                #if 
                 self.si.append(scipy.signal.resample(self.sig.signal,(Requete.BypassedSamplingRate)*(len(self.sig.signal)/self.sig.sampling_rate)))
                 self.Filtered_Signal.append(scipy.signal.resample(self.sig.signal,(Requete.BypassedSamplingRate)*(len(self.sig.signal)/self.sig.sampling_rate)))            
               
                   
         elif Main.SQLTabWidget.currentIndex() == 2:#For local Files
             #TODO:Implement multichannel on spikes
-            
             self.si = self.ArrayList[Requete.Current_Sweep_Number]
             self.Filtered_Signal = self.ArrayList[Requete.Current_Sweep_Number]
             n=Mapping.CurrentChannel
@@ -407,28 +405,69 @@ class Navigate(object):
             Main.From.setText(str(0))
             Main.To.setText(str(len(Requete.Analogsignal_ids)-1))
 
-    def Concatenate(self,Start=None,Stop=None,Channels=None,Rendering=False):
+    def Concatenate(self,Source=None,Mode='Ids',Start=None,Stop=None,Channels=None,Rendering=False):
         '''
-        
-        
+        Source is a list of analogisnal ids (Default is Requete.Analogsignal_ids) OR a list of arrays.
+        if Source is a list of Ids, Mode == 'Ids', else Mode == 'RAW'
+        Source Structure must be [[a1,b1],[a2,b2],[a3,b3]] letters being channels and numbers beeing sweep numbers
+
+        Concatenate all traces from Source  and save them as
+            Navigate.Concatenated
+        Start and Stop define the range of interest (default to None concatenate all traces)
+        Channel define the Channel to concatenate. Default behavior concatenate all channels
+        Rendering shows the result. Default to False
         '''
+        #If No Defined Source, we used the analogsignal ids
+        if Source == None:
+            Source = Requete.Analogsignal_ids
         
+        
+        #If No Defined Source, we used the analogsignal ids
+        try:
+            if type(Source[0]) not in [list,numpy.ndarray]:
+                #if input is [a1,a2,a3,a4]
+                Source=[[x] for x in Source]
+                print 'Corrected input', Source
+        except IndexError:
+                msg="""
+                <b>No DATA</b>
+                <p>Did you tag any trace?
+                """                 
+                Infos.Error(msg)            
+
         if Channels==None:
-            self.Concatenated=[[]*Requete.NumberofChannels]
+            self.Concatenated=[[] for x in [None]*Requete.NumberofChannels]
             Channels=range(Requete.NumberofChannels)
         else:
-            if type(Channel) is not 'list':
-                print 'Channel must be a list of valid channels'
-                return
-            self.Concatenated=[[]*len(Channels)]
+            if type(Channels) is int or type(Channels) is float:
+                Channels=[int(Channels)]
+            self.Concatenated=[[] for x in Channels]
+            #self.Concatenated=[[None]*len(Channels)]
+
+        if Start == None or Stop <0:
+            Start=0
+        if Stop == None or Stop > len(Source): 
+            Stop = len(Source)
+
+        if Mode == 'RAW': #correction for improper user input with single channel
+            #if the user enter [array,array,array] it becomes [[array],[array],[array]]
+            if type(Source[0][0]) not in [list,numpy.ndarray]:
+                Source=[[x] for x in Source]
 
         for n,m in enumerate(Channels):
-            for i in Requete.Analogsignal_ids:
-                try:
-                    a=AnalogSignal.load(i[m]).signal
-                except TypeError:#when it's a local file
-                    a=self.ArrayList[i[n]][0]
-                self.Concatenated[n].extend(a)
+            for j,i in enumerate(Source):
+                if j>= Start and j<=Stop:
+                    if Mode == 'Ids':
+                        try:
+                            a=AnalogSignal.load(i[m]).signal
+                        except TypeError:#when it's a local file
+                            a=self.ArrayList[j][n]
+                    elif Mode == 'RAW':
+                        a=Source[j][n]
+                    else:
+                        print 'Mode', Mode, 'not recognized'
+                        return
+                    self.Concatenated[n].extend(a)
             if Rendering == True:
                 pyplot.plot(self.Concatenated[n])
         

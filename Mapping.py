@@ -51,6 +51,7 @@ class Mapping(object):
         self.AllowToAddaMapping=False
         self.NumberOfLevels = 20
         self.ZScore=False
+        self.ZScoreReference = 'Background_Noise'
         
     def _all(self,All=False):
         List=[]
@@ -565,7 +566,8 @@ class Mapping(object):
                    self.__name__+'.Analysis_mode',
                    self.__name__+'.Transparency',
                    self.__name__+'.NumberOfLevels',
-                   self.__name__+'.ZScore']
+                   self.__name__+'.ZScore',
+                   self.__name__+'.ZScoreReference']
         for i in ListofVar:
             Option_Label=QtGui.QLabel(i)
             Option=QtGui.QLineEdit()
@@ -1486,7 +1488,7 @@ class Mapping(object):
          
         if ZScore==True:
             currentparam=Analysis.Get_User_Parameters()
-            Analysis.Set_User_Parameters('Background_Noise')
+            Analysis.Set_User_Parameters(self.ZScoreReference)
             Mean,SD=Analysis.MeasureNoise()
             Analysis.Set_User_Parameters(currentparam)
 

@@ -272,7 +272,7 @@ class Requete(object):
                 self.Spiketrain_neuron_name = list(numpy.zeros(int(len(self.Block_ids)))*numpy.NaN)
                 self.Spiketrain_t_start = list(numpy.zeros(int(len(self.Block_ids)))*numpy.NaN)
                 self.Spiketrain_Neuid = list(numpy.zeros(int(len(self.Block_ids)))*numpy.NaN)
-                Main.SpikesWidget.setEnabled(False)
+                Main.SpikesWidget.setEnabled(True)
                 
                 print "-----------> This is the whole query command\n", self.query,"\n\n\n"
                 print "-----------> End of the Query"
@@ -335,7 +335,7 @@ class Requete(object):
                         self.Spiketrain_neuron_name = list(numpy.zeros(int(len(self.Block_ids)))*numpy.NaN)
                         self.Spiketrain_t_start = list(numpy.zeros(int(len(self.Block_ids)))*numpy.NaN)
                         self.Spiketrain_Neuid = list(numpy.zeros(int(len(self.Block_ids)))*numpy.NaN)
-                        Main.SpikesWidget.setEnabled(False)   
+                        Main.SpikesWidget.setEnabled(True)   
                     except:
                         pass
       

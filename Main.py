@@ -325,7 +325,7 @@ class Main(QtGui.QWidget,object):#
         
 
         self.SpikesWidget = QtGui.QWidget()
-        self.Analyze_Tab_Widget.addTab(self.SpikesWidget,"Spike Analysis")
+        self.Analyze_Tab_Widget.addTab(self.SpikesWidget,"Spike/LFP Analysis")
         self.SpikesWidget.setWindowTitle("Spike Tools")
         
 
@@ -511,11 +511,30 @@ class Main(QtGui.QWidget,object):#
         self.ShowEvents.setGeometry(5, 105, 80, 23) #taille et position (X,Y,Xsize,Ysize)
         self.ShowEvents.setText( "Show Events")
         self.ShowEvents.setEnabled(False)
+    
+        self.Display_Spikes_Button = QtGui.QCheckBox(self.SpikesWidget)
+        self.Display_Spikes_Button.setGeometry(5, 45, 120, 21)
+        self.Display_Spikes_Button.setText( "Show/Hide Spikes") 
         
+        self.Show_Scalogram_Button = QtGui.QPushButton(self.SpikesWidget)
+        self.Show_Scalogram_Button.setGeometry(5, 65, 180, 21)
+        self.Show_Scalogram_Button.setText( "Sweep Scalogram") 
+
+        self.Scalogram_Min = QtGui.QLineEdit(self.SpikesWidget)
+        self.Scalogram_Min.setGeometry(200, 65, 80, 21)
+        self.Scalogram_Min.setText('None')
         
+        self.Scalogram_Max = QtGui.QLineEdit(self.SpikesWidget)
+        self.Scalogram_Max.setGeometry(290, 65, 80, 21)
+        self.Scalogram_Max.setText('None')
+
+
+        self.Show_Concatenated_Scalogram_Button = QtGui.QPushButton(self.SpikesWidget)
+        self.Show_Concatenated_Scalogram_Button.setGeometry(5, 85, 180, 21)
+        self.Show_Concatenated_Scalogram_Button.setText( "Sweep Concatenated Scalogram") 
         
         self.ModifySpikes = QtGui.QCheckBox(self.SpikesWidget) #creation du bouton
-        self.ModifySpikes.setGeometry(5, 140, 120, 23) #taille et position (X,Y,Xsize,Ysize)
+        self.ModifySpikes.setGeometry(5, 240, 120, 23) #taille et position (X,Y,Xsize,Ysize)
         self.ModifySpikes.setText( "Modify Spikes") 
         self.ModifySpikes.setDisabled(0)
         
@@ -681,10 +700,7 @@ class Main(QtGui.QWidget,object):#
         self.Measure_From_Zero_Button.setGeometry(130, 240, 120, 21)
         self.Measure_From_Zero_Button.setText( "Measure from 0") 
         self.Measure_From_Zero_Button.setObjectName("Measure_From_Zero_Button")
-    
-        self.Display_Spikes_Button = QtGui.QCheckBox(self.SpikesWidget)
-        self.Display_Spikes_Button.setGeometry(5, 45, 120, 21)
-        self.Display_Spikes_Button.setText( "Show Spikes")
+
 
         self.Use_Spiketrains_Button = QtGui.QCheckBox(self.FilteringWidget)
         self.Use_Spiketrains_Button.setGeometry(5, 100, 120, 21)
@@ -853,6 +869,9 @@ class Main(QtGui.QWidget,object):#
         QtCore.QObject.connect(self.Rasterplot, QtCore.SIGNAL("clicked()"),Analysis.Raster_Plot)
         QtCore.QObject.connect(self.Start_Spike_Sorting, QtCore.SIGNAL("clicked()"),Infos.SpikeSorting)
         QtCore.QObject.connect(self.ShowEvents, QtCore.SIGNAL("clicked()"),Analysis.Display_Events)
+        QtCore.QObject.connect(self.Show_Scalogram_Button, QtCore.SIGNAL("clicked()"),Analysis.EmbeddedScalogram)
+        QtCore.QObject.connect(self.Show_Concatenated_Scalogram_Button, QtCore.SIGNAL("clicked()"),Analysis.Concat_Scalogram)
+
 
 
         #QtCore.QObject.connect(self.CallSpikes, QtCore.SIGNAL("clicked()"),Requete.Call_Spikes)

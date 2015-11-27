@@ -471,11 +471,11 @@ class MyWindow(QtGui.QWidget,object):
                 Requete.Analogsignal_sampling_rate=list([Navigate.VarList["sampling_rate"]]*len(Navigate.ArrayList))
         except KeyError:
             val, ok = QtGui.QInputDialog.getText(self,'Sampling rate not found', 
-                'Please enter sampling rate')
+                'Please enter sampling interval (ms per point)')
             val=float(val)                
             Navigate.VarList["SampleInterval"] = val
             Requete.timescale = val*numpy.array(range(len(RecordA0[0])))
-            Requete.Analogsignal_sampling_rate=list([len(Requete.Current_Signal)]*len(Navigate.ArrayList)) 
+            Requete.Analogsignal_sampling_rate=list([len(Requete.Current_Signal[0])]*len(Navigate.ArrayList)) 
             msgBox = QtGui.QMessageBox()
             msgBox.setText(
             """
@@ -494,10 +494,12 @@ class MyWindow(QtGui.QWidget,object):
         Requete.Shortest_Sweep_Length=(Requete.timescale[-1]+(Requete.timescale[1]-Requete.timescale[0]))/1000. #in s
         if Navigate.VarList.has_key("sampling_rate") == True:
             Navigate.Points_by_ms = Navigate.VarList["sampling_rate"]
-            Requete.BypassedSamplingRate=1000.*Navigate.VarList["sampling_rate"]
+            Requete.BypassedSamplingRate=Navigate.VarList["sampling_rate"]
+            Navigate.VarList["SampleInterval"]=1000./Navigate.VarList["sampling_rate"]
         else:
             Navigate.Points_by_ms = 1000./ Navigate.VarList["SampleInterval"]    
             Requete.BypassedSamplingRate=1000./Navigate.VarList["SampleInterval"]
+            Navigate.VarList["sampling_rate"]=1000/Navigate.VarList["SampleInterval"]
         
         Requete.Current_Sweep_Number=0
         Requete.Block_ids=list([[0]*Requete.NumberofChannels]*len(Navigate.ArrayList))
