@@ -383,7 +383,8 @@ class MyWindow(QtGui.QWidget,object):
         
         Requete.SpikeTrainfromLocal={}
         Requete.AmpSpikeTrainfromLocal={} 
-        Requete.Spiketrain_ids=numpy.copy(Requete.Analogsignal_ids)  
+        Requete.Spiketrain_ids=numpy.copy(Requete.Analogsignal_ids)
+        Main.Current_or_Average.setCurrentIndex(int(Main.Current_or_Average.findText('Navigate.si')))
 
     def ClearLocal(self):
         for i in Main.LoadedList:
@@ -436,6 +437,7 @@ class MyWindow(QtGui.QWidget,object):
         Main.MainFigure.canvas.fig.clf()
         Main.Show_Main_Figure()
         #Main.MainFigure.canvas.Compute_Initial_Figure()
+        
         Navigate.Check_From_To()
                 
     def Update_Navigate(self):

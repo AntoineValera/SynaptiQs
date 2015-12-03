@@ -205,8 +205,8 @@ class Infos(object):
         self.Use_Segment_ids.setEnabled(False)
         
         
-        self.BlockFrom.setText(str(Requete.Block_ids[0]))
-        self.BlockTo.setText(str(Requete.Block_ids[0]))
+        self.BlockFrom.setText(str(Requete.Block_ids[0][0]))
+        self.BlockTo.setText(str(Requete.Block_ids[0][0]))
 
         
         
@@ -528,7 +528,7 @@ class Infos(object):
         value=str(value.replace('"',''))    
         
         print "using url : ", Requete.url
-        print value,' is set to ',table+'.'+column,' field'
+        print value,'is set to ',table+'.'+column,'field'
         self.FillDB(From,To,Mode)
         
         
@@ -556,10 +556,10 @@ class Infos(object):
                 
         
             exec(Loading_Command)
-            command=str('obj.'+column+'='+"'"+value+"'")
+            command=str('obj.'+column+'='+value)
             print command
             exec(command)
-            exec('obj.save(session=Requete.Global_Session)')
+            exec('obj.save()')
             
         msgBox = QtGui.QMessageBox()
         msgBox.setText(
@@ -1306,16 +1306,16 @@ class Infos(object):
         from win32com.client import Dispatch
 
         self.NumberOfFilesSentToIgor+=1
-        
-        
+
         if array == None and name== None:
             #TODO :
             #       -Use the real name of the array for importation
             #       -check more carefully all situations
             currentname = str(Main.Current_or_Average.currentText())
             print currentname, ' sent to Igor as Wave'+str(self.NumberOfFilesSentToIgor)
-            savename = currentname.split(".")[1]
+            #savename = currentname.split(".")[1]
             currentpath = str(Main.desktop)+'/'+'Wave'+str(self.NumberOfFilesSentToIgor)+'.txt'
+            savename = currentpath.split("/")[-1]
             print 'temp file is ', currentpath
         elif array != None and name== None:
             savename= 'Wave'+str(self.NumberOfFilesSentToIgor)
@@ -1327,16 +1327,17 @@ class Infos(object):
            
         try:
             if savename == 'Wave'+str(self.NumberOfFilesSentToIgor):
-                numpy.savetxt(currentpath, array)
+                numpy.savetxt(currentpath, array, delimiter='\n')
             else:
-                numpy.savetxt(currentpath, eval(currentname))
+                numpy.savetxt(currentpath, eval(currentname), delimiter='\n')
+                
             Igor = Dispatch('IgorPro.Application')
             Igor.Visible = True
             #Igor.Execute('NewDataFolder/O/S root:localstring')
             Igor.Execute('SetDataFolder root:')
             Igor.Execute('newpath/o/q path "%s"' %(str(Main.desktop).replace('\\',':').replace('::',':')))#%(os.environ['USERPROFILE'].replace('\\',':').replace('::',':')))
-            cmd = 'LoadWave/J/W/A/D/O/P=path "%s.txt"' % (savename) #/T for textwaves
-            Igor.Execute(cmd) #See N option for overwriting options
+            cmd = 'LoadWave/J/W/A/D/O/P=path "%s"' % (savename) #/T for textwaves
+            Igor.Execute(cmd) #See /N/A option for overwriting options
             cmd='Display wave'+str(self.NumberOfFilesSentToIgor)
             Igor.Execute(cmd)
             os.remove(currentpath)

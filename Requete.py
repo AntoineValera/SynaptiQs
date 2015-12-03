@@ -542,7 +542,7 @@ class Requete(object):
 
         
         
-        
+        Main.Current_or_Average.setCurrentIndex(Main.Current_or_Average.findText('Navigate.si'))
         self.Add_Dictionnary_Arrays()
         self.Record_User_Parameters()
 
@@ -957,14 +957,16 @@ class Requete(object):
         self.persoWidget2.setMinimumSize(400,400)
 
         InfoLabel= QtGui.QLabel(self.persoWidget2)
-        InfoLabel.setGeometry(5, 20, 400, 22)
-        InfoLabel.setText('''<p>Main classes are : Block, Segment, Neuron, AnalogSignal, SpikeTrain <p>
-                           <p>Leave the filtering field empty to select all ''')
+        InfoLabel.setGeometry(5, 5, 400, 85)
+        InfoLabel.setText('''Main classes are : Block, Segment, Neuron, AnalogSignal, SpikeTrain
+                            ex:Field to Filter: <i> Block.Info </i>   Filter :<i> ='Spike Map' </i>
+                            ex:Field to Filter: <i> AnalogSignal.Calcium </i>   Filter :<i> >1.5 </i>
+                            Leave the filtering field empty to select all ''')
         
         self.Filter_Fields_Labels=["a","b","c","d","e","f","g","h","i","j"]
         for j in range(len(self.Filter_Fields_Labels)):
             eval(compile("self."+self.Filter_Fields_Labels[j]+"= QtGui.QLineEdit(self.persoWidget2)",'<string>','exec'))
-            eval(compile("self."+self.Filter_Fields_Labels[j]+".setGeometry(5, 40+20*j, 150, 22)",'<string>','exec'))
+            eval(compile("self."+self.Filter_Fields_Labels[j]+".setGeometry(5, 100+20*j, 150, 22)",'<string>','exec'))
             eval(compile("self."+self.Filter_Fields_Labels[j]+".setText('')",'<string>','exec'))
             eval(compile("self."+self.Filter_Fields_Labels[j]+".setPlaceholderText('Field to Filter')",'<string>','exec'))
             
@@ -972,7 +974,7 @@ class Requete(object):
         Filter_Fields_List=["a1","b1","c1","d1","e1","f1","g1","h1","i1","j1"]
         for j in range(len(Filter_Fields_List)):
             eval(compile("self."+Filter_Fields_List[j]+"= QtGui.QLineEdit(self.persoWidget2)",'<string>','exec'))
-            eval(compile("self."+Filter_Fields_List[j]+".setGeometry(165, 40+20*j, 80, 22)",'<string>','exec'))
+            eval(compile("self."+Filter_Fields_List[j]+".setGeometry(165, 100+20*j, 80, 22)",'<string>','exec'))
             eval(compile("self."+Filter_Fields_List[j]+".setText('')",'<string>','exec'))
             eval(compile("self."+Filter_Fields_List[j]+".setPlaceholderText('Filter')",'<string>','exec'))
 

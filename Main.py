@@ -382,7 +382,6 @@ class Main(QtGui.QWidget,object):#
         self.Current_or_Average.setGeometry(0, 0, 83, 23)
         self.Current_or_Average.setSizeAdjustPolicy(0)
         self.Current_or_Average.addItems(self.ExistingSweeps)
-        
 
         self.SaveName = QtGui.QLineEdit(self.IOTools)
         self.SaveName.setGeometry(0, 20, 83, 23)
