@@ -52,6 +52,9 @@ class Mapping(object):
         self.NumberOfLevels = 20
         self.ZScore=False
         self.ZScoreReference = 'Background_Noise'
+        self.ZScoreMean=0
+        self.ZScoreSD=1
+        self.AutoZScore=True
         
     def _all(self,All=False):
         List=[]
@@ -567,7 +570,13 @@ class Mapping(object):
                    self.__name__+'.Transparency',
                    self.__name__+'.NumberOfLevels',
                    self.__name__+'.ZScore',
-                   self.__name__+'.ZScoreReference']
+                   self.__name__+'.ZScoreReference',
+                   self.__name__+'.ZScoreMean',
+                   self.__name__+'.ZScoreSD',
+                   self.__name__+'.AutoZScore']
+
+                   
+                   
         for i in ListofVar:
             Option_Label=QtGui.QLabel(i)
             Option=QtGui.QLineEdit()
@@ -891,12 +900,12 @@ class Mapping(object):
             self.Stim_Resolution.setText("1")   
 
         #Corrections for step direction
-        Xstart=int(self.X_Start_Field.text())
-        Xend=int(self.X_End_Field.text())
-        Xstep=int(self.X_Step_Field.text())
-        Ystart=int(self.Y_Start_Field.text())
-        Yend=int(self.Y_End_Field.text())
-        Ystep=int(self.Y_Step_Field.text())
+        Xstart=float(self.X_Start_Field.text())
+        Xend=float(self.X_End_Field.text())
+        Xstep=float(self.X_Step_Field.text())
+        Ystart=float(self.Y_Start_Field.text())
+        Yend=float(self.Y_End_Field.text())
+        Ystep=float(self.Y_Step_Field.text())
         if Xstart < Xend and Xstep <= 0:
             self.X_Step_Field.setText(str(Xstep*-1)) 
         elif Xstart > Xend and Xstep >= 0:
@@ -1067,10 +1076,16 @@ class Mapping(object):
             self.CM.Scanning_Direction_Mode = None   
 
         try:
-            List_of_X_Points = range(int(self.X_Start_Field.text()),int(self.X_End_Field.text())+int(self.X_Step_Field.text()),int(self.X_Step_Field.text()))        #liste les coordonnées en X
-            self.Number_of_X_Points=len(List_of_X_Points) #Number of X-axis points
-            List_of_Y_Points = range(int(self.Y_Start_Field.text()),int(self.Y_End_Field.text())+int(self.Y_Step_Field.text()),int(self.Y_Step_Field.text()))         #liste les coordonnées en Y
-            self.Number_of_Y_Points=len(List_of_Y_Points) #Number of Y-axis points   
+            if float(self.X_Step_Field.text()) == 0.0:
+                List_of_X_Points=[0.0]
+            else:
+                List_of_X_Points = numpy.arange(float(self.X_Start_Field.text()),float(self.X_End_Field.text())+float(self.X_Step_Field.text()),float(self.X_Step_Field.text()))        #liste les coordonnées en X
+                self.Number_of_X_Points=len(List_of_X_Points) #Number of X-axis points                
+            if float(self.Y_Step_Field.text()) == 0.0:
+                List_of_Y_Points=[0.0]
+            else:
+                List_of_Y_Points = numpy.arange(float(self.Y_Start_Field.text()),float(self.Y_End_Field.text())+float(self.Y_Step_Field.text()),float(self.Y_Step_Field.text()))         #liste les coordonnées en Y
+                self.Number_of_Y_Points=len(List_of_Y_Points) #Number of Y-axis points   
         except ValueError:
             msg="""
             <b>Error</b>
@@ -1106,42 +1121,125 @@ class Mapping(object):
         if QtCore.QObject().sender() ==  self.Vertical_Lines_Button or QtCore.QObject().sender() ==  self.Horizontal_Lines_Button:   
             self.Mapping_Pattern = MyMplWidget(title='Mapping Pattern')
             self.Mapping_Pattern.canvas.axes.plot(self.CM.Sorted_X_Coordinates,self.CM.Sorted_Y_Coordinates,'o-',-400,-400,400,400)
-
-            self.Mapping_Pattern.canvas.axes.arrow(self.CM.Sorted_X_Coordinates[-2],self.CM.Sorted_Y_Coordinates[-2],(self.CM.Sorted_X_Coordinates[-1]-self.CM.Sorted_X_Coordinates[-2]),(self.CM.Sorted_Y_Coordinates[-1]-self.CM.Sorted_Y_Coordinates[-2]),length_includes_head=True,width=1, head_width=int(self.X_Step_Field.text()),head_length=int(self.X_Step_Field.text()),fc='r')
+            if len(self.CM.Sorted_X_Coordinates)>1 and len(self.CM.Sorted_Y_Coordinates)>1:
+                self.Mapping_Pattern.canvas.axes.arrow(self.CM.Sorted_X_Coordinates[-2],self.CM.Sorted_Y_Coordinates[-2],(self.CM.Sorted_X_Coordinates[-1]-self.CM.Sorted_X_Coordinates[-2]),(self.CM.Sorted_Y_Coordinates[-1]-self.CM.Sorted_Y_Coordinates[-2]),length_includes_head=True,width=1, head_width=float(self.X_Step_Field.text()),head_length=float(self.X_Step_Field.text()),fc='r')
             self.Mapping_Pattern.canvas.axes.annotate("expected Nb of Sweeps : "+str(len(self.CM.Sorted_Y_Coordinates_Full)),(-380,350),backgroundcolor='white',alpha=0.4)
             self.Map_tools_Widget.close()
             self.Mapping_Pattern.show()
     
 
     def AutoFill_Grid(self):
-        
         #TODO : detect modulo, so that when the step doesn't exactly match we can correct if
-        #TODO : also, coordinates should be set with float, only int a working now
-        if self.X_Start_Field.text() == '' or self.X_End_Field.text() == '':
-            self.X_Start_Field.setText('-100')
-            self.X_End_Field.setText('100')
-        if self.Y_Start_Field.text() == '' or self.Y_End_Field.text() == '':
-            self.Y_Start_Field.setText('-100')
-            self.Y_End_Field.setText('100')
-        if self.Number_of_Turns.text() == '':    
-            self.Number_of_Turns.setText('1') 
-            
-        Xe=int(self.X_End_Field.text())
-        Xs=int(self.X_Start_Field.text())
-        Xn=int(self.X_Number_Field.text())-1 #because if there are 6 points on a line, there are 5 intervals
-        N=int(self.Number_of_Turns.text())
-        Ye=int(self.Y_End_Field.text())
-        Ys=int(self.Y_Start_Field.text())
-        Yn=int(self.Y_Number_Field.text())-1 #because if there are 6 points on a line, there are 5 intervals
-
-        self.X_Step_Field.setText(str((Xe-Xs)/abs(Xn)))#(Xn*N*Yn)))
-        self.Y_Step_Field.setText(str((Ye-Ys)/abs(Yn)))#(Yn*N*Xn)))
+        #TODO : also, coordinates should be set with float, only int a working now        
+        def FindNumberOfTurns(nbpnts,xsteps,ysteps):
+            turn=nbpnts/(xsteps*ysteps)
+            if turn.is_integer():
+                return turn
+            else:
+                return ''
+                
+        def ReadValues():
+            Xe=float(self.X_End_Field.text())
+            Xs=float(self.X_Start_Field.text())
+            Ye=float(self.Y_End_Field.text())
+            Ys=float(self.Y_Start_Field.text())
+            Xn=float(self.X_Number_Field.text())#-1. #because if there are 6 points on a line, there are 5 intervals
+            Yn=float(self.Y_Number_Field.text())  
+            return  Xe,Xs,Ye,Ys,Xn,Yn
         
-        L=(Yn+1)*(Xn+1)*N
+        #1 : detect nonsense steps
+        try:
+            if self.X_Start_Field.text() == self.X_End_Field.text():
+                self.X_Number_Field.setText('1.0')
+                self.X_Step_Field.setText('0.0')
+        except ValueError:
+            pass
+        try:
+            if self.Y_Start_Field.text() == self.Y_End_Field.text():
+                self.Y_Number_Field.setText('1.0')
+                self.Y_Step_Field.setText('0.0')
+        except ValueError:
+            pass        
+            
+        #2 : try to guess the number of turns
+        if self.Number_of_Turns.text() == '':#if number of turns not defined 
+            try: #if everything was filled properly
+                Xe,Xs,Ye,Ys,Xn,Yn = ReadValues()
+                turns=FindNumberOfTurns(len(Requete.Analogsignal_ids),Xn,Yn)
+                self.Number_of_Turns.setText(str(turns)) 
+            except ValueError: #if other fields not properly filled 
+                self.Number_of_Turns.setText(str(len(Requete.Analogsignal_ids))) 
+            
+        #3 : if there is really no information 
+        if self.X_Start_Field.text() == '' or self.X_End_Field.text() == '':
+            self.X_Start_Field.setText('0')
+            self.X_End_Field.setText('0')
+            self.X_Number_Field.setText('1.0')
+            self.X_Step_Field.setText('0.0')            
+        if self.Y_Start_Field.text() == '' or self.Y_End_Field.text() == '':
+            self.Y_Start_Field.setText('0')
+            self.Y_End_Field.setText('0')
+            self.Y_Number_Field.setText('1.0')
+            self.Y_Step_Field.setText('0.0')            
+        
+#        #4 Easy completion
+        try:
+            Xe=float(self.X_End_Field.text())
+            Xs=float(self.X_Start_Field.text())
+            Xst=float(self.X_Step_Field.text())
+            if Xst == 0:
+                pass
+            else:
+                tempXstep=1+(Xe-Xs)/Xst
+                if tempXstep.is_integer():
+                    print True
+                    self.X_Number_Field.setText(str(tempXstep))
+                else:
+                    self.X_Step_Field.setText('')
+        except ValueError:
+            pass
+        try:
+            Ye=float(self.Y_End_Field.text())
+            Ys=float(self.Y_Start_Field.text())
+            Yst=float(self.Y_Step_Field.text())
+            if Yst == 0:
+                pass
+            else:
+                tempYstep=1+(Ye-Ys)/Yst
+                if tempYstep.is_integer():
+                    print True
+                    self.Y_Number_Field.setText(str(tempYstep))
+                else:
+                    self.Y_Step_Field.setText('')
+        except ValueError:
+            pass
+
+        #5 : Compute missing values
+        Xe,Xs,Ye,Ys,Xn,Yn = ReadValues()
+        N=float(self.Number_of_Turns.text())
+
+        if (abs(Xn)-1) == 0.0:
+            self.X_Step_Field.setText('0.0') #to prevent divison by zero
+        else:
+            self.X_Step_Field.setText(str((Xe-Xs)/(abs(Xn)-1)))
+        if (abs(Yn)-1) == 0.0: 
+            self.Y_Step_Field.setText('0.0') #to prevent divison by zero
+        else:
+            self.Y_Step_Field.setText(str((Ye-Ys)/(abs(Yn)-1)))
+        
+        #6: Check if it fits
+        L=Yn*Xn*N
         print 'expected number of sweep is ', L
         print 'actual number is', len(Requete.Analogsignal_ids)
         
         if L != len(Requete.Analogsignal_ids):
+            msg="""
+            <b>Error</b>
+            you have %s sweeps.
+            The mapping pattern cannot be %s rows by %s columns by %s turn(s)
+            please correct (or use autofill grid option)
+            """ %(len(Requete.Analogsignal_ids), Xn, Yn, N)
+            Infos.Error(msg)              
             raise IOError('The number of recordings do not match your mapping plan')
         else:
             self.Define_Coordinates(Available=[1,2])
@@ -1149,27 +1247,27 @@ class Mapping(object):
             
     def AutoComplete_Missing_Fields(self):
         
-        Xe=int(self.X_End_Field.text())
-        Xs=int(self.X_Start_Field.text())
-        Xst=int(self.X_Step_Field.text())
-        Ye=int(self.Y_End_Field.text())
-        Ys=int(self.Y_Start_Field.text())
-        Yst=int(self.Y_Step_Field.text())    
+        Xe=float(self.X_End_Field.text())
+        Xs=float(self.X_Start_Field.text())
+        Xst=float(self.X_Step_Field.text())
+        Ye=float(self.Y_End_Field.text())
+        Ys=float(self.Y_Start_Field.text())
+        Yst=float(self.Y_Step_Field.text())    
         PreviousX=self.X_Number_Field.text() #Can be ''
         PreviousY=self.Y_Number_Field.text() #Can be ''
-        NewX=(Xe-Xs)/(Xst)+1
-        NewY=(Ye-Ys)/(Yst)+1
-        
-        if PreviousX == '':
-            self.X_Number_Field.setText(str(NewX))
-        elif PreviousX != NewX:
-            print 'Warning, number of X steps was adjusted using X_Step Value'
-            self.X_Number_Field.setText(str(NewX))
-        if PreviousY == '':
-            self.Y_Number_Field.setText(str(NewY))
-        elif PreviousY != NewY:
-            print 'Warning, number of Y steps was adjusted using Y_Step Value'
-            self.Y_Number_Field.setText(str(NewY))            
+#        NewX=(Xe-Xs)/(Xst)
+#        NewY=(Ye-Ys)/(Yst)
+#        
+#        if PreviousX == '':
+#            self.X_Number_Field.setText(str(NewX))
+#        elif PreviousX != NewX:
+#            print 'Warning, number of X steps was adjusted using X_Step Value'
+#            self.X_Number_Field.setText(str(NewX))
+#        if PreviousY == '':
+#            self.Y_Number_Field.setText(str(NewY))
+#        elif PreviousY != NewY:
+#            print 'Warning, number of Y steps was adjusted using Y_Step Value'
+#            self.Y_Number_Field.setText(str(NewY))            
 
     def Set_Coordinates_in_Tag_Variable(self):
         
@@ -1476,7 +1574,7 @@ class Mapping(object):
             self.CM.Success_rate
         """        
  
-        if self.ZScore=='True':
+        if self.ZScore=='True' or self.ZScore==True:
             print '#################### WARINNG ####################'
             print '###########DATA REPRESENTED AS ZSCORE############'
             ZScore=True
@@ -1487,10 +1585,15 @@ class Mapping(object):
             return     
          
         if ZScore==True:
-            currentparam=Analysis.Get_User_Parameters()
-            Analysis.Set_User_Parameters(self.ZScoreReference)
-            Mean,SD=Analysis.MeasureNoise()
-            Analysis.Set_User_Parameters(currentparam)
+            if self.AutoZScore == True:
+                currentparam=Analysis.Get_User_Parameters()
+                Analysis.Set_User_Parameters(self.ZScoreReference)
+                Mean,SD=Analysis.MeasureNoise()
+                Analysis.Set_User_Parameters(currentparam)
+            else:
+                Mean=self.ZScoreMean
+                SD=self.ZScoreSD
+            
 
         AllC1values=[]
         AllA1values=[]
@@ -1504,9 +1607,7 @@ class Mapping(object):
             self.CM.Types_of_Events_to_Measure = 'Positive'
             A1,A2,A3,C1,C2,C3=Analysis.Count_Events() #Amplitude array is used for Evnts
             
-            if ZScore==True:
-                A1-=Mean
-                A1/=SD
+
                 
             for i,j in enumerate(A1):
                 if j==0:
@@ -1515,6 +1616,11 @@ class Mapping(object):
         else: #All other type of measurement
             A1,A2,A3,C1,C2,C3 = Analysis.Measure(Rendering=False,Measure_Filtered=Measure_Filtered,Silent=Silent)
             
+        if ZScore==True:
+            A1=list(numpy.array(A1)-float(Mean))
+            A1=list(numpy.array(A1)/float(SD))
+            C1=list(numpy.array(C1)-float(Mean))
+            C1=list(numpy.array(C1)/float(SD))
 
         #For each point, the measure is done. Average of individual measures is stored in self.CM.Coordinates_and_Corresponding_Mean_Charge1_Dictionnary and self.CM.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary
         #array of all measured values is stored in self.CM.Coordinates_and_Corresponding_Amplitudes1_Dictionnary and self.CM.Coordinates_and_Corresponding_Charges1_Dictionnary

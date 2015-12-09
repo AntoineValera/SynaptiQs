@@ -58,6 +58,8 @@ class Fitting(object):
         self.display_range=[0.,1.,-1.,1.] 
         self.MinGuess=[None]*10
         self.MaxGuess=[None]*10 
+        
+        
     def _all(self,All=False):
         List=[]
         i=self.__name__
@@ -590,10 +592,11 @@ class Fitting(object):
 
     def ListYWaves(self):
         
-        L1,L2,nop,nop2=Infos.List_All_Globals(option='numericalonly')
+        L1,L2,nop,nop2=Infos.List_All_Globals(option="numericalonly",Builtin=False)
         self.Data_Wave = QtGui.QComboBox()
         self.Data_Wave.addItem(str('None'))
-        self.Data_Wave.addItems(L1+L2)    
+        self.Data_Wave.addItems(list(set(L1)))
+        self.Data_Wave.addItems(list(set(L2)))
         
         self.Data_Wave_Axes = QtGui.QComboBox()
         self.Data_Wave_Axes.clear()
@@ -603,7 +606,7 @@ class Fitting(object):
         
     def ListXWaves(self):
         
-        L1,L2,nop,nop2=Infos.List_All_Globals(option='numericalonly') 
+        L1,L2,nop,nop2=Infos.List_All_Globals(option="numericalonly",Builtin=False)
         L=L1+L2
 
         self.Data_Wave_Axes.clear()
@@ -866,6 +869,7 @@ class Fitting(object):
         Bounds=[]
         for i in range(10):
             Bounds.append([self.MinGuess[i],self.MaxGuess[i]])
+            
         fit=self.Fit(x,X=x,function=str(self.List_of_Functions.currentText()).lower(),Guess=self.param_list,StartX=self.range[0],EndX=self.range[1],Number_of_points=len(x),Rendering = False,Bounds=Bounds,Model=True)
         B,=self.Fit_Example.canvas.axes.plot(x,fit,'r') #The fitting guess
         self.Fit_Example.canvas.axes.legend([A,B], ["Data", "Model"], loc='best',fancybox=True)
@@ -892,6 +896,7 @@ class Fitting(object):
         
     def FittingWindowInput(self):
         from matplotlib import numpy
+        
         try:
             self.List_of_Functions.setCurrentIndex(4)
             

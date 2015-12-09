@@ -49,6 +49,7 @@ from matplotlib import *
 
 
 
+
 if __name__ == "__main__": #Executé si l'application est en StandAlone
 
         #sys.path.append('C:\Users\Antoine\WinPython-64bit-2.7.10.1\scripts\SynaptiQs')
@@ -76,14 +77,8 @@ if __name__ == "__main__": #Executé si l'application est en StandAlone
 
 
 
-
-
-
         SpreadSheet=SpreadSheet.SpreadSheet
-        
-        
-        
-        
+
         Infos.Class_List=[Navigate,Requete,Analysis,Main,MyMplCanvas,MyMplWidget,Infos,Mapping,Fitting,Histogram,SpreadSheet,Import,Map] #Add all classes needed in the Script function
     
         #setattr(Infos,'Class_List',Class_List)

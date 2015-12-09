@@ -11,17 +11,20 @@ from matplotlib import numpy,pyplot
 class Histogram(object):
     def __init__(self):
         self.__name__='Histogram'
+        self.autoadjusted=False
  
     def _all(self,All=False):
         List=[]
         i=self.__name__
+        
         for j in dir(eval(i)):
             if All==False and j[:2] == '__':
                 pass
             else:
                 List.append(i+'.'+j)
         for i in List:
-            print i        
+            print i  
+            
     def Manager(self):
         
         try:
@@ -37,26 +40,35 @@ class Histogram(object):
             
             self.vbox=QtGui.QVBoxLayout()
         
-            
             self.Source = QtGui.QComboBox(self.Hist_Widget)
-            a,b,c,d=Infos.List_All_Globals(option="numericalonly")
-            self.Source.addItems(a)
-            self.Source.addItems(b)
+            a,b,c,d=Infos.List_All_Globals(option="numericalonly",Builtin=False)
+            
+            self.Source.addItems(list(set(a)))
+            self.Source.addItems(list(set(b)))
             self.Source_Label = QtGui.QLabel(self.Hist_Widget)
             self.Source_Label.setText('Source')
             
+            Min=numpy.nanmin(eval(self.Source.currentText()))
+            if Min == numpy.nan:
+                Min=-1
+            Max=numpy.nanmax(eval(self.Source.currentText()))
+            if Max == numpy.nan:
+                Max=1
+                
             self.Min = QtGui.QLineEdit(self.Hist_Widget)
-            self.Min.setText(str(min(eval(self.Source.currentText()))))        
+            self.Min.setText(str(Min))        
             self.Min_Label = QtGui.QLabel(self.Hist_Widget)
             self.Min_Label.setText('Minimum')
             
             self.Max = QtGui.QLineEdit(self.Hist_Widget)
-            self.Max.setText(str(max(eval(self.Source.currentText()))))          
+            self.Max.setText(str(Max))          
             self.Max_Label = QtGui.QLabel(self.Hist_Widget)
             self.Max_Label.setText('Maximum')
             
-            self.N = QtGui.QLineEdit(self.Hist_Widget)
-            self.N.setText(str(min(eval((self.Source.currentText()))-min(eval(self.Source.currentText())))/10))          
+            self.N = QtGui.QSpinBox(self.Hist_Widget)
+            self.N.setValue(int(round((Max-Min)/10.))) 
+            self.N.setSingleStep(1)
+            self.N.setRange(1,1000)  
             self.N_Label = QtGui.QLabel(self.Hist_Widget)
             self.N_Label.setText('Number of Bins')
             
@@ -98,7 +110,6 @@ class Histogram(object):
             
             self.Wid.setLayout(self.hbox)
         
-        
             QtCore.QObject.connect(self.Source, QtCore.SIGNAL('activated(int)'),self.AutoAdjust)
             QtCore.QObject.connect(self.Min, QtCore.SIGNAL('editingFinished()'),self.adjust)
             QtCore.QObject.connect(self.Max, QtCore.SIGNAL('editingFinished()'),self.adjust)
@@ -122,14 +133,22 @@ class Histogram(object):
 
 
     def AutoAdjust(self):
-        Min=min(eval(self.Source.currentText()))
-        Max=max(eval(self.Source.currentText()))
-        InitialN=10
+        
+        
+        #self.Source.clear()
+        a,b,c,d=Infos.List_All_Globals(option="numericalonly",Builtin=False)
+        
+        self.Source.addItems(list(set(a)))
+        self.Source.addItems(list(set(a)))        
+        
+        Min=numpy.nanmin(eval(self.Source.currentText()))
+        Max=numpy.nanmax(eval(self.Source.currentText()))
         
         self.Min.setText(str(Min))        
         self.Max.setText(str(Max))          
-        self.N.setText(str(InitialN))    
-        self.AutoAdjust = True
+        self.N.setValue(10)    
+        self.autoadjusted = False
+        
         self.adjust()
 
 
@@ -141,19 +160,17 @@ class Histogram(object):
         Min=float(self.Min.text())
         Max=float(self.Max.text())
         
-        
-            
-        
+
         if self.Wid.sender() == self.N:
             Size=(Max-Min)/N
             self.Size.setText(str(Size))
         elif self.Wid.sender() == self.Size:
-            N=(Max-Min)/Size
-            self.N.setText(str(N))
-        elif self.AutoAdjust == True:
+            N=(Max-Min)/float(Size)
+            self.N.setValue(int(round(N)))
+        elif self.autoadjusted == False:
             Size=(Max-Min)/N
             self.Size.setText(str(Size))
-            self.AutoAdjust=False
+            self.autoadjusted=True
         
         if N > 10000:
             value,ok = QtGui.QInputDialog.getText(Main.FilteringWidget, 'Warning', 
@@ -163,13 +180,9 @@ class Histogram(object):
             self.N.setText(str(N))
             self.Size.setText(str(Size))
            
-            
-            
-        
-        self.Process(Source=self.Source.currentText(),Min=Min,Max=Max,N=N,Size=Size,Destination='hist',Internal=True)
 
-            
-            
+        self.Process(Source=self.Source.currentText(),Min=Min,Max=Max,N=N,Size=Size,Destination='hist',Internal=True)
+       
         
     
     def Process(self,Source,Min,Max,N,Size,Destination,Internal=False,Rendering=True):

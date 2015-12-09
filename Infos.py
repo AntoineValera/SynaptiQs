@@ -20,6 +20,7 @@ class Infos(object):
     def __init__(self):
         self.__name__="Infos"
         self.NumberOfFilesSentToIgor=-1
+        self.Filter=None
     def _all(self,All=False):
         List=[]
         i=self.__name__
@@ -548,15 +549,16 @@ class Infos(object):
             
             #Exception List, case correction.
             if table.capitalize() == 'Analogsignal':
-                Loading_Command='obj = AnalogSignal().load(i,session=Requete.Global_Session)'
+                Loading_Command='obj = AnalogSignal().load(i)'
             elif table.capitalize() == 'Spiketrain':
-                Loading_Command='obj = SpikeTrain().load(i,session=Requete.Global_Session)'
+                Loading_Command='obj = SpikeTrain().load(i)'
             elif table.capitalize() == 'Recordingpoint':
-                Loading_Command='obj = RecordingPoint().load(i,session=Requete.Global_Session)' 
+                Loading_Command='obj = RecordingPoint().load(i)' 
                 
         
             exec(Loading_Command)
-            command=str('obj.'+column+'='+value)
+            #print i, Loading_Command
+            command=str('obj.'+column+'='+"'"+value+"'")
             print command
             exec(command)
             exec('obj.save()')
@@ -826,16 +828,15 @@ class Infos(object):
         QtGui.QDesktopServices().openUrl(QtCore.QUrl("file:///"+url,0))
 
 
-    def List_All_Globals(self,option='All'):
-        
-        import __builtin__
-        
-        Plugins.Reload()
+    def List_All_Globals(self,option='All',Filter='',Builtin=True):
         
         L=[]
         
-        for i in Plugins.Plugin_List:
-            L.append("__builtin__."+i)
+        if Builtin == True:
+            Plugins.Reload()
+            import __builtin__
+            for i in Plugins.Plugin_List:
+                L.append("__builtin__."+i)
         
         for i in self.Class_List: #Coming from Main SynaptiQs
             L.append(i.__name__)
@@ -852,21 +853,22 @@ class Infos(object):
                         if option=='All':
                             LList.append(i+'.'+j)
                         elif option=='numericalonly':
-                            for k in eval(i+'.'+j):
-                                if type(k) == float() or  type(k) in LList == int():
+                            for point in eval(i+'.'+j):
+                                if type(point) == float or type(point) == int:
                                     pass
                                 else:
                                     break
                                 LList.append(i+'.'+j)
                                  
-                    elif type(eval(i+'.'+j)) == numpy.ndarray:
+                    elif type(eval(i+'.'+j)) in [numpy.array,numpy.ndarray]:
                         LArray.append(i+'.'+j)
-                    elif type(eval(i+'.'+j)) == int or float:
+                    elif type(eval(i+'.'+j)) in [int,float]:
                         LVar.append(i+'.'+j)
                     elif type(eval(i+'.'+j)) == str:
                         LStr.append(i+'.'+j)   
                     else:
-                        print type(eval(i+'.'+j))
+                        pass
+                        #print type(eval(i+'.'+j)), 'not supported yet'
                 except:
                     pass
                 
@@ -874,7 +876,28 @@ class Infos(object):
         self.Add_Array(LArray)
         return LList,LArray,LVar,LStr
  
-
+    def PopulateYList(self,L1,L2,L3,L4):
+        self.YList.clear()
+        for i in L1:
+            a=QtGui.QListWidgetItem(i)
+            a.setTextColor(QtGui.QColor('black'))
+            self.YList.addItem(a)
+        for i in L2:
+            a=QtGui.QListWidgetItem(i)
+            a.setTextColor(QtGui.QColor('darkblue'))
+            self.YList.addItem(a)
+        if self.Display_Var.checkState()==2:
+            for i in L3:
+                if '__' not in i:
+                    a=QtGui.QListWidgetItem(i)
+                    a.setTextColor(QtGui.QColor('red'))
+                    self.YList.addItem(a)
+        if self.Display_Str.checkState()==2:
+            for i in L4:
+                if '__' not in i:
+                    a=QtGui.QListWidgetItem(i)
+                    a.setTextColor(QtGui.QColor('green'))
+                    self.YList.addItem(a)   
                 
     def Data_Browser(self,VAR=0,STR=0):
         #TODO : Explain VAR=0, STR=0
@@ -897,40 +920,27 @@ class Infos(object):
         self.Display_Var=QtGui.QCheckBox()
         self.Display_Var.setCheckState(VAR)
         self.Display_Var.setText('Show Variables')
+        
         self.Display_Str=QtGui.QCheckBox()
         self.Display_Str.setCheckState(STR)  
         self.Display_Str.setText('Show Strings')
+
+        self.Filter=QtGui.QLineEdit()
+        self.Filter.setPlaceholderText('Filter Name')
+
         
         vbox.addWidget(self.Refresh)
         vbox.addWidget(self.Display_Var)
         vbox.addWidget(self.Display_Str)
+        vbox.addWidget(self.Filter)        
         vbox.addWidget(self.PlotMultiple)
         
         self.YList=QtGui.QListWidget(self.DataBrowser)
         
         L1,L2,L3,L4=self.List_All_Globals()
+        self.PopulateYList(L1,L2,L3,L4)
         
-        
-        for i in L1:
-            a=QtGui.QListWidgetItem(i)
-            a.setTextColor(QtGui.QColor('black'))
-            self.YList.addItem(a)
-        for i in L2:
-            a=QtGui.QListWidgetItem(i)
-            a.setTextColor(QtGui.QColor('darkblue'))
-            self.YList.addItem(a)
-        if self.Display_Var.checkState()==2:
-            for i in L3:
-                if '__' not in i:
-                    a=QtGui.QListWidgetItem(i)
-                    a.setTextColor(QtGui.QColor('red'))
-                    self.YList.addItem(a)
-        if self.Display_Str.checkState()==2:
-            for i in L4:
-                if '__' not in i:
-                    a=QtGui.QListWidgetItem(i)
-                    a.setTextColor(QtGui.QColor('green'))
-                    self.YList.addItem(a)            
+         
         
         self.YList.setSelectionMode(3) #1 = one item at the time
         self.YList.setWindowTitle('Data Browser')
@@ -957,11 +967,29 @@ class Infos(object):
 #        QtCore.QObject.connect(self.YList, QtCore.SIGNAL("clicked())"),self.Selected_To_Display)
         QtCore.QObject.connect(self.Refresh, QtCore.SIGNAL("clicked()"),self.Actualize)
         QtCore.QObject.connect(self.PlotMultiple, QtCore.SIGNAL("clicked()"),self.Selected_To_Display)
+        QtCore.QObject.connect(self.Filter, QtCore.SIGNAL("textChanged(QString)"),self.UpdateYList)
 
 
         self.DataBrowser.show()
-        
+    
+    def UpdateYList(self):
+
+        Filter=self.Filter.text() 
+            
+        L1,L2,L3,L4=self.List_All_Globals()
+        L1New, L2New = [],[]
+        for i in L1:
+            if Filter in i:
+                L1New.append(i)
+        for i in L2:
+            if Filter in i:
+                L2New.append(i)      
+                
+        self.PopulateYList(L1New,L2New,L3,L4)            
+    
     def Actualize(self):
+     
+
         try:
             self.Data_Browser(VAR=self.Display_Var.checkState(),STR=self.Display_Str.checkState())
         except AttributeError:
@@ -971,6 +999,7 @@ class Infos(object):
     def Filter_X_Axis(self):
         #self.XList.clearSelection()
         self.XList.clear()
+        
         Array_to_Display=[]
         Array_length=[]
         selected=self.YList.selectedItems()
@@ -992,10 +1021,13 @@ class Infos(object):
         
         counter=0
         for i in Main.ExistingSweeps:
-            if type(eval(i)) in [list,numpy.array,numpy.ndarray]:
-                if len(eval(i)) == len(eval(Array_to_Display[0])):
-                    self.XList.addItem(QtGui.QListWidgetItem(i))
-                    counter+=1
+            try:
+                if type(eval(i)) in [list,numpy.array,numpy.ndarray]:
+                    if len(eval(i)) == len(eval(Array_to_Display[0])):
+                        self.XList.addItem(QtGui.QListWidgetItem(i))
+                        counter+=1
+            except NameError:#some very special variable names can fail. example, an array in __builtin__
+                pass
            
         
     def Selected_To_Display(self):
@@ -1129,12 +1161,15 @@ class Infos(object):
         """)   
         msgBox.exec_()
 
+
+
     def Add_Array(self,Arrays=None):
         
         Main.Current_or_Average.clear()   
         for i in Arrays: 
             if i not in Main.ExistingSweeps:
                 Main.ExistingSweeps.append(i)
+
         Main.Current_or_Average.addItems(Main.ExistingSweeps)  
         
         

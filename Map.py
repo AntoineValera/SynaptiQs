@@ -95,7 +95,7 @@ class Map(object):
         elif Scanning_Direction_Mode == 'Y':
             X, Y = numpy.meshgrid(List_of_X_Points, List_of_Y_Points)
             
-        self.Number_of_Turns= int(Mapping.Number_of_Turns.text())   
+        self.Number_of_Turns= int(float(Mapping.Number_of_Turns.text()))   
         self.Sorted_X_Coordinates=list(X.flatten())
         self.Sorted_Y_Coordinates=list(Y.flatten())
         self.Sorted_X_Coordinates_Full=self.Sorted_X_Coordinates*self.Number_of_Turns
