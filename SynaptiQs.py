@@ -19,6 +19,7 @@ import sys,sip
 sip.setapi('QString', 2)
 sip.setapi('QVariant', 2)
 Ipython=True
+
 #except ValueError:
 
 from PyQt4 import QtCore, QtGui

@@ -607,21 +607,22 @@ class Requete(object):
         If the AnalogSignal.Tag field is corrupted, it can be restored
         """
         print 'this function is sensitive and was not checked yet'
-        return
+        
         
         if Main.Reset_Check.checkState()==2:
-            for i in self.Analogsignal_ids:
-                self.ResetTag = AnalogSignal().load(i)
-                self.ResetTag.Tag=None
-                self.ResetTag.save() 
-                print 'Analogsignal', i, 'reset to initial Values'
-            self.tag["Selection"]=[0]*len(tag)
-            
-            try:
-                Navigate.UnTag_All_Traces()
-            except IndexError:
-                print "Error in final untaging. It shouldn't have consequences"
-                pass
+            for n in range(self.NumberofChannels):
+                for i in range(len(self.Analogsignal_ids)):
+                    self.ResetTag = AnalogSignal().load(self.Analogsignal_ids[i][n])
+                    self.ResetTag.tag=None
+                    self.ResetTag.save() 
+                    print 'Analogsignal', i, 'reset to initial Values'
+#                self.tag["Selection"]=[0]*len(tag)
+#            
+#            try:
+#                Navigate.UnTag_All_Traces()
+#            except IndexError:
+#                print "Error in final untaging. It shouldn't have consequences"
+#                pass
 
             msgBox = QtGui.QMessageBox()
             msgBox.setText(

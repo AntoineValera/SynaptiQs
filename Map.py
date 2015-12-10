@@ -41,21 +41,19 @@ class Map(object):
         self.Scaling_Factor =1.        
         
         self.Number_of_Turns = None    
-        self.Sorted_Y_Coordinates = []
         self.Sorted_X_Coordinates = []
+        self.Sorted_Y_Coordinates  = [] 
         self.Sorted_X_Coordinates_Full = []
         self.Sorted_Y_Coordinates_Full = []
         self.Sorted_X_and_Y_Coordinates = []
         self.Sorted_X_and_Y_Coordinates_Full = []
-        self.Sorted_Y_Coordinates = []
-        self.Sorted_X_Coordinates  = []    
+   
             
         self.Types_of_Events_to_Measure = 'Negative'
         self.Charge = 'Surface'
         self.Amplitude = 'Color'
 
 
-        self.Sorted_X_and_Y_Coordinates = []
         self.Sorted_Mean_Amplitudes_1 = []
         self.Sorted_Mean_Charges_1 = []
         self.Coordinates_and_Corresponding_Mean_Amplitude1_Dictionnary = {}

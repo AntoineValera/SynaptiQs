@@ -949,20 +949,27 @@ class Mapping(object):
         return self.Current_Picture_for_the_Map
         
     def Define_Non_Grid_Positions(self):
-
+        
         self.CM.Scanning_Direction_Mode = 'UserDefined'   
         self.Set_Auto_Coordinates_Visible()        
-        try:
-            #Wid=QtGui.QWidget()
-            #self.repeats, ok = QtGui.QInputDialog.getInt(Wid,'Number of pattern repeats', 
-            #    'Enter the number of time your coordinates are repeated',value=1)
-            #self.repeats=int(self.repeats)
+        #try:
+        #Wid=QtGui.QWidget()
+        #self.repeats, ok = QtGui.QInputDialog.getInt(Wid,'Number of pattern repeats', 
+        #    'Enter the number of time your coordinates are repeated',value=1)
+        #self.repeats=int(self.repeats)
+        
+        #if ok:
+        
+        
+        if self.CM.Sorted_X_Coordinates == [] and self.CM.Sorted_Y_Coordinates == []:
+            print 'define or load coordinates first'
+            self.AutoFill_Grid() 
+            return
             
-            #if ok:
-            self.Window=SpreadSheet(Source=[self.CM.Sorted_X_Coordinates,self.CM.Sorted_Y_Coordinates],Rendering=True,MustBeClosed=True)
-            QtCore.QObject.connect(self.Window, QtCore.SIGNAL('destroyed()'),self.UpdateDictafterWidgetClosure)        
-        except AttributeError:
-            self.Load_Coordinates()
+        self.Window=SpreadSheet(Source=[self.CM.Sorted_X_Coordinates,self.CM.Sorted_Y_Coordinates],Rendering=True,MustBeClosed=True)
+        QtCore.QObject.connect(self.Window, QtCore.SIGNAL('destroyed()'),self.UpdateDictafterWidgetClosure)        
+        #except AttributeError:
+            #self.Load_Coordinates()
 
 
     def UpdateDictafterWidgetClosure(self):
@@ -995,7 +1002,7 @@ class Mapping(object):
         Une fois excuté, les infos sont stockées dans Requete.tag
         Dans les 2 cas, une fois passée, self.Bypass devient True
         """
-        
+
         self.Map_tools_Widget = QtGui.QWidget()#self.popupDialog)
         self.Map_tools_Widget.setFixedSize(400,120) #definit la taille minimale du Widget (largeur, hauteur)          
 
@@ -1028,8 +1035,7 @@ class Mapping(object):
             self.GridGenerator_Button.setText("AutoFill Grid")
             QtCore.QObject.connect(self.GridGenerator_Button, QtCore.SIGNAL("clicked()"),self.AutoFill_Grid)
   
-        self.CM = Map.Map() 
-        self.Map_tools_Widget.show()  
+        self.Map_tools_Widget.show() 
         
      
     def Set_Auto_Coordinates_Visible(self):        
@@ -1606,9 +1612,6 @@ class Mapping(object):
         if self.Thresholding_Mode.currentIndex() == 7: #Spikes
             self.CM.Types_of_Events_to_Measure = 'Positive'
             A1,A2,A3,C1,C2,C3=Analysis.Count_Events() #Amplitude array is used for Evnts
-            
-
-                
             for i,j in enumerate(A1):
                 if j==0:
                    A1[i]=1E-30

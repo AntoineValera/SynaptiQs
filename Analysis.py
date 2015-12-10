@@ -751,6 +751,7 @@ class Analysis(object):
         if Rendering=False, theanalysis doesn't show the final figure and value tables
 
         """
+        
         if Main.Measure_From_Zero_Button.checkState() == 2:
             All_from_Zero == True
         if All_from_Zero == True:
@@ -758,7 +759,8 @@ class Analysis(object):
             Measure_All_from_Baseline1 = False
         if Main.Remove_Leak_Button.checkState() == 2:
             if All_from_Zero == False:
-                Main.Remove_Leak_Button.setCheckState(0)
+                pass
+                #Main.Remove_Leak_Button.setCheckState(0)
             leaktemporaryremoved=True
         else:
             leaktemporaryremoved=False 
