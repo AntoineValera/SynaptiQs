@@ -615,7 +615,7 @@ class Requete(object):
                     self.ResetTag = AnalogSignal().load(self.Analogsignal_ids[i][n])
                     self.ResetTag.tag=None
                     self.ResetTag.save() 
-                    print 'Analogsignal', i, 'reset to initial Values'
+                    print 'Analogsignal', self.Analogsignal_ids[i][n], 'reset to initial Values'
 #                self.tag["Selection"]=[0]*len(tag)
 #            
 #            try:
@@ -759,7 +759,9 @@ class Requete(object):
                 pass
                
                    
-        elif Main.Use_Spiketrains_Button.checkState() == 2:      
+        elif Main.Use_Spiketrains_Button.checkState() == 2:  
+            if Chan == " like '%' or analogsignal.channel IS NULL)":
+                Chan = " = spiketrain.channel)"
             Select_Core = """
             block.id,
             block.datetime,
@@ -1287,17 +1289,26 @@ class Requete(object):
         This function call the spiketrain corresponding to a given analogsignal.id
         Then it creates an array containing the amplitude of the signal when a spikes occurs (for display purpose)
         """
-        channel=0
-        try:
-            f = SpikeTrain().load(self.Spiketrain_ids[self.Current_Sweep_Number][channel],session=self.Global_Session)
-            self.Current_Spike_Times=(f._spike_times-f.t_start)*1000
-            self.Amplitude_At_Spike_Time=numpy.ones(len(self.Current_Spike_Times))
-            for i in range(len(self.Current_Spike_Times)):
-                self.Amplitude_At_Spike_Time[i]=Navigate.si[channel][self.Current_Spike_Times[i]/1000*self.Analogsignal_sampling_rate[self.Current_Sweep_Number]]    
-        except (IndexError,TypeError):
-            self.Current_Spike_Times=[]
-            self.Amplitude_At_Spike_Time=[]
-            print "!!!!!  INFO  !!!!! No Spiketrains in this segment"
+        NbOfST=len(self.Spiketrain_ids[0])
+        self.Current_Spike_Times=[]
+        self.Amplitude_At_Spike_Time=[]
+        for i in range(NbOfST):
+            self.Current_Spike_Times.append([])
+            self.Amplitude_At_Spike_Time.append([])
+            
+        
+        
+        for n in range(NbOfST):
+            try:
+                f = SpikeTrain().load(self.Spiketrain_ids[self.Current_Sweep_Number][n],session=self.Global_Session)
+                self.Current_Spike_Times[n]=(f._spike_times-f.t_start)*1000
+                self.Amplitude_At_Spike_Time[n]=numpy.ones(len(self.Current_Spike_Times[n]))
+                for i in range(len(self.Current_Spike_Times[n])):
+                    self.Amplitude_At_Spike_Time[n][i]=Navigate.si[n][self.Current_Spike_Times[n][i]/1000*self.Analogsignal_sampling_rate[self.Current_Sweep_Number]]    
+            except (IndexError):
+                self.Current_Spike_Times[n]=[]
+                self.Amplitude_At_Spike_Time[n]=[]
+                print "!!!!!  INFO  !!!!! No Spiketrains in this segment, in channel %s" %(n)
 
     
     def Save_Tags_To_Db(self):

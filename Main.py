@@ -10,6 +10,8 @@ from matplotlib import pyplot,numpy
 #import Analysis,Navigate,MyMplWidget,Mapping,Requete.Requete,Histogram,Fitting,Import
 
 
+
+
 class Main(QtGui.QWidget,object):#
 
     """This Class set up the Main Window"""
@@ -230,6 +232,7 @@ class Main(QtGui.QWidget,object):#
         self.About_Menu = QtGui.QMenu("About")
         self.Options_Menu = QtGui.QMenu("Options")
         self.Mapping_Options_Menu = QtGui.QMenu("Mapping Options")
+        self.Analysis_Options_Menu = QtGui.QMenu("Analysis Options")
 
         self.File_Menu.addAction("Show Main Figure",self.Show_Main_Figure,"CTRL+S")
         self.File_Menu.addAction("Navigator",Infos.Navigator)
@@ -248,6 +251,7 @@ class Main(QtGui.QWidget,object):#
         #self.Mapping_Options_Menu.addAction("Mapping on Negative currents",self.Update_Menu_Options)
         self.Mapping_Options_Menu.addAction("More Options",Mapping.More_Options)
         
+        self.Analysis_Options_Menu.addAction("Events Options",Analysis.ShowEventsOptions)
 
         self.About_Menu.addAction("Help",Infos.Help,'CTRL+H')
         self.About_Menu.addAction("Plugins Folder",Infos.Open_a_Folder,'CTRL+P')
@@ -267,6 +271,7 @@ class Main(QtGui.QWidget,object):#
         self.MainWindow.menuBar().addMenu(self.File_Menu)
         self.MainWindow.menuBar().addMenu(self.Plugins_Menu)
         self.MainWindow.menuBar().addMenu(self.Options_Menu)
+        self.MainWindow.menuBar().addMenu(self.Analysis_Options_Menu)        
         self.MainWindow.menuBar().addMenu(self.Mapping_Options_Menu)
         self.MainWindow.menuBar().addMenu(self.About_Menu)
         
@@ -509,7 +514,7 @@ class Main(QtGui.QWidget,object):#
         self.ShowEvents = QtGui.QPushButton(self.SpikesWidget) #creation du bouton
         self.ShowEvents.setGeometry(5, 105, 80, 23) #taille et position (X,Y,Xsize,Ysize)
         self.ShowEvents.setText( "Show Events")
-        self.ShowEvents.setEnabled(False)
+
     
         self.Display_Spikes_Button = QtGui.QCheckBox(self.SpikesWidget)
         self.Display_Spikes_Button.setGeometry(5, 45, 120, 21)
@@ -803,23 +808,18 @@ class Main(QtGui.QWidget,object):#
         self.slider.setRange(0, 1)
         self.slider.setValue(0.5)
         self.slider.setTracking(True)
-        
-        
-        
+
         #Barre de Status
         
         self.status_text = QtGui.QLabel("Welcome in SynaptiQs")
         self.MainWindow.statusBar().addWidget(self.status_text, 1)
-        
-        
+
         
         #Barre de progression
         self.progress = QtGui.QProgressBar(self.NavigationWidget)
         self.progress.setGeometry(50, 170, 150, 23)
         
 
-
-      
         #Connexion des boutons de navigation avec leur signal
             #Les Signaux d'appels des sweeps
         QtCore.QObject.connect(self.Filter_Date, QtCore.SIGNAL('activated(int)'),Requete.Request_ComboBoxes_update)
@@ -870,6 +870,8 @@ class Main(QtGui.QWidget,object):#
         QtCore.QObject.connect(self.ShowEvents, QtCore.SIGNAL("clicked()"),Analysis.Display_Events)
         QtCore.QObject.connect(self.Show_Scalogram_Button, QtCore.SIGNAL("clicked()"),Analysis.EmbeddedScalogram)
         QtCore.QObject.connect(self.Show_Concatenated_Scalogram_Button, QtCore.SIGNAL("clicked()"),Analysis.Concat_Scalogram)
+        #QtCore.QObject.connect(self.ShowEventsOptions, QtCore.SIGNAL("customContextMenuRequested ()"),Analysis.ShowEventsOptions)
+
 
 
 
@@ -1235,8 +1237,114 @@ class Main(QtGui.QWidget,object):#
             self.IPythonOpened=False
             
 
+    
+
+    def OptionPlugin(self,Class,Varnames=None,Type='Globals',funcname=None):
+        def Update():
+            val=QtCore.QObject().sender().text()
+            if val.isdigit():
+                if '.' in val:
+                    val=float(val)
+                else:
+                    val=int(val)
+            
+            Var[QtCore.QObject().sender().objectName()]=val
         
-       
+        def Validate():
+            eval(funcname+'('+'**Var'+')')
+            
+            
+        self.OptionWid=QtGui.QWidget()            
+        hbox=QtGui.QVBoxLayout()
+        ListofVar=[]
+        
+        if Type == 'Globals':
+            for i in Varnames:
+                ListofVar.append(Class.__name__+'.'+i.replace('self.','')) #replace is just a user error correction
+        
+            for i in ListofVar:
+                Option_Label=QtGui.QLabel(i)
+                Option=QtGui.QLineEdit()
+                Option.setObjectName(i)
+                #if name == 'Main':
+                    #i=i.replace(self.__name__,'self')
+                Option.setText(str(eval(i)))
+                hbox.addWidget(Option_Label)
+                hbox.addWidget(Option) 
+                QtCore.QObject.connect(Option, QtCore.SIGNAL('editingFinished()'),Infos.LineEdited)        
+            
+        
+        elif Type == 'Locals':
+            import inspect
+            a=inspect.getargspec(eval(funcname))
+            arg=a.args
+            if arg[0] == 'self':
+                print True
+                arg.pop(0)
+            ListofVar=zip(arg,a.defaults)
+            global Var
+            Var={}    
+            for i in ListofVar:
+                Option_Label=QtGui.QLabel(i[0])
+                Option=QtGui.QLineEdit()
+                Option.setObjectName(i[0])
+                Var[i[0]]=i[1]
+                Option.setText(str(i[1]))
+                hbox.addWidget(Option_Label)
+                hbox.addWidget(Option) 
+                QtCore.QObject.connect(Option, QtCore.SIGNAL('editingFinished()'),Update) 
+                
+            Ok=QtGui.QPushButton()
+            Ok.setText('OK')
+            QtCore.QObject.connect(Ok, QtCore.SIGNAL("clicked()"),Validate) 
+            
+            hbox.addWidget(Ok)
+            
+            
+            
+
+        self.OptionWid.setLayout(hbox)
+        self.OptionWid.show()        
+ 
+
+#class Button(QtGui.QPushButton):
+#    def __init__(self, *args, **kwargs):
+#        QtGui.QPushButton.__init__(self, *args, **kwargs)
+#        self.setAutoRepeat(True)
+#        self.setAutoRepeatDelay(1000)
+#        self.setAutoRepeatInterval(1000)
+#        self.clicked.connect(self.handleClicked)
+#        self._state = 0
+#
+#    def handleClicked(self):
+#        if self.isDown():
+#            if self._state == 0:
+#                self._state = 1
+#                self.setAutoRepeatInterval(50)
+#                print 'press'
+#            else:
+#                print 'repeat'
+#        elif self._state == 1:
+#            self._state = 0
+#            self.setAutoRepeatInterval(1000)
+#            print 'release'
+#        else:
+#            print 'click'
+
+#class SpecialQPushButton(QtGui.QPushButton):
+#
+#
+#    def mouseReleaseEvent(self,event):    
+#  
+#      # Mouse Right Button Release Event
+#        if event.button() == QtCore.Qt.RightButton:
+#            signal = QtCore.Signal()
+#            signal.emit('right')
+#        elif event.button() == QtCore.Qt.LeftButton:
+#            QtCore.Signal().emit('left')
+
+
+      
 #    def Backup_All(self):
 #        
 #        import shelve

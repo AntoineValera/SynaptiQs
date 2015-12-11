@@ -488,13 +488,9 @@ class MyMplCanvas(FigureCanvasQTAgg):
                     
         
             if Main.Display_Spikes_Button.checkState() == 2:
-                try:
-                    self.axes.plot(Requete.Current_Spike_Times,Requete.Amplitude_At_Spike_Time,'ro',linewidth=10)
-                except:
-                    #TODO : Catch the good error here
-                    Requete.Current_Spike_Times=[]
-                    print "No spikes to plot here"
-                    
+                c=['r','g','b','k']
+                self.axes.plot(Requete.Current_Spike_Times[n],Requete.Amplitude_At_Spike_Time[n],c[n]+'o',linewidth=10)
+     
             elif Main.Display_Spikes_Button.checkState() == 0:
                 Requete.Current_Spike_Times=[]
             else:

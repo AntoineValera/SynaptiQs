@@ -558,38 +558,22 @@ class Mapping(object):
 
         
     def More_Options(self):
-        
-        self.OptionWid=QtGui.QWidget()            
-        hbox=QtGui.QVBoxLayout()
 
-        ListofVar=[self.__name__+'.Max_Valid_Dist',
-                   self.__name__+'.Use_Number_of_Turns',
-                   self.__name__+'.CurrentChannel',
-                   self.__name__+'.Image_ColorMap',
-                   self.__name__+'.Analysis_mode',
-                   self.__name__+'.Transparency',
-                   self.__name__+'.NumberOfLevels',
-                   self.__name__+'.ZScore',
-                   self.__name__+'.ZScoreReference',
-                   self.__name__+'.ZScoreMean',
-                   self.__name__+'.ZScoreSD',
-                   self.__name__+'.AutoZScore']
 
-                   
-                   
-        for i in ListofVar:
-            Option_Label=QtGui.QLabel(i)
-            Option=QtGui.QLineEdit()
-            Option.setObjectName(i)
-            i=i.replace(self.__name__,'self')
-            Option.setText(str(eval(i)))
-            hbox.addWidget(Option_Label)
-            hbox.addWidget(Option) 
-            QtCore.QObject.connect(Option, QtCore.SIGNAL('editingFinished()'),Infos.LineEdited)
-        self.OptionWid.setLayout(hbox)
-        
-                
-        self.OptionWid.show()
+        ListofVar=['Max_Valid_Dist',
+                   'Use_Number_of_Turns',
+                   'CurrentChannel',
+                   'Image_ColorMap',
+                   'Analysis_mode',
+                   'Transparency',
+                   'NumberOfLevels',
+                   'ZScore',
+                   'ZScoreReference',
+                   'ZScoreMean',
+                   'ZScoreSD',
+                   'AutoZScore']
+
+        Main.OptionPlugin(self,Varnames=ListofVar)         
         
     def ChangeCurrentChannel(self):
         print self.CurrentMapFocus.currentIndex()

@@ -1291,8 +1291,18 @@ class Analysis(object):
                                     concatenatedEvents.extend(sptr._spike_times)
                             except ValueError:
                                 print "ID ",Source[i]," passed"
-                            counter+=1    
-    
+                            counter+=1  
+                            
+                            
+                    if Rendering == True:
+                        self.Wid.canvas.axes.set_xlabel("Time")
+                        self.Wid.canvas.axes.set_ylabel("Sweep Number")
+                        self.Wid.canvas.axes.invert_yaxis()
+                        self.Wid.canvas.axes.axvspan(Bar_time,Bar_time+Bar_Width,facecolor='b', alpha=0.3)
+                        self.Wid.canvas.axes.set_xbound(0.,Length)
+                        self.Wid.canvas.axes.set_ybound(-1.,len(Source)+2.)
+                        self.Wid.canvas.axes.hist(concatenatedEvents, bins=100, range=(0.,Length),histtype="stepfilled",alpha=0.6, normed=True)
+                
             else:
                 for i in range(len(Source)):
                     sptr=SpikeTrain.load(Source[i],session=Requete.Global_Session)
@@ -1332,16 +1342,8 @@ class Analysis(object):
                 
 
             
-        if Rendering == True:
-            self.Wid.canvas.axes.set_xlabel("Time")
-            self.Wid.canvas.axes.set_ylabel("Sweep Number")
-            self.Wid.canvas.axes.invert_yaxis()
-            self.Wid.canvas.axes.axvspan(Bar_time,Bar_time+Bar_Width,facecolor='b', alpha=0.3)
-            self.Wid.canvas.axes.set_xbound(0.,Length)
-            self.Wid.canvas.axes.set_ybound(-1.,len(Source)+2.)
-          
-            self.Wid.canvas.axes.hist(concatenatedEvents, bins=100, range=(0.,Length),histtype="stepfilled",alpha=0.6, normed=True)
-           
+
+        if Rendering == True:   
             self.Wid.show()        
 
             Info_Message="It's a superposition of "+str(counter)+" sweeps"
@@ -1349,32 +1351,43 @@ class Analysis(object):
 
         return self.Wid  
 
-    def Display_Events(self,leftsweep=5.,rightsweep=5.,Source=None,Baseline=None,Range=None,Rendering=True):
+    def ShowEventsOptions(self):
+
+        Main.OptionPlugin(self,Type='Locals',funcname='Analysis.Display_Events')     
+        #self.Display_Events(**opt)
+        
+        
+
+    def Display_Events(self,leftsweep=0.005,rightsweep=0.005,Source=None,Baseline=None,Range=None,Rendering=True,Raster=True,DetectionChannel=0,DisplayChannel=0,syncThr=0.05,Sync=None,StoredST=None):
         """
-        This function is able to display at the same time     -a raster plot and
-                                                            -a superposition of all detected events
+        This function is able to display at the same time 	-a raster plot and
+        													-a superposition of all detected events
+    
         if Source is None (or Requete.Spiketrain_ids) all the tagging/Intervall system of SynaptiQs is used
         leftsweep/rightsweep is the intervall used for display around _spiketime
         Baseline is the time BEFORE the event used for offset substraction. if None, the whole AnalogSignal_id corresponding signal is used
         Range is the range in second where the events are selected
+        DetectionChannel indicates the SpikeSorting channel used 
+        DisplayChannel indicates the channel use for displaying traces
         to be solved : sometimes, some events are missed. their position is printed.
         """
+    
         from OpenElectrophy import AnalogSignal,SpikeTrain
         from matplotlib import numpy
-    
+        
     
         if Source== None:
             Source=Requete.Spiketrain_ids
-    
         if Rendering == True:
             self.Widget=QtGui.QWidget()
-            vbox=QtGui.QVBoxLayout()
-            Raster=self.Raster_Plot(Source=Source,Rendering=False,Bar_time=0.2,Bar_Width=0.2)
-            self.Wid = MyMplWidget(subplots=None)
-            self.Wid.canvas.axes = self.Wid.canvas.fig.add_subplot(111)
+            if Raster == True:
+                vbox=QtGui.QVBoxLayout()
+                Raster=self.Raster_Plot(Source=Source,Rendering=False,Bar_time=0.2,Bar_Width=0.2)
+                self.Wid = MyMplWidget(subplots=None)
+                self.Wid.canvas.axes = self.Wid.canvas.fig.add_subplot(111)
     
-        As=AnalogSignal.load(Requete.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary[Source[0]])
-        pnts_by_s=As.sampling_rate
+        As=AnalogSignal.load(Requete.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary[Source[0][DetectionChannel]])
+        pnts_by_s=int(As.sampling_rate)
         counter=0
     
         L=int(leftsweep*pnts_by_s)
@@ -1387,65 +1400,89 @@ class Analysis(object):
         else:
             if Rendering == True:
                 Raster.canvas.axes.axvspan(Range[0],Range[1],facecolor='r', alpha=0.3)
-
-
+    
+    
         for n in range(Requete.NumberofChannels):
                 for j,i in enumerate(Source):
                     if (Source is Requete.Spiketrain_ids) and (j < int(Main.From.text())) or (j > int(Main.To.text())) or (Requete.tag["Selection"][j][n] == 0):
                         pass
                     else:
-                        st=SpikeTrain.load(i)
-                        As=AnalogSignal.load(Requete.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary[i])
+                        #Loading spiketrain
+                        st=SpikeTrain.load(i[DetectionChannel])
+                        As=AnalogSignal.load(Requete.SpikeTrain_id_and_Corresponding_AnalogSignal_id_Dictionnary[i[0]]+DisplayChannel)
                         pnts_by_s=As.sampling_rate
-            
+                        
+                        #Defining the ref spiketrain if necessary
+                        if  StoredST is not None:
+                            refST=StoredST[j]
+                        else:
+                            refST=st._spike_times
+                            
+                        #Removing baseline    
                         if Baseline == None:
                             baseline=numpy.mean(As.signal)
-                        else: baseline=Baseline
+                        else:
+                            baseline=Baseline
                         
                         try:
-                            for k in st._spike_times:
+                            for k in st._spike_times: #k is a spike
                                 if (k-st.t_start > Range[0]) and (k-st.t_start < Range[1]):
-                                    lower=int((k-st.t_start)*pnts_by_s)-L
-                                    higher=int((k-st.t_start)*pnts_by_s)+H
-                                    event = As.signal[lower:higher]
                                     
-                                    event=event-numpy.mean(event[(leftsweep-baseline)*pnts_by_s:leftsweep*pnts_by_s])
-            
-                                    try:
-                                        average_trace+=event
-                                        counter+=1
-                                    except ValueError:
-                                        print 'error in spiketrain id %s, at %s ms' % (i,(k-st.t_start)*pnts_by_s/1000)
-            
-                                    #print len(croped_axe), len(event)
-            
-                                    if len(list(croped_axe))>len(list(event)):
-                                        croped_axe=list(croped_axe)
+                                    Cond=False
+                                    #we test if there is any spike in the reference array close to our spike of interrest
+                                    test=[numpy.allclose(test,[k-st.t_start],atol=syncThr) for test in refST]
+                                    if Sync == True: #We keep it if there's one
+                                        Cond= any(numpy.array(test))
+                                    elif Sync == False: #We keep it if there's none
+                                        Cond= all(~numpy.array(test))
+                                    elif Sync == None: #We keep it anyway
+                                        Cond=True
+    
+                                    if Cond:
+                                        lower=int((k-st.t_start)*pnts_by_s)-L
+                                        higher=int((k-st.t_start)*pnts_by_s)+H
+                                        event = As.signal[lower:higher]
+                                        
+                                        event=event-numpy.mean(event[(leftsweep-baseline)*pnts_by_s:leftsweep*pnts_by_s])
+                
+                                        try:
+                                            average_trace+=event
+                                            counter+=1
+                                        except ValueError:
+                                            print 'error in spiketrain id %s, at %s ms' % (i,(k-st.t_start)*pnts_by_s/1000)
+                
                                         #print len(croped_axe), len(event)
-                                        #croped_axe.pop()
-                                    if Rendering == True :
-                                        if len(list(croped_axe)) != len(list(event)):
-                                            print j,i, 'passed'
-                                            pass
-                                        else:
-                                            self.Wid.canvas.axes.plot(croped_axe,event,color='k',alpha=0.15)
+                
+                                        if len(list(croped_axe))>len(list(event)):
+                                            croped_axe=list(croped_axe)
+                                            #print len(croped_axe), len(event)
+                                            #croped_axe.pop()
+                                        if Rendering == True :
+                                            if len(list(croped_axe)) != len(list(event)):
+                                                print j,i, 'passed'
+                                                pass
+                                            else:
+                                                self.Wid.canvas.axes.plot(croped_axe,event,color='k',alpha=0.15)
                         except ValueError:
                             pass
-                                
+                                    
     
+    
+    
+        
         average_trace/=counter
         #HACK
         Min=min([len(croped_axe),len(average_trace)])
         croped_axe=croped_axe[:Min]
         average_trace=average_trace[:Min]
-        print croped_axe,average_trace
         if Rendering == True:
             self.Wid.canvas.axes.plot(croped_axe,average_trace,color='red',alpha=1)
-            vbox.addWidget(Raster)
+            if Raster == True:
+                vbox.addWidget(Raster)
             vbox.addWidget(self.Wid)
             self.Widget.setLayout(vbox)
             self.Widget.show()
-    
+        
         return croped_axe,average_trace
 
     def Load_Tags(self):
