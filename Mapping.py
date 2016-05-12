@@ -55,6 +55,9 @@ class Mapping(object):
         self.ZScoreMean=0
         self.ZScoreSD=1
         self.AutoZScore=True
+        self.smoothfactor = 20
+        self.power = 3
+
         
     def _all(self,All=False):
         List=[]
@@ -2476,9 +2479,9 @@ class Mapping(object):
 
         
         if self.CM.Charge=='Surface':
-            mesh,contour = self.SmoothMap(self.CM.Sorted_X_Coordinates_Scaled[:], self.CM.Sorted_Y_Coordinates_Scaled[:],self.CM.Local_Surface,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist,MeshMap=MeshMap,ContourMap=ContourMap)
+            mesh,contour = self.SmoothMap(self.CM.Sorted_X_Coordinates_Scaled[:], self.CM.Sorted_Y_Coordinates_Scaled[:],self.CM.Local_Surface,power=self.power,smoothing=self.smoothfactor,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist,MeshMap=MeshMap,ContourMap=ContourMap)
         else:
-            mesh,contour = self.SmoothMap(self.CM.Sorted_X_Coordinates_Scaled[:], self.CM.Sorted_Y_Coordinates_Scaled[:],self.CM.Local_Amplitude,power=3,smoothing=10,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist,MeshMap=MeshMap,ContourMap=ContourMap)
+            mesh,contour = self.SmoothMap(self.CM.Sorted_X_Coordinates_Scaled[:], self.CM.Sorted_Y_Coordinates_Scaled[:],self.CM.Local_Amplitude,power=self.power,smoothing=self.smoothfactor,subsampling=5,cmap=cmap,Max_Valid_Dist=self.Max_Valid_Dist,MeshMap=MeshMap,ContourMap=ContourMap)
             
         self.CreateInteractiveGrid(n,ColorBar=ColorBar,Labels=Labels,Title=Title,NoWarning=NoWarning)
        

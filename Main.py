@@ -542,6 +542,14 @@ class Main(QtGui.QWidget,object):#
         self.ModifySpikes.setText( "Modify Spikes") 
         self.ModifySpikes.setDisabled(0)
         
+        self.CurrentSpikeTrainToModify = QtGui.QSpinBox(self.SpikesWidget)     
+        self.CurrentSpikeTrainToModify.setGeometry(105, 240, 120, 23) #taille et position (X,Y,Xsize,Ysize)
+        self.CurrentSpikeTrainToModify.setValue(0) 
+        self.CurrentSpikeTrainToModify.setMaximum(1)
+        self.CurrentSpikeTrainToModify.setMinimum(0)
+        self.CurrentSpikeTrainToModify.setSingleStep(1)
+        self.CurrentSpikeTrainToModify.setDisabled(0)
+        
         self.Measure_Button = QtGui.QPushButton(self.AnalysisWidget) #creation du bouton
         self.Measure_Button.setGeometry(5, 85, 80, 23) #taille et position (X,Y,Xsize,Ysize)
         self.Measure_Button.setText( "Measure!")

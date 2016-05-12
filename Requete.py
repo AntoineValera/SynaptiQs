@@ -1297,7 +1297,7 @@ class Requete(object):
             self.Amplitude_At_Spike_Time.append([])
             
         
-        
+        Main.CurrentSpikeTrainToModify.setMaximum(NbOfST-1)
         for n in range(NbOfST):
             try:
                 f = SpikeTrain().load(self.Spiketrain_ids[self.Current_Sweep_Number][n],session=self.Global_Session)
